@@ -12,6 +12,7 @@ unzip:
 clean:
 	find . -type d -name "*__MACOS*" -print -exec rm -r {} +
 	find . -type f -name ".DS_Store" -print -exec rm -r {} +
+	find . -type d -name "__pycache__" -print -exec rm -r {} +
 
 lint:
 	ruff check . --fix
