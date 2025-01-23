@@ -2,7 +2,7 @@ download:
 	mkdir -p ./downloads
 	gsutil -m cp -r gs://yo-personal/fdua/downloads/* ./downloads
 
-upload:
+upload: clean
 	gsutil -m cp -r ./downloads gs://yo-personal/fdua/
 
 unzip:
@@ -13,6 +13,7 @@ clean:
 	find . -type d -name "*__MACOS*" -print -exec rm -r {} +
 	find . -type f -name ".DS_Store" -print -exec rm -r {} +
 	find . -type d -name "__pycache__" -print -exec rm -r {} +
+	find . -type f -name "*.Identifier" -print -exec rm -r {} +
 
 lint:
 	ruff check . --fix
