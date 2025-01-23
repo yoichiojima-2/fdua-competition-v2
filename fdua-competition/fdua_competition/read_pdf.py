@@ -26,7 +26,7 @@ def read_pdf(filename: str):
 def main():
     for pdf_file in tqdm(get_documents_dir().glob("*.pdf")):
         read_pdf(pdf_file.name)
-        
+
 
 if __name__ == "__main__":
     main()
