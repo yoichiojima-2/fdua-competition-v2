@@ -12,3 +12,9 @@ unzip:
 clean:
 	find . -type d -name "*__MACOS*" -print -exec rm -r {} +
 	find . -type f -name ".DS_Store" -print -exec rm -r {} +
+
+lint:
+	ruff check . --fix
+	ruff format .
+
+pre-commit: lint clean
