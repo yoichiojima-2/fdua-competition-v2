@@ -8,13 +8,14 @@ def get_documents_dir():
 
 
 def get_interim_dir():
-    return Path().cwd().parent / "interim"
+    dir = Path().cwd().parent / "interim"
+    dir.mkdir(exist_ok=True)
+    return dir
 
 
 def read_pdf(filename: str):
     input_path = get_documents_dir() / filename
     pdf = pdfium.PdfDocument(input_path)
-    get_interim_dir().mkdir(exist_ok=True)
 
     for index, page in tqdm(enumerate(pdf)):
         text = page.get_textpage().get_text_bounded().replace("\n", "")
