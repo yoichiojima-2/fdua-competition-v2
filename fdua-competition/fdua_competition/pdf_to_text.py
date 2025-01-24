@@ -1,16 +1,11 @@
 from pathlib import Path
 import pypdfium2 as pdfium
 from tqdm import tqdm
+from fdua_competition.utils import get_interim_dir
 
 
 def get_documents_dir() -> Path:
     return Path().home() / ".fdua-competition/downloads/documents"
-
-
-def get_interim_dir() -> Path:
-    dir = Path().home() / ".fdua-competition/interim"
-    dir.mkdir(exist_ok=True)
-    return dir
 
 
 def pdf_to_text(filename: str) -> None:
