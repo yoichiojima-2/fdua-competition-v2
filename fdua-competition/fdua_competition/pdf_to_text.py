@@ -17,7 +17,7 @@ def pdf_to_text(filename: str) -> None:
         text = page.get_textpage().get_text_bounded().replace("\n", "")
         output_path.write_text(text)
 
-    print(f"[pdf_to_text] done")
+    print("[pdf_to_text] done")
     print(f"source: {input_path}\noutput: {output_path}")
 
 
