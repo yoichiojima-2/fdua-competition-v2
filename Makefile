@@ -1,19 +1,21 @@
+DATA_DIR = ~/.fdua-competition
+
 download:
-	mkdir -p ./downloads
-	gsutil -m cp -r gs://yo-personal/fdua/downloads/* ./downloads
+	mkdir -p ${DATA_DIR}/downloads
+	gsutil -m cp -r gs://yo-personal/fdua/downloads/* ${DATA_DIR}/downloads
 
 upload: clean
-	gsutil -m cp -r ./downloads gs://yo-personal/fdua/
+	gsutil -m cp -r ${DATA_DIR}/downloads gs://yo-personal/fdua/
 
 unzip:
-	cd downloads && \
+	cd ${DATA_DIR}/downloads && \
 	find . -name "*.zip" -print -exec unzip {} \;
 
 clean:
-	find . -type d -name "*__MACOS*" -print -exec rm -r {} +
-	find . -type f -name ".DS_Store" -print -exec rm -r {} +
-	find . -type d -name "__pycache__" -print -exec rm -r {} +
-	find . -type f -name "*.Identifier" -print -exec rm -r {} +
+	find ${DATA_DIR} -type d -name "*__MACOS*" -print -exec rm -r {} +
+	find ${DATA_DIR} -type f -name ".DS_Store" -print -exec rm -r {} +
+	find ${DATA_DIR} -type d -name "__pycache__" -print -exec rm -r {} +
+	find ${DATA_DIR} -type f -name "*.Identifier" -print -exec rm -r {} +
 
 lint:
 	ruff check . --fix
