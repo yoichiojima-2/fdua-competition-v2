@@ -9,7 +9,7 @@ AZURE_OPENAI_ENDPOINT_URL = os.getenv("AZURE_OPENAI_ENDPOINT_URL")
 AZURE_OPENAI_VERSION = os.getenv("AZURE_OPENAI_VERSION")
 
 
-def vectorize_text(text: str) -> list:
+def vectorize_text(text: str) -> list[str]:
     client = AzureOpenAI(
         api_key=AZURE_OPENAI_API_KEY,
         azure_endpoint=AZURE_OPENAI_ENDPOINT_URL,
