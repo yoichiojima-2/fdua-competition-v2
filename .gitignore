@@ -170,7 +170,5 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-# Project
-downloads
-interim
+# ruff
 .ruff_cache
