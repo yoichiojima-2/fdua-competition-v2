@@ -21,5 +21,9 @@ jobs:
       run: |
         pip install --upgrade pip && pip install uv
     - name: test
+      env: 
+        AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+        AZURE_OPENAI_ENDPOINT_URL: ${{ secrets.AZURE_OPENAI_ENDPOINT_URL }}
+        AZURE_OPENAI_VERSION: ${{ secrets.AZURE_OPENAI_VERSION }}
       run: |
         make test
