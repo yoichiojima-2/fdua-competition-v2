@@ -25,3 +25,6 @@ lint:
 	ruff format .
 
 pre-commit: lint clean
+
+test:
+	uv run pytest -vvv
