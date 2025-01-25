@@ -1,4 +1,3 @@
-from pathlib import Path
 from fdua_competition.pdf_to_text import pdf_to_text
 from fdua_competition.utils import get_interim_dir
 
