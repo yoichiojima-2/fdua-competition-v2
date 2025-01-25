@@ -4,6 +4,9 @@ download:
 	mkdir -p ${DATA_DIR}/downloads
 	gsutil -m cp -r gs://yo-personal/fdua/downloads/* ${DATA_DIR}/downloads
 
+download-secret:
+	gsutil cp gs://yo-personal/fdua/secret/.env .
+
 upload: clean
 	gsutil -m cp -r ${DATA_DIR}/downloads gs://yo-personal/fdua/
 
@@ -22,3 +25,6 @@ lint:
 	ruff format .
 
 pre-commit: lint clean
+
+test:
+	uv run pytest -vvv
