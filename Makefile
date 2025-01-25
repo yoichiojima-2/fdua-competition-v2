@@ -21,8 +21,8 @@ clean:
 	find ${DATA_DIR} -type f -name "*.Identifier" -print -exec rm -r {} +
 
 lint:
-	ruff check . --fix
-	ruff format .
+	uv run ruff check . --fix
+	uv run ruff format .
 
 pre-commit: lint clean
 
