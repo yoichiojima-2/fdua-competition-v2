@@ -20,6 +20,15 @@ clean:
 	find ${DATA_DIR} -type d -name "__pycache__" -print -exec rm -r {} +
 	find ${DATA_DIR} -type f -name "*.Identifier" -print -exec rm -r {} +
 
+	find . -type f -name ".DS_Store" -print -exec rm -r {} +
+	find . -type d -name "__pycache__" -print -exec rm -r {} +
+	find . -type d -name ".pytest_cache" -print -exec rm -r {} +
+	find . -type d -name ".ruff_cache" -print -exec rm -r {} +
+	find . -type f -name "*.Identifier" -print -exec rm -r {} +
+
+	rm uv.lock
+	rm -r .venv
+
 lint:
 	uv run ruff check . --fix
 	uv run ruff format .
