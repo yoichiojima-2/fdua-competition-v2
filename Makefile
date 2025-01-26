@@ -38,6 +38,4 @@ lint:
 pre-commit: lint clean-project
 
 test:
-	mkdir -p ${DATA_DIR}/downloads/documents
-	cp tests/assets/1.pdf ${DATA_DIR}/downloads/documents/1.pdf
 	uv run pytest -vvv

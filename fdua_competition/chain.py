@@ -7,7 +7,9 @@ from langchain_openai import AzureOpenAIEmbeddings
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_community.document_loaders import PyPDFium2Loader
 
-from fdua_competition.utils import get_documents_dir
+
+def get_documents_dir() -> Path:
+    return Path().home() / ".fdua-competition/downloads/documents"
 
 
 def get_pdf_paths() -> Iterable[Path]:
