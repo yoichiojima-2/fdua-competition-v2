@@ -23,7 +23,8 @@ def get_pages(filename: str) -> Iterable[Document]:
 def make_retriever(pages: list[Document]) -> VectorStoreRetriever:
     embeddings = AzureOpenAIEmbeddings(model="embedding")
     vectorstore = InMemoryVectorStore(embedding=embeddings)
-    return vectorstore.add_documents(pages).as_retriever()
+    vectorstore.add_documents(pages)
+    return vectorstore.as_retriever()
 
 
 def get_prompt_template() -> ChatPromptTemplate:
