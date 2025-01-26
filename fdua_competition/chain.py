@@ -56,16 +56,17 @@ def get_prompt_template() -> ChatPromptTemplate:
 
 
 def main() -> None:
+    query = "4℃ホールディングスの2024年2月29日現在の連結での従業員数は何名か"
+
     load_dotenv()
 
-    query = "4℃ホールディングスの2024年2月29日現在の連結での従業員数は何名か"
     prompt_template = get_prompt_template()
     retriever = make_retriever()
 
     prompt = prompt_template.invoke(
         {
             "language": "Japanese",
-            "context": retriever.invoke(query)[0].page_content,
+            "context": "\n".join([page.page_content for page in retriever.invoke(query)]),
             "query": query,
         }
     )
