@@ -1,5 +1,5 @@
-from openai import AzureOpenAI
 from dotenv import load_dotenv
+from openai import AzureOpenAI
 
 
 def test_azure_openai():
