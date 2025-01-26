@@ -14,7 +14,7 @@ def get_documents_dir() -> Path:
 
 def get_pdf_paths() -> Iterable[Path]:
     documents_dir = get_documents_dir()
-    for pdf_path in documents_dir.glob("1.pdf"):
+    for pdf_path in documents_dir.glob("*.pdf"):
         yield pdf_path
 
 
@@ -32,14 +32,13 @@ def get_all_pages() -> Iterable[Document]:
 
 load_dotenv()
 
-pages = get_all_pages()
+pages = list(get_all_pages())
+
 embeddings = AzureOpenAIEmbeddings(model="embedding")
 vectorstore = InMemoryVectorStore(embedding=embeddings)
 vectorstore.add_documents(pages)
 
-print(vectorstore.search(query="test", search_type="similarity"))
+retriever = vectorstore.as_retriever()
 
-# retriever = vectorstore.as_retriever()
-
-# retrieved_documents = retriever.invoke("what is written in the document?")
-# print(retrieved_documents[0].page_content)
+retrieved_documents = retriever.invoke("what is written in the document?")
+print(retrieved_documents[0].page_content)
