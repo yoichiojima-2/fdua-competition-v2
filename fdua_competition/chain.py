@@ -27,12 +27,10 @@ def make_retriever(pages: list[Document]) -> VectorStoreRetriever:
 
 
 def get_prompt_template() -> ChatPromptTemplate:
+    system_prompt = "Answer the following question based only on the provided context in {language}"
     return ChatPromptTemplate.from_messages(
         [
-            (
-                "system",
-                "Answer the following question based only on the provided context in {language}",
-            ),
+            ("system", system_prompt),
             ("system", "context: {context}"),
             ("user", "query: {query}"),
         ]
