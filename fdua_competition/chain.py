@@ -43,7 +43,7 @@ def make_retriever() -> VectorStoreRetriever:
     return vectorstore.as_retriever()
 
 
-def get_prompt_template():
+def get_prompt_template() -> ChatPromptTemplate:
     return ChatPromptTemplate.from_messages(
         [
             (
@@ -56,7 +56,7 @@ def get_prompt_template():
     )
 
 
-def main():
+def main() -> None:
     load_dotenv()
 
     query = "4℃ホールディングスの2024年2月29日現在の連結での従業員数は何名か"
