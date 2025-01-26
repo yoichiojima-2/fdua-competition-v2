@@ -11,7 +11,6 @@ def main():
 
         df = pd.read_csv(Path().home() / ".fdua-competition/downloads/query.csv")
         for i in df["problem"]:
-            print(i)
             f.write(f"- {i}\n")
 
     print(f"[{Path(__file__).stem}] done: {output_md}")
