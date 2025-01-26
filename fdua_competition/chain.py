@@ -2,13 +2,12 @@ from pathlib import Path
 from typing import Iterable
 
 from dotenv import load_dotenv
-from langchain_core.documents import Document
-from langchain_openai import AzureChatOpenAI
-from langchain_openai import AzureOpenAIEmbeddings
-from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_community.document_loaders import PyPDFium2Loader
+from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_core.vectorstores.base import VectorStoreRetriever
+from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
 
 
 def get_documents_dir() -> Path:

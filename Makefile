@@ -32,6 +32,7 @@ clean-data-dir:
 	find ${DATA_DIR} -type f -name "*.Identifier" -print -exec rm -r {} +
 
 lint:
+	uv run isort .
 	uv run ruff check . --fix
 	uv run ruff format .
 
