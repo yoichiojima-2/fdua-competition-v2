@@ -49,8 +49,8 @@ def get_pages(filename: str) -> Iterable[Document]:
 @traceable
 def get_vectorstore(
     model: str = "embedding",
-    embedding_class: OpenAIEmbeddings = AzureOpenAIEmbeddings,
-    vectorstore_class: VectorStore = InMemoryVectorStore,
+    embedding_class: OpenAIEmbeddings
+    vectorstore_class: VectorStore
 ) -> VectorStore:
     embeddings = embedding_class(model=model)
     return vectorstore_class(embedding=embeddings)
