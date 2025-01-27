@@ -47,11 +47,7 @@ def get_pages(filename: str) -> Iterable[Document]:
 
 
 @traceable
-def get_vectorstore(
-    model: str = "embedding",
-    embedding_class: OpenAIEmbeddings
-    vectorstore_class: VectorStore
-) -> VectorStore:
+def get_vectorstore(model: str, embedding_class: OpenAIEmbeddings, vectorstore_class: VectorStore) -> VectorStore:
     embeddings = embedding_class(model=model)
     return vectorstore_class(embedding=embeddings)
 
@@ -122,6 +118,7 @@ def main() -> None:
     system_prompt = "Answer the following question based only on the provided context in {language}"
 
     vectorstore = build_vectorstore(
+        model="embedding",
         embedding_class=AzureOpenAIEmbeddings,
         vectorstore_class=InMemoryVectorStore,
     )
