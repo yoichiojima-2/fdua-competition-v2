@@ -1,3 +1,4 @@
+from datetime import datetime
 import warnings
 from pathlib import Path
 from typing import Iterable
@@ -112,7 +113,7 @@ def get_chat_model() -> ChatOpenAI:
 def main() -> None:
     output_dir = Path(__file__).parent.parent / "result"
     output_dir.mkdir(exist_ok=True, parents=True)
-    output_md = output_dir / "result.md"
+    output_md = output_dir / f"result_{datetime.now().strftime('%Y%m%d_%H%M')}.md"
     output_md.unlink(missing_ok=True)
 
     system_prompt = "Answer the following question based only on the provided context in {language}"
