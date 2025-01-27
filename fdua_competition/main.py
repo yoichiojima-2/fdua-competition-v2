@@ -92,8 +92,7 @@ def get_prompt(
     language: str = "Japanese",
 ) -> ChatPromptValue:
     return (
-        ChatPromptTemplate
-        .from_messages(
+        ChatPromptTemplate.from_messages(
             [
                 ("system", system_prompt.format(language=language)),
                 ("system", f"context: {'\n'.join([page.page_content for page in vectorstore.as_retriever().invoke(query)])}"),
