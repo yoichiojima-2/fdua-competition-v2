@@ -4,10 +4,11 @@ from typing import Iterable
 from dotenv import load_dotenv
 from langchain_community.document_loaders import PyPDFium2Loader
 from langchain_core.documents import Document
+from langchain_core.prompt_values import ChatPromptValue
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.vectorstores import InMemoryVectorStore
-from langchain_core.vectorstores.base import VectorStoreRetriever
-from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
+from langchain_core.vectorstores.base import VectorStore
+from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, ChatOpenAI, OpenAIEmbeddings
 
 
 def get_documents_dir() -> Path:
@@ -20,40 +21,53 @@ def get_pages(filename: str) -> Iterable[Document]:
         yield doc
 
 
-def make_retriever(pages: list[Document]) -> VectorStoreRetriever:
-    embeddings = AzureOpenAIEmbeddings(model="embedding")
-    vectorstore = InMemoryVectorStore(embedding=embeddings)
-    vectorstore.add_documents(pages)
-    return vectorstore.as_retriever()
+def get_vectorstore(
+    model: str = "embedding",
+    embedding_class: OpenAIEmbeddings = AzureOpenAIEmbeddings,
+    vectorstore_class: VectorStore = InMemoryVectorStore,
+) -> VectorStore:
+    embeddings = embedding_class(model=model)
+    return vectorstore_class(embedding=embeddings)
 
 
-def get_prompt_template() -> ChatPromptTemplate:
-    system_prompt = "Answer the following question based only on the provided context in {language}"
-    return ChatPromptTemplate.from_messages(
+def get_prompt(
+    system_prompt: str,
+    query: str,
+    vectorstore: VectorStore,
+    language: str = "Japanese",
+) -> ChatPromptValue:
+    prompt_template = ChatPromptTemplate.from_messages(
         [
             ("system", system_prompt),
             ("system", "context: {context}"),
             ("user", "query: {query}"),
         ]
     )
-
-
-def main() -> None:
-    query = "4℃ホールディングスの2024年2月29日現在の連結での従業員数は何名か"
-
-    pages = list(get_pages("1.pdf"))
-    retriever = make_retriever(pages)
-
-    prompt = get_prompt_template().invoke(
+    return prompt_template.invoke(
         {
-            "language": "Japanese",
-            "context": "\n".join([page.page_content for page in retriever.invoke(query)]),
+            "language": language,
+            "context": "\n".join([page.page_content for page in vectorstore.as_retriever().invoke(query)]),
             "query": query,
         }
     )
 
-    llm = AzureChatOpenAI(azure_deployment="4omini")
-    res = llm.invoke(prompt)
+
+def get_chat_model() -> ChatOpenAI:
+    return AzureChatOpenAI(azure_deployment="4omini")
+
+
+def main() -> None:
+    system_prompt = "Answer the following question based only on the provided context in {language}"
+    query = "4℃ホールディングスの2024年2月29日現在の連結での従業員数は何名か"
+
+    pages = list(get_pages("1.pdf"))
+    vectorstore = get_vectorstore()
+    vectorstore.add_documents(pages)
+
+    prompt = get_prompt(system_prompt, query, vectorstore)
+
+    chat_model = get_chat_model()
+    res = chat_model.invoke(prompt)
     print(res.content)
 
 

@@ -16,9 +16,6 @@ unzip:
 	make clean-data-dir
 
 clean-project:
-	rm uv.lock
-	rm -r .venv
-
 	find . -type f -name ".DS_Store" -print -exec rm -r {} +
 	find . -type d -name "__pycache__" -print -exec rm -r {} +
 	find . -type d -name ".pytest_cache" -print -exec rm -r {} +
