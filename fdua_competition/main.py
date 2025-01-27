@@ -99,7 +99,8 @@ def get_prompt(
                 ("system", "context: {context}"),
                 ("user", "query: {query}"),
             ]
-        ).invoke(
+        )
+        .invoke(
             {
                 "language": language,
                 "context": "\n".join([page.page_content for page in vectorstore.as_retriever().invoke(query)]),
