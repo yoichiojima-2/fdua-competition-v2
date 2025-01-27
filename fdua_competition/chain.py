@@ -10,12 +10,22 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_core.vectorstores.base import VectorStore
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, ChatOpenAI, OpenAIEmbeddings
+import pandas as pd
 from tenacity import retry, stop_after_attempt, wait_exponential
 from tqdm import tqdm
 
 
+def get_root() -> Path:
+    return Path().home() / ".fdua-competition"
+
+
 def get_documents_dir() -> Path:
-    return Path().home() / ".fdua-competition/downloads/documents"
+    return get_root() / "downloads/documents"
+
+
+def get_queries() -> list[str]:
+    df = pd.read_csv(get_root() / "downloads/query.csv")
+    return df["problem"].tolist()
 
 
 def get_pages(filename: str) -> Iterable[Document]:
@@ -51,6 +61,16 @@ def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterabl
         vectorstore.add_documents(batch)
 
 
+def build_vectorstore() -> VectorStore:
+    vectorstore = get_vectorstore()
+
+    for path in get_documents_dir().glob("*.pdf"):
+        print(f"store pdf content in vectorstore: {path}")
+        add_pages_to_vectorstore_in_batches(vectorstore=vectorstore, pages=get_pages(path))
+
+    return vectorstore
+
+
 def get_prompt(
     system_prompt: str,
     query: str,
@@ -78,19 +98,19 @@ def get_chat_model() -> ChatOpenAI:
 
 
 def main() -> None:
+    output_md = get_root() / "result/result.md"
+
     system_prompt = "Answer the following question based only on the provided context in {language}"
-    query = "4℃ホールディングスの2024年2月29日現在の連結での従業員数は何名か"
 
-    vectorstore = get_vectorstore()
-
-    for path in get_documents_dir().glob("*.pdf"):
-        print(f"processing: {path}")
-        add_pages_to_vectorstore_in_batches(vectorstore=vectorstore, pages=get_pages(path))
-
+    vectorstore = build_vectorstore()
     chat_model = get_chat_model()
-    prompt = get_prompt(system_prompt, query, vectorstore)
-    res = chat_model.invoke(prompt)
-    print(res.content)
+
+    with output_md.open(mode="a") as f:
+        for query in get_queries():
+            f.write(f"# {query}")
+            prompt = get_prompt(system_prompt, query, vectorstore)
+            res = chat_model.invoke(prompt)
+            f.write(f"{res.content}")
 
 
 if __name__ == "__main__":
