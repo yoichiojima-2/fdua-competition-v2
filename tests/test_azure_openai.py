@@ -4,5 +4,9 @@ from openai import AzureOpenAI
 
 def test_azure_openai():
     load_dotenv()
-    res = AzureOpenAI().chat.completions.create(model="4omini", messages=[{"role": "user", "content": "test"}])
+
+    llm = AzureOpenAI()
+    messages = [{"role": "user", "content": "test"}]
+    res = llm.chat.completions.create(model="4omini", messages=messages)
+
     assert len(res.choices) > 0
