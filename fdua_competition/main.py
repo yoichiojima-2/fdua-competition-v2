@@ -100,7 +100,6 @@ def get_prompt(
                 ("user", f"query: {query}"),
             ]
         )
-        .invoke()
     )
 
 
