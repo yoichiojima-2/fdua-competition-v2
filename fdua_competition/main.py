@@ -121,7 +121,10 @@ def get_chat_model() -> ChatOpenAI:
 def main() -> None:
     system_prompt = "Answer the following question based only on the provided context in {language}"
 
-    vectorstore = build_vectorstore()
+    vectorstore = build_vectorstore(
+        embedding_class=AzureOpenAIEmbeddings,
+        vectorstore_class=InMemoryVectorStore,
+    )
     chat_model = get_chat_model()
 
     with get_output_path().open(mode="a") as f:
