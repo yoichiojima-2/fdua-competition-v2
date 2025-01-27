@@ -13,7 +13,7 @@ def test_get_pages():
 def test_get_vectorstore():
     vectorstore = chain.get_vectorstore()
     assert vectorstore
-    
+
 
 def test_prompt():
     system_prompt = "test system prompt: {language}"
