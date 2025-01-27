@@ -26,3 +26,9 @@ def test_prompt():
 def test_get_chat_model():
     chat_model = chain.get_chat_model()
     assert chat_model
+
+
+def test_get_queries():
+    queries = chain.get_queries()
+    assert isinstance(queries, list)
+    assert queries
