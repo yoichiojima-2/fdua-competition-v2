@@ -16,6 +16,8 @@ unzip:
 	make clean-data-dir
 
 clean-project:
+	rm -rf .venv
+	rm uv.lock
 	find . -type f -name ".DS_Store" -print -exec rm -r {} +
 	find . -type d -name "__pycache__" -print -exec rm -r {} +
 	find . -type d -name ".pytest_cache" -print -exec rm -r {} +
@@ -37,3 +39,10 @@ pre-commit: lint clean-project
 
 test:
 	uv run pytest -vvv
+
+backup-repo:
+	gsutil -m rm -r gs://yo-personal/fdua/repo/fdua-competition
+	gsutil -m cp -r . gs://yo-personal/fdua/repo/fdua-competition
+
+run:
+	uv run python -m fdua_competition.main
