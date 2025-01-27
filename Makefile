@@ -44,7 +44,7 @@ pre-commit: lint clean-project
 test:
 	uv run pytest -vvv
 
-backup-repo:
+backup-repo: clean-project
 	gsutil -m rm -r gs://yo-personal/fdua/repo/fdua-competition
 	gsutil -m cp -r . gs://yo-personal/fdua/repo/fdua-competition
 
