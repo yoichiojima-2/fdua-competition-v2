@@ -25,6 +25,14 @@ def get_documents_dir() -> Path:
     return get_root() / "downloads/documents"
 
 
+def get_output_path() -> Path:
+    output_dir = Path(__file__).parent.parent / "result"
+    output_dir.mkdir(exist_ok=True, parents=True)
+    output_md = output_dir / f"result_{datetime.now().strftime('%Y%m%d_%H%M')}.md"
+    output_md.unlink(missing_ok=True)
+    return output_md
+
+
 @traceable
 def get_queries() -> list[str]:
     df = pd.read_csv(get_root() / "downloads/query.csv")
@@ -111,17 +119,12 @@ def get_chat_model() -> ChatOpenAI:
 
 @traceable
 def main() -> None:
-    output_dir = Path(__file__).parent.parent / "result"
-    output_dir.mkdir(exist_ok=True, parents=True)
-    output_md = output_dir / f"result_{datetime.now().strftime('%Y%m%d_%H%M')}.md"
-    output_md.unlink(missing_ok=True)
-
     system_prompt = "Answer the following question based only on the provided context in {language}"
 
     vectorstore = build_vectorstore()
     chat_model = get_chat_model()
 
-    with output_md.open(mode="a") as f:
+    with get_output_path().open(mode="a") as f:
         f.write("# Results\n")
         for query in tqdm(get_queries(), desc="querying.."):
             f.write(f"## {query}\n")
