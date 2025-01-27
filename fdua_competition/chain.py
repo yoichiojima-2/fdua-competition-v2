@@ -10,6 +10,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_core.vectorstores.base import VectorStore
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, ChatOpenAI, OpenAIEmbeddings
+from langsmith import traceable
 import pandas as pd
 from tenacity import retry, stop_after_attempt, wait_exponential
 from tqdm import tqdm
@@ -23,17 +24,20 @@ def get_documents_dir() -> Path:
     return get_root() / "downloads/documents"
 
 
+@traceable
 def get_queries() -> list[str]:
     df = pd.read_csv(get_root() / "downloads/query.csv")
     return df["problem"].tolist()
 
 
+@traceable
 def get_pages(filename: str) -> Iterable[Document]:
     pdf_path = get_documents_dir() / filename
     for doc in PyPDFium2Loader(pdf_path).lazy_load():
         yield doc
 
 
+@traceable
 def get_vectorstore(
     model: str = "embedding",
     embedding_class: OpenAIEmbeddings = AzureOpenAIEmbeddings,
@@ -44,13 +48,15 @@ def get_vectorstore(
 
 
 @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=4, max=60))
+@traceable
 def add_documents_with_retry(vectorstore, batch):
     vectorstore.add_documents(batch)
 
 
+@traceable
 def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterable[Document], batch_size: int = 5) -> None:
     batch = []
-    for page in tqdm(pages, desc="adding pages to vectorstore"):
+    for page in tqdm(pages, desc="adding pages.."):
         batch.append(page)
         if len(batch) == batch_size:
             add_documents_with_retry(vectorstore=vectorstore, batch=batch)
@@ -61,16 +67,20 @@ def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterabl
         vectorstore.add_documents(batch)
 
 
+@traceable
 def build_vectorstore() -> VectorStore:
+    print(f"[build_vectorstore] building vectorstore..")
     vectorstore = get_vectorstore()
 
     for path in get_documents_dir().glob("*.pdf"):
-        print(f"store pdf content in vectorstore: {path}")
+        print(f"adding document in vectorstore: {path}")
         add_pages_to_vectorstore_in_batches(vectorstore=vectorstore, pages=get_pages(path))
 
+    print(f"[build_vectorstore] done building vectorstore")
     return vectorstore
 
 
+@traceable
 def get_prompt(
     system_prompt: str,
     query: str,
@@ -93,12 +103,17 @@ def get_prompt(
     )
 
 
+@traceable
 def get_chat_model() -> ChatOpenAI:
     return AzureChatOpenAI(azure_deployment="4omini")
 
 
+@traceable
 def main() -> None:
-    output_md = get_root() / "result/result.md"
+    output_dir = Path(__file__).parent.parent / "result"
+    output_dir.mkdir(exist_ok=True, parents=True)
+    output_md = output_dir / "result.md"
+    output_md.unlink(missing_ok=True)
 
     system_prompt = "Answer the following question based only on the provided context in {language}"
 
@@ -106,11 +121,13 @@ def main() -> None:
     chat_model = get_chat_model()
 
     with output_md.open(mode="a") as f:
-        for query in get_queries():
-            f.write(f"# {query}")
+        f.write("# Results\n")
+        for query in tqdm(get_queries(), desc="querying.."):
+            f.write(f"## {query}\n")
             prompt = get_prompt(system_prompt, query, vectorstore)
             res = chat_model.invoke(prompt)
-            f.write(f"{res.content}")
+            f.write(f"{res.content}\n\n")
+            print(f"done with query: {query}\noutput: {res.content}\n")
 
 
 if __name__ == "__main__":
