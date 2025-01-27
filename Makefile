@@ -4,6 +4,10 @@ download:
 	mkdir -p ${DATA_DIR}/downloads
 	gsutil -m cp -r gs://yo-personal/fdua/downloads/* ${DATA_DIR}/downloads
 
+
+upload-secret:
+	gsutil cp .env gs://yo-personal/fdua/secret/
+
 download-secret:
 	gsutil cp gs://yo-personal/fdua/secret/.env .
 
