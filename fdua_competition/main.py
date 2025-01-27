@@ -134,7 +134,7 @@ def main() -> None:
             f.write(f"## {query}\n")
             f.write(f"{res.content}\n\n")
 
-            print(f"done with query: {query}\noutput: {res.content}\n")
+            print(f"done\n\tquery: {query}\n\toutput: {res.content}\n")
 
 
 if __name__ == "__main__":
