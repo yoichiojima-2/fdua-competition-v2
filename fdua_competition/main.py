@@ -91,19 +91,21 @@ def get_prompt(
     vectorstore: VectorStore,
     language: str = "Japanese",
 ) -> ChatPromptValue:
-    prompt_template = ChatPromptTemplate.from_messages(
-        [
-            ("system", system_prompt),
-            ("system", "context: {context}"),
-            ("user", "query: {query}"),
-        ]
-    )
-    return prompt_template.invoke(
-        {
-            "language": language,
-            "context": "\n".join([page.page_content for page in vectorstore.as_retriever().invoke(query)]),
-            "query": query,
-        }
+    return (
+        ChatPromptTemplate
+        .from_messages(
+            [
+                ("system", system_prompt),
+                ("system", "context: {context}"),
+                ("user", "query: {query}"),
+            ]
+        ).invoke(
+            {
+                "language": language,
+                "context": "\n".join([page.page_content for page in vectorstore.as_retriever().invoke(query)]),
+                "query": query,
+            }
+        )
     )
 
 
