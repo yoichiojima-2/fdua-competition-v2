@@ -1,3 +1,4 @@
+import warnings
 from pathlib import Path
 from typing import Iterable
 
@@ -9,6 +10,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_core.vectorstores.base import VectorStore
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, ChatOpenAI, OpenAIEmbeddings
+from tenacity import retry, stop_after_attempt, wait_exponential
+from tqdm import tqdm
 
 
 def get_documents_dir() -> Path:
@@ -28,6 +31,24 @@ def get_vectorstore(
 ) -> VectorStore:
     embeddings = embedding_class(model=model)
     return vectorstore_class(embedding=embeddings)
+
+
+@retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=4, max=60))
+def add_documents_with_retry(vectorstore, batch):
+    vectorstore.add_documents(batch)
+
+
+def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterable[Document], batch_size: int = 5) -> None:
+    batch = []
+    for page in tqdm(pages, desc="adding pages to vectorstore"):
+        batch.append(page)
+        if len(batch) == batch_size:
+            add_documents_with_retry(vectorstore=vectorstore, batch=batch)
+            batch = []  # clear the batch
+
+    # add any remaining documents in the last batch
+    if batch:
+        vectorstore.add_documents(batch)
 
 
 def get_prompt(
@@ -60,17 +81,19 @@ def main() -> None:
     system_prompt = "Answer the following question based only on the provided context in {language}"
     query = "4℃ホールディングスの2024年2月29日現在の連結での従業員数は何名か"
 
-    pages = list(get_pages("1.pdf"))
     vectorstore = get_vectorstore()
-    vectorstore.add_documents(pages)
 
-    prompt = get_prompt(system_prompt, query, vectorstore)
+    for path in get_documents_dir().glob("*.pdf"):
+        print(f"processing: {path}")
+        add_pages_to_vectorstore_in_batches(vectorstore=vectorstore, pages=get_pages(path))
 
     chat_model = get_chat_model()
+    prompt = get_prompt(system_prompt, query, vectorstore)
     res = chat_model.invoke(prompt)
     print(res.content)
 
 
 if __name__ == "__main__":
     load_dotenv()
+    warnings.filterwarnings("ignore", category=UserWarning)
     main()
