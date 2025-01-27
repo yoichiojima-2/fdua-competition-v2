@@ -1,8 +1,9 @@
-from datetime import datetime
 import warnings
+from datetime import datetime
 from pathlib import Path
 from typing import Iterable
 
+import pandas as pd
 from dotenv import load_dotenv
 from langchain_community.document_loaders import PyPDFium2Loader
 from langchain_core.documents import Document
@@ -12,7 +13,6 @@ from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_core.vectorstores.base import VectorStore
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, ChatOpenAI, OpenAIEmbeddings
 from langsmith import traceable
-import pandas as pd
 from tenacity import retry, stop_after_attempt, wait_exponential
 from tqdm import tqdm
 
@@ -70,14 +70,14 @@ def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterabl
 
 @traceable
 def build_vectorstore() -> VectorStore:
-    print(f"[build_vectorstore] building vectorstore..")
+    print("[build_vectorstore] building vectorstore..")
     vectorstore = get_vectorstore()
 
     for path in get_documents_dir().glob("*.pdf"):
         print(f"adding document in vectorstore: {path}")
         add_pages_to_vectorstore_in_batches(vectorstore=vectorstore, pages=get_pages(path))
 
-    print(f"[build_vectorstore] done building vectorstore")
+    print("[build_vectorstore] done building vectorstore")
     return vectorstore
 
 
