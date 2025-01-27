@@ -126,6 +126,7 @@ def main() -> None:
 
     with get_output_path().open(mode="a") as f:
         f.write("# Results\n")
+
         for query in tqdm(get_queries(), desc="querying.."):
             prompt = get_prompt(system_prompt, query, vectorstore)
             res = chat_model.invoke(prompt)
