@@ -44,6 +44,7 @@ pre-commit: lint clean-project
 test:
 	mkdir -p ${DATA_DIR}/downloads/documents
 	cp tests/assets/1.pdf ${DATA_DIR}/downloads/documents/
+	cp tests/assets/query.csv ${DATA_DIR}/downloads/
 	uv run pytest -vvv
 
 backup-repo: clean-project
