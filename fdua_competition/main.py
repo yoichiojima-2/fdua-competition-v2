@@ -95,7 +95,7 @@ def get_prompt(
         ChatPromptTemplate
         .from_messages(
             [
-                ("system", system_prompt.format(language=language),
+                ("system", system_prompt.format(language=language)),
                 ("system", f"context: {'\n'.join([page.page_content for page in vectorstore.as_retriever().invoke(query)])}"),
                 ("user", f"query: {query}"),
             ]
