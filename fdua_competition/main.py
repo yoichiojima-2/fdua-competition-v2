@@ -73,9 +73,9 @@ def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterabl
 
 
 @traceable
-def build_vectorstore() -> VectorStore:
+def build_vectorstore(model: str, embedding_class: OpenAIEmbeddings, vectorstore_class: VectorStore) -> VectorStore:
     print("[build_vectorstore] building vectorstore..")
-    vectorstore = get_vectorstore()
+    vectorstore = get_vectorstore(model=model, embedding_class=embedding_class, vectorstore_class=vectorstore_class)
 
     for path in get_documents_dir().glob("*.pdf"):
         print(f"adding document in vectorstore: {path}")
