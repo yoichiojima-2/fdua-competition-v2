@@ -1,4 +1,5 @@
 import warnings
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Iterable
@@ -11,7 +12,7 @@ from langchain_core.documents import Document
 from langchain_core.prompt_values import ChatPromptValue
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.vectorstores import InMemoryVectorStore
-from langchain_core.vectorstores.base import VectorStore
+from langchain_core.vectorstores.base import VectorStore, VectorStoreRetriever
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, ChatOpenAI, OpenAIEmbeddings
 from langsmith import traceable
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -108,14 +109,24 @@ def add_document_to_vectorstore(vectorstore: VectorStore) -> VectorStore:
 
 
 # [START: chat]
-@traceable
+
+
+@dataclass
+class GetPromptResponse:
+    value: ChatPromptValue
+    metadata: list[dict]
+
+
 def get_prompt(
     system_prompt: str,
     query: str,
-    vectorstore: VectorStore,
+    retriever: VectorStoreRetriever,
     language: str = "Japanese",
 ) -> ChatPromptValue:
-    return ChatPromptTemplate.from_messages(
+    relevant_pages = retriever.invoke(query)
+    metadata = [page.metadata for page in relevant_pages]
+
+    value = ChatPromptTemplate.from_messages(
         [
             ("system", system_prompt),
             ("system", "context: {context}"),
@@ -124,10 +135,12 @@ def get_prompt(
     ).invoke(
         {
             "language": language,
-            "context": "\n".join([page.page_content for page in vectorstore.as_retriever().invoke(query)]),
+            "context": "\n".join([page.page_content for page in relevant_pages]),
             "query": query,
         }
     )
+
+    return GetPromptResponse(value=value, metadata=metadata)
 
 
 @traceable
@@ -142,26 +155,38 @@ def get_chat_model(opt: str) -> ChatOpenAI:
 # [END: chat]
 
 
+def parse_metadata(metadata: list[dict]) -> str:
+    return ",  ".join([f"p{data['page']} - {Path(data['source']).name}" for data in metadata])
+
+
 @traceable
 def main() -> None:
     chat_model = get_chat_model("azure")
     system_prompt = "Answer the following question based only on the provided context in {language}"
 
     embedding_model = get_embedding_model("azure")
-    vectorstore = get_vectorstore("chroma", embedding_model)
+    retriever = get_vectorstore("chroma", embedding_model).as_retriever()
     # add_document_to_vectorstore(vectorstore)
 
     with get_output_path().open(mode="a") as f:
         f.write("# Results\n")
 
         for query in tqdm(get_queries(), desc="querying.."):
-            prompt = get_prompt(system_prompt, query, vectorstore)
-            res = chat_model.invoke(prompt)
+            prompt = get_prompt(system_prompt, query, retriever)
+            res = chat_model.invoke(prompt.value)
 
+            print(f"query: {query}")
             f.write(f"## {query}\n")
-            f.write(f"{res.content}\n\n")
 
-            print(f"query: {query}\noutput: {res.content}\n\n")
+            print(f"output: {res.content}")
+            f.write(f"{res.content}\n")
+
+            parsed_metadata = parse_metadata(prompt.metadata)
+            print(f"source: {parsed_metadata}")
+            f.write(f"source: {parsed_metadata}\n")
+
+            print()
+            f.write("\n")
 
 
 if __name__ == "__main__":
