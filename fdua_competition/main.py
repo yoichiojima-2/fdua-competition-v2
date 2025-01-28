@@ -112,18 +112,15 @@ def add_document_to_vectorstore(vectorstore: VectorStore) -> VectorStore:
 
 
 @dataclass
-class GetPromptResponse:
+class GetPromptResult:
     value: ChatPromptValue
     metadata: list[dict]
 
 
-def get_prompt(
-    system_prompt: str,
-    query: str,
-    retriever: VectorStoreRetriever,
-    language: str = "Japanese",
-) -> ChatPromptValue:
+def get_prompt(system_prompt: str, query: str, retriever: VectorStoreRetriever, language: str = "Japanese") -> GetPromptResult:
     relevant_pages = retriever.invoke(query)
+
+    context = [page.page_content for page in relevant_pages]
     metadata = [page.metadata for page in relevant_pages]
 
     value = ChatPromptTemplate.from_messages(
@@ -135,12 +132,12 @@ def get_prompt(
     ).invoke(
         {
             "language": language,
-            "context": "\n".join([page.page_content for page in relevant_pages]),
+            "context": "\n".join(context),
             "query": query,
         }
     )
 
-    return GetPromptResponse(value=value, metadata=metadata)
+    return GetPromptResult(value=value, metadata=metadata)
 
 
 @traceable
