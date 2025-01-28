@@ -59,8 +59,8 @@ def get_embedding_model(model: str) -> OpenAIEmbeddings:
             raise ValueError(f"unknown model: {model}")
 
 
-def get_vectorstore(vectorstore: str, embeddings: OpenAIEmbeddings) -> VectorStore:
-    match vectorstore:
+def get_vectorstore(opt: str, embeddings: OpenAIEmbeddings) -> VectorStore:
+    match opt:
         case "in-memory":
             return InMemoryVectorStore(embeddings)
         case "chroma":
@@ -125,8 +125,8 @@ def get_prompt(
 
 
 @traceable
-def get_chat_model(model: str) -> ChatOpenAI:
-    match model:
+def get_chat_model(opt: str) -> ChatOpenAI:
+    match opt:
         case "azure":
             return AzureChatOpenAI(azure_deployment="4omini")
         case _:
