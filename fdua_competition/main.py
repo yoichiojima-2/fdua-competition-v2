@@ -71,7 +71,7 @@ def build_vectorstore(model: str, embedding_class: OpenAIEmbeddings, vectorstore
     vectorstore = vectorstore_class(embedding=embeddings)
 
     for path in get_documents_dir().glob("*.pdf"):
-        print(f"adding document in vectorstore: {path}")
+        print(f"adding document to vectorstore: {path}")
         add_pages_to_vectorstore_in_batches(vectorstore=vectorstore, pages=get_pages(path))
 
     print("[build_vectorstore] done building vectorstore")
