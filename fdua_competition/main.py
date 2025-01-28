@@ -44,14 +44,14 @@ def get_pages(filename: str) -> Iterable[Document]:
         yield doc
 
 
-@retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=4, max=60))
 @traceable
+@retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=4, max=60))
 def add_documents_with_retry(vectorstore, batch):
     vectorstore.add_documents(batch)
 
 
 @traceable
-def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterable[Document], batch_size: int = 5) -> None:
+def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterable[Document], batch_size: int = 80) -> None:
     batch = []
     for page in tqdm(pages, desc="adding pages.."):
         batch.append(page)
