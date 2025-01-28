@@ -1,7 +1,7 @@
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import AzureOpenAIEmbeddings
 
-from fdua_competition.main import get_chat_model, get_documents_dir, get_pages, get_prompt, get_queries, get_vectorstore
+from fdua_competition.main import get_chat_model, get_documents_dir, get_pages, get_prompt, get_queries
 
 
 def test_document_dir():
@@ -13,23 +13,11 @@ def test_get_pages():
     assert len(pages) > 0
 
 
-def test_get_vectorstore():
-    vectorstore = get_vectorstore(
-        model="embedding",
-        embedding_class=AzureOpenAIEmbeddings,
-        vectorstore_class=InMemoryVectorStore,
-    )
-    assert vectorstore
-
-
 def test_prompt():
     system_prompt = "test system prompt: {language}"
     query = "test query"
-    vectorstore = get_vectorstore(
-        model="embedding",
-        embedding_class=AzureOpenAIEmbeddings,
-        vectorstore_class=InMemoryVectorStore,
-    )
+    embeddings = AzureOpenAIEmbeddings(model="embedding")
+    vectorstore = InMemoryVectorStore(embeddings)
     prompt = get_prompt(system_prompt, query, vectorstore)
     assert prompt
 
