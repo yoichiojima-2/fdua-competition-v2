@@ -34,8 +34,13 @@ def test_prompt():
 
 
 def test_get_chat_model():
-    chat_model = get_chat_model()
+    chat_model = get_chat_model("azure")
     assert chat_model
+    try:
+        get_chat_model("should_raise_err")
+        assert False
+    except ValueError:
+        assert True
 
 
 def test_get_queries():

@@ -103,8 +103,12 @@ def get_prompt(
 
 
 @traceable
-def get_chat_model() -> ChatOpenAI:
-    return AzureChatOpenAI(azure_deployment="4omini")
+def get_chat_model(model: str) -> ChatOpenAI:
+    match model:
+        case "azure":
+            return AzureChatOpenAI(azure_deployment="4omini")
+        case _:
+            raise ValueError(f"unknown model: {model}")
 
 
 @traceable
@@ -116,7 +120,7 @@ def main() -> None:
         embedding_class=AzureOpenAIEmbeddings,
         vectorstore_class=InMemoryVectorStore,
     )
-    chat_model = get_chat_model()
+    chat_model = get_chat_model("azure")
 
     with get_output_path().open(mode="a") as f:
         f.write("# Results\n")
