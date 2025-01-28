@@ -1,6 +1,7 @@
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import AzureOpenAIEmbeddings
-from fdua_competition.main import get_root, get_documents_dir, get_queries, get_pages, get_vectorstore, get_prompt, get_chat_model
+
+from fdua_competition.main import get_chat_model, get_documents_dir, get_pages, get_prompt, get_queries, get_vectorstore
 
 
 def test_document_dir():
