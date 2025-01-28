@@ -5,6 +5,7 @@ from typing import Iterable
 
 import pandas as pd
 from dotenv import load_dotenv
+from langchain_chroma import Chroma
 from langchain_community.document_loaders import PyPDFium2Loader
 from langchain_core.documents import Document
 from langchain_core.prompt_values import ChatPromptValue
@@ -17,6 +18,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from tqdm import tqdm
 
 
+# [START: paths]
 def get_root() -> Path:
     return Path().home() / ".fdua-competition"
 
@@ -29,19 +31,46 @@ def get_output_path() -> Path:
     output_dir = Path(__file__).parent.parent / "result"
     output_dir.mkdir(exist_ok=True, parents=True)
     return output_dir / f"result_{datetime.now().strftime('%Y%m%d_%H%M')}.md"
+# [END: paths]
 
 
+# [START: queries]
 @traceable
 def get_queries() -> list[str]:
     df = pd.read_csv(get_root() / "downloads/query.csv")
     return df["problem"].tolist()
+# [END: queries]
 
 
+# [START: vectorstores]
 @traceable
 def get_pages(filename: str) -> Iterable[Document]:
     pdf_path = get_documents_dir() / filename
     for doc in PyPDFium2Loader(pdf_path).lazy_load():
         yield doc
+
+
+@traceable
+def get_embedding_model(model: str) -> OpenAIEmbeddings:
+    match model:
+        case "azure":
+            return AzureOpenAIEmbeddings(azure_deployment="embedding")
+        case _:
+            raise ValueError(f"unknown model: {model}")
+
+
+def get_vectorstore(vectorstore: str, embeddings: OpenAIEmbeddings) -> VectorStore:
+    match vectorstore:
+        case "in-memory":
+            return InMemoryVectorStore(embeddings)
+        case "chroma":
+            return Chroma(
+                collection_name="fdua-competition",
+                embedding_function=embeddings,
+                persist_directory=str(get_root() / "vectorstore/chroma"),
+            )
+        case _:
+            raise ValueError(f"unknown vectorstore: {vectorstore}")
 
 
 @traceable
@@ -51,7 +80,7 @@ def add_documents_with_retry(vectorstore, batch):
 
 
 @traceable
-def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterable[Document], batch_size: int = 80) -> None:
+def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterable[Document], batch_size: int = 8) -> None:
     batch = []
     for page in tqdm(pages, desc="adding pages.."):
         batch.append(page)
@@ -61,24 +90,18 @@ def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterabl
 
     # add any remaining documents in the last batch
     if batch:
-        vectorstore.add_documents(batch)
+        add_documents_with_retry(vectorstore=vectorstore, batch=batch)
 
 
 @traceable
-def build_vectorstore(model: str, embedding_class: OpenAIEmbeddings, vectorstore_class: VectorStore) -> VectorStore:
-    print("[build_vectorstore] building vectorstore..")
-    embeddings = embedding_class(model=model)
-    vectorstore = vectorstore_class(embedding=embeddings)
-
+def add_document_to_vectorstore(vectorstore: VectorStore) -> VectorStore:
     for path in get_documents_dir().glob("*.pdf"):
         print(f"adding document to vectorstore: {path}")
         add_pages_to_vectorstore_in_batches(vectorstore=vectorstore, pages=get_pages(path))
-
-    print("[build_vectorstore] done building vectorstore")
-
-    return vectorstore
+# [END: vectorstores]
 
 
+# [START: chat]
 @traceable
 def get_prompt(
     system_prompt: str,
@@ -108,19 +131,17 @@ def get_chat_model(model: str) -> ChatOpenAI:
             return AzureChatOpenAI(azure_deployment="4omini")
         case _:
             raise ValueError(f"unknown model: {model}")
+# [END: chat]
 
 
 @traceable
 def main() -> None:
-    vectorstore = build_vectorstore(
-        model="embedding",
-        embedding_class=AzureOpenAIEmbeddings,
-        vectorstore_class=InMemoryVectorStore,
-    )
-
     chat_model = get_chat_model("azure")
-
     system_prompt = "Answer the following question based only on the provided context in {language}"
+
+    embedding_model = get_embedding_model("azure")
+    vectorstore = get_vectorstore("chroma", embedding_model)
+    # add_document_to_vectorstore(vectorstore)
 
     with get_output_path().open(mode="a") as f:
         f.write("# Results\n")
@@ -132,7 +153,7 @@ def main() -> None:
             f.write(f"## {query}\n")
             f.write(f"{res.content}\n\n")
 
-            print(f"done\nquery: {query}\noutput: {res.content}\n\n")
+            print(f"query: {query}\noutput: {res.content}\n\n")
 
 
 if __name__ == "__main__":
