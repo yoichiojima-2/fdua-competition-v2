@@ -112,14 +112,15 @@ def get_chat_model(model: str) -> ChatOpenAI:
 
 @traceable
 def main() -> None:
-    system_prompt = "Answer the following question based only on the provided context in {language}"
-
     vectorstore = build_vectorstore(
         model="embedding",
         embedding_class=AzureOpenAIEmbeddings,
         vectorstore_class=InMemoryVectorStore,
     )
+
     chat_model = get_chat_model("azure")
+
+    system_prompt = "Answer the following question based only on the provided context in {language}"
 
     with get_output_path().open(mode="a") as f:
         f.write("# Results\n")
