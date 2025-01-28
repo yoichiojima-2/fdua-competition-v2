@@ -31,7 +31,6 @@ def get_output_path() -> Path:
     return output_dir / f"result_{datetime.now().strftime('%Y%m%d_%H%M')}.md"
 
 
-
 @traceable
 def get_queries() -> list[str]:
     df = pd.read_csv(get_root() / "downloads/query.csv")
@@ -43,12 +42,6 @@ def get_pages(filename: str) -> Iterable[Document]:
     pdf_path = get_documents_dir() / filename
     for doc in PyPDFium2Loader(pdf_path).lazy_load():
         yield doc
-
-
-@traceable
-def get_vectorstore(model: str, embedding_class: OpenAIEmbeddings, vectorstore_class: VectorStore) -> VectorStore:
-    embeddings = embedding_class(model=model)
-    return vectorstore_class(embedding=embeddings)
 
 
 @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=4, max=60))
@@ -74,13 +67,15 @@ def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterabl
 @traceable
 def build_vectorstore(model: str, embedding_class: OpenAIEmbeddings, vectorstore_class: VectorStore) -> VectorStore:
     print("[build_vectorstore] building vectorstore..")
-    vectorstore = get_vectorstore(model=model, embedding_class=embedding_class, vectorstore_class=vectorstore_class)
+    embeddings = embedding_class(model=model)
+    vectorstore = vectorstore_class(embedding=embeddings)
 
     for path in get_documents_dir().glob("*.pdf"):
         print(f"adding document in vectorstore: {path}")
         add_pages_to_vectorstore_in_batches(vectorstore=vectorstore, pages=get_pages(path))
 
     print("[build_vectorstore] done building vectorstore")
+
     return vectorstore
 
 
@@ -91,14 +86,18 @@ def get_prompt(
     vectorstore: VectorStore,
     language: str = "Japanese",
 ) -> ChatPromptValue:
-    return (
-        ChatPromptTemplate.from_messages(
-            [
-                ("system", system_prompt.format(language=language)),
-                ("system", f"context: {'\n'.join([page.page_content for page in vectorstore.as_retriever().invoke(query)])}"),
-                ("user", f"query: {query}"),
-            ]
-        )
+    return ChatPromptTemplate.from_messages(
+        [
+            ("system", system_prompt),
+            ("system", "context: {context}"),
+            ("user", "query: {query}"),
+        ]
+    ).invoke(
+        {
+            "language": language,
+            "context": "\n".join([page.page_content for page in vectorstore.as_retriever().invoke(query)]),
+            "query": query,
+        }
     )
 
 
