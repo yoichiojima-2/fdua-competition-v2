@@ -30,8 +30,8 @@ def test_get_prompt():
     system_prompt = "test system prompt: {language}"
     query = "test query"
     embeddings = AzureOpenAIEmbeddings(model="embedding")
-    vectorstore = InMemoryVectorStore(embeddings)
-    prompt = get_prompt(system_prompt, query, vectorstore)
+    retriever = InMemoryVectorStore(embeddings).as_retriever()
+    prompt = get_prompt(system_prompt, query, retriever)
     assert prompt
 
 
