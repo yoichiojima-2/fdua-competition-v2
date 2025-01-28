@@ -51,12 +51,12 @@ def get_pages(filename: str) -> Iterable[Document]:
 
 
 @traceable
-def get_embedding_model(model: str) -> OpenAIEmbeddings:
-    match model:
+def get_embedding_model(opt: str) -> OpenAIEmbeddings:
+    match opt:
         case "azure":
             return AzureOpenAIEmbeddings(azure_deployment="embedding")
         case _:
-            raise ValueError(f"unknown model: {model}")
+            raise ValueError(f"unknown model: {opt}")
 
 
 def get_vectorstore(opt: str, embeddings: OpenAIEmbeddings) -> VectorStore:
@@ -70,7 +70,7 @@ def get_vectorstore(opt: str, embeddings: OpenAIEmbeddings) -> VectorStore:
                 persist_directory=str(get_root() / "vectorstore/chroma"),
             )
         case _:
-            raise ValueError(f"unknown vectorstore: {vectorstore}")
+            raise ValueError(f"unknown vectorstore: {opt}")
 
 
 @traceable
@@ -130,7 +130,7 @@ def get_chat_model(opt: str) -> ChatOpenAI:
         case "azure":
             return AzureChatOpenAI(azure_deployment="4omini")
         case _:
-            raise ValueError(f"unknown model: {model}")
+            raise ValueError(f"unknown model: {opt}")
 # [END: chat]
 
 
