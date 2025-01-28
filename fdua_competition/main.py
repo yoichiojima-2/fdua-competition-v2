@@ -31,6 +31,8 @@ def get_output_path() -> Path:
     output_dir = Path(__file__).parent.parent / "result"
     output_dir.mkdir(exist_ok=True, parents=True)
     return output_dir / f"result_{datetime.now().strftime('%Y%m%d_%H%M')}.md"
+
+
 # [END: paths]
 
 
@@ -39,6 +41,8 @@ def get_output_path() -> Path:
 def get_queries() -> list[str]:
     df = pd.read_csv(get_root() / "downloads/query.csv")
     return df["problem"].tolist()
+
+
 # [END: queries]
 
 
@@ -80,11 +84,7 @@ def add_documents_with_retry(vectorstore: VectorStore, batch: list[Document]) ->
 
 
 @traceable
-def add_pages_to_vectorstore_in_batches(
-    vectorstore: VectorStore,
-    pages: Iterable[Document],
-    batch_size: int = 8
-) -> None:
+def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterable[Document], batch_size: int = 8) -> None:
     batch = []
     for page in tqdm(pages, desc="adding pages.."):
         batch.append(page)
@@ -102,6 +102,8 @@ def add_document_to_vectorstore(vectorstore: VectorStore) -> VectorStore:
     for path in get_documents_dir().glob("*.pdf"):
         print(f"adding document to vectorstore: {path}")
         add_pages_to_vectorstore_in_batches(vectorstore=vectorstore, pages=get_pages(path))
+
+
 # [END: vectorstores]
 
 
@@ -135,6 +137,8 @@ def get_chat_model(opt: str) -> ChatOpenAI:
             return AzureChatOpenAI(azure_deployment="4omini")
         case _:
             raise ValueError(f"unknown model: {opt}")
+
+
 # [END: chat]
 
 
