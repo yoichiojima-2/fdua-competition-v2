@@ -75,12 +75,16 @@ def get_vectorstore(opt: str, embeddings: OpenAIEmbeddings) -> VectorStore:
 
 @traceable
 @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=4, max=60))
-def add_documents_with_retry(vectorstore, batch):
+def add_documents_with_retry(vectorstore: VectorStore, batch: list[Document]) -> None:
     vectorstore.add_documents(batch)
 
 
 @traceable
-def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterable[Document], batch_size: int = 8) -> None:
+def add_pages_to_vectorstore_in_batches(
+    vectorstore: VectorStore,
+    pages: Iterable[Document],
+    batch_size: int = 8
+) -> None:
     batch = []
     for page in tqdm(pages, desc="adding pages.."):
         batch.append(page)
