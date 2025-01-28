@@ -64,7 +64,7 @@ def test_get_embedding_model():
 
 
 def test_get_vectorstore():
-    embeddings = get_embedding_model(model="azure")
+    embeddings = get_embedding_model("azure")
 
     in_memory_vectorstore = get_vectorstore("in-memory", embeddings)
     assert isinstance(in_memory_vectorstore, InMemoryVectorStore)
