@@ -29,7 +29,7 @@ def get_documents_dir() -> Path:
 
 
 def get_output_path() -> Path:
-    output_dir = Path(__file__).parent.parent / "result"
+    output_dir = get_root() / "result"
     output_dir.mkdir(exist_ok=True, parents=True)
     return output_dir / f"result_{datetime.now().strftime('%Y%m%d_%H%M')}.md"
 
