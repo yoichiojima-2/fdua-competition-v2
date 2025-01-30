@@ -1,3 +1,4 @@
+import os
 import warnings
 from dataclasses import dataclass
 from datetime import datetime
@@ -21,7 +22,7 @@ from tqdm import tqdm
 
 # [START: paths]
 def get_root() -> Path:
-    return Path().home() / ".fdua-competition"
+    return Path(os.getenv("FDUA_DIR")).expanduser()
 
 
 def get_documents_dir() -> Path:
