@@ -174,4 +174,4 @@ cython_debug/
 .ruff_cache
 
 # project specific
-hands-on
+.fdua-competition
