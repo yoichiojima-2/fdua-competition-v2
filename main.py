@@ -1,7 +1,5 @@
-import os
 import warnings
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 from typing import Iterable
 
@@ -19,20 +17,22 @@ from langsmith import traceable
 from tenacity import retry, stop_after_attempt, wait_exponential
 from tqdm import tqdm
 
+TAG = "simple"
+
 
 # [START: paths]
 def get_root() -> Path:
-    return Path(os.getenv("FDUA_DIR")).expanduser()
+    return Path(__file__).parent / ".fdua-competition"
 
 
 def get_documents_dir() -> Path:
-    return get_root() / "downloads/documents"
+    return get_root() / "documents"
 
 
 def get_output_path() -> Path:
-    output_dir = get_root() / "result"
+    output_dir = get_root() / "results/"
     output_dir.mkdir(exist_ok=True, parents=True)
-    return output_dir / f"result_{datetime.now().strftime('%Y%m%d_%H%M')}.md"
+    return output_dir / f"result_{TAG}.md"
 
 
 # [END: paths]
@@ -41,7 +41,7 @@ def get_output_path() -> Path:
 # [START: queries]
 @traceable
 def get_queries() -> list[str]:
-    df = pd.read_csv(get_root() / "downloads/query.csv")
+    df = pd.read_csv(get_root() / "query.csv")
     return df["problem"].tolist()
 
 
@@ -163,8 +163,9 @@ def main() -> None:
     system_prompt = "Answer the following question based only on the provided context in {language}"
 
     embedding_model = get_embedding_model("azure")
-    retriever = get_vectorstore("chroma", embedding_model).as_retriever()
-    # add_document_to_vectorstore(vectorstore)
+    vectorstore = get_vectorstore("chroma", embedding_model)
+    add_document_to_vectorstore(vectorstore)
+    retriever = vectorstore.as_retriever()
 
     with get_output_path().open(mode="a") as f:
         f.write("# Results\n")

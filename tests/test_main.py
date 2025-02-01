@@ -4,7 +4,7 @@ from langchain_chroma import Chroma
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, OpenAIEmbeddings
 
-from fdua_competition.main import (
+from main import (
     add_documents_with_retry,
     get_chat_model,
     get_documents_dir,
