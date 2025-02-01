@@ -186,6 +186,7 @@ class Response(BaseModel):
     reason: str = Field(description="the reason for the response")
     organization_name: str = Field(description="the organization name that query is about")
     sources: list[str] = Field(description="the sources of the response")
+    context: str = Field(description="the cleansed context in given prompt")
 
 
 def main(mode: Mode, vectorstore_option: VectorStoreOption) -> None:
