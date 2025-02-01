@@ -1,8 +1,9 @@
 import argparse
 import warnings
+from enum import Enum
 from pathlib import Path
 from pprint import pprint
-from typing import Iterable, Literal
+from typing import Iterable
 
 import pandas as pd
 from dotenv import load_dotenv
@@ -14,14 +15,22 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_core.vectorstores.base import VectorStore, VectorStoreRetriever
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, ChatOpenAI, OpenAIEmbeddings
-from langsmith import traceable
 from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_exponential
 from tqdm import tqdm
 
 TAG = "simple"
-Mode = Literal["submit", "test"]
-VectorStoreOption = Literal["chroma", "in-memory"]
+
+
+class Mode(Enum):
+    submit = "submit"
+    test = "test"
+
+
+class VectorStoreOption(Enum):
+    chroma = "chroma"
+    in_memory = "in-memory"
+
 
 load_dotenv("secrets/.env")
 
@@ -94,7 +103,6 @@ def get_vectorstore(mode: Mode, opt: str, embeddings: OpenAIEmbeddings) -> Vecto
 
 def get_existing_sources(vectorstore: VectorStore) -> set[str]:
     return {metadata.get("source") for metadata in vectorstore.get().get("metadatas")}
-
 
 
 @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=4, max=60))
@@ -198,8 +206,10 @@ def main(mode: Mode, vectorstore_option: VectorStoreOption) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", "-m", type=str, choices=["test", "submit"], default="test")
-    parser.add_argument("--vectorstore", "-v", type=str, choices=["chroma", "in-memory"], default="chroma")
+    parser.add_argument("--mode", "-m", type=str, choices=[choice.value for choice in Mode], default="test")
+    parser.add_argument(
+        "--vectorstore", "-v", type=str, choices=[choice.value for choice in VectorStoreOption], default="chroma"
+    )
     return parser.parse_args()
 
 
