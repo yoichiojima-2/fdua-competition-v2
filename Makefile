@@ -1,5 +1,7 @@
-PYTHON = uv run python
-PYTEST = uv run pytest
+UV = uv run
+PYTHON = ${UV} python
+PYTEST = ${UV} pytest
+GS_PATH = "gs://yo-personal/fdua-competition"
 
 install:
 	-mkdir .fdua-competition
@@ -17,9 +19,9 @@ test:
 pre-commit: lint clean
 
 lint:
-	uv run isort .
-	uv run ruff check . --fix
-	uv run ruff format .
+	${UV} isort .
+	${UV} ruff check . --fix
+	${UV} ruff format .
 
 clean:
 	-rm -rf .venv
@@ -31,3 +33,6 @@ clean:
 	find . -type f -name ".DS_Store" -print -exec rm -r {} +
 	find . -type f -name "*.Identifier" -print -exec rm -r {} +
 
+download-assets:
+	-mkdir assets
+	gsutil -m cp -r ${GS_PATH}/assets/* assets/
