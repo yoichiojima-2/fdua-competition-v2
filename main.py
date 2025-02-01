@@ -21,6 +21,7 @@ from tqdm import tqdm
 
 TAG = "simple"
 Mode = Literal["submit", "test"]
+VectorStoreOption = Literal["chroma", "in-memory"]
 
 load_dotenv("secrets/.env")
 
@@ -181,9 +182,9 @@ class Response(BaseModel):
 
 
 @traceable
-def main(mode: Mode) -> None:
+def main(mode: Mode, vectorstore_option: VectorStoreOption) -> None:
     embedding_model = get_embedding_model("azure")
-    vectorstore = get_vectorstore(mode=mode, opt="chroma", embeddings=embedding_model)
+    vectorstore = get_vectorstore(mode=mode, opt=vectorstore_option, embeddings=embedding_model)
 
     docs = get_documents(document_dir=get_documents_dir(mode=mode))
     loaded_sources = {metadata.get("source") for metadata in vectorstore.get().get("metadatas")}
@@ -207,10 +208,11 @@ def main(mode: Mode) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", "-m", type=str, choices=["test", "submit"], default="test")
+    parser.add_argument("--vectorstore", "-v", type=str, choices=["chroma", "in-memory"], default="chroma")
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     warnings.filterwarnings("ignore", category=UserWarning)
     args = parse_args()
-    main(mode=args.mode)
+    main(mode=args.mode, vectorstore_option=args.vectorstore)
