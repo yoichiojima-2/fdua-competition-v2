@@ -16,8 +16,7 @@ jobs:
       - name: checkout repository
         uses: actions/checkout@v4
       - name: install uv
-        run: |
-          pip install --upgrade pip && pip install uv
+        run: pip install --upgrade pip && pip install uv
 
       - name: authenticate to google cloud
         uses: google-github-actions/auth@v1
@@ -33,10 +32,12 @@ jobs:
       - name: verify authentication
         run: gcloud auth list 
 
+      - name: install
+        run: make install
+
       - name: test
         env: 
           AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
           OPENAI_API_VERSION: ${{ secrets.OPENAI_API_VERSION }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
-        run: |
-          make test
+        run: make test

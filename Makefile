@@ -4,6 +4,8 @@ PYTEST = ${UV} pytest
 GS_PATH = "gs://fdua-competition"
 
 install:
+	-mkdir assets
+	gsutil -m cp -r ${GS_PATH}/assets/* assets/
 	-mkdir .fdua-competition
 	find assets -type f -name "*.zip" -print -exec unzip -o {} -d .fdua-competition/ \;
 	cp assets/query.csv .fdua-competition/
@@ -32,7 +34,3 @@ clean:
 	find . -type d -name "__MACOSX" -print -exec rm -r {} +
 	find . -type f -name ".DS_Store" -print -exec rm -r {} +
 	find . -type f -name "*.Identifier" -print -exec rm -r {} +
-
-download-assets:
-	-mkdir assets
-	gsutil -m cp -r ${GS_PATH}/assets/* assets/
