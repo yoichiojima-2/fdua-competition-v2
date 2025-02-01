@@ -176,3 +176,4 @@ cython_debug/
 # project specific
 .fdua-competition
 assets
+google-cloud-credentials.json
