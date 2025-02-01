@@ -34,9 +34,6 @@ class VectorStoreOption(Enum):
     in_memory = "in-memory"
 
 
-# [START: paths]
-
-
 def get_root() -> Path:
     return Path(__file__).parent / ".fdua-competition"
 
@@ -51,10 +48,6 @@ def get_documents_dir(mode: Mode) -> Path:
             raise ValueError(f"unknown mode: {mode}")
 
 
-# [END: paths]
-
-
-# [START: queries]
 def get_queries(mode: Mode) -> list[str]:
     match mode:
         case "test":
@@ -67,10 +60,6 @@ def get_queries(mode: Mode) -> list[str]:
             raise ValueError(f"unknown mode: {mode}")
 
 
-# [END: queries]
-
-
-# [START: vectorstores]
 def get_pages(path: Path) -> Iterable[Document]:
     for doc in PyPDFium2Loader(path).lazy_load():
         yield doc
@@ -113,8 +102,7 @@ def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterabl
         batch.append(page)
         if len(batch) == batch_size:
             add_documents_with_retry(vectorstore=vectorstore, batch=batch)
-            batch = []  # clear the batch
-    # add any remaining documents in the last batch
+            batch = []
     if batch:
         add_documents_with_retry(vectorstore=vectorstore, batch=batch)
 
@@ -131,12 +119,6 @@ def add_document_to_vectorstore(documents: list[Path], vectorstore: VectorStore)
         print(f"adding document to vectorstore: {path}")
         pages = get_pages(path=path)
         add_pages_to_vectorstore_in_batches(vectorstore=vectorstore, pages=pages)
-
-
-# [END: vectorstores]
-
-
-# [START: chat]
 
 
 def get_prompt(system_prompt: str, query: str, retriever: VectorStoreRetriever, language: str = "Japanese") -> ChatPromptValue:
@@ -165,13 +147,6 @@ def get_chat_model(opt: str) -> ChatOpenAI:
             return AzureChatOpenAI(azure_deployment="4omini")
         case _:
             raise ValueError(f"unknown model: {opt}")
-
-
-# [END: chat]
-
-
-def parse_metadata(metadata: list[dict]) -> str:
-    return ",  ".join([f"p{data['page']} - {Path(data['source']).name}" for data in metadata])
 
 
 class Response(BaseModel):
