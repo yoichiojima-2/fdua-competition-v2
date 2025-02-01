@@ -32,7 +32,7 @@ jobs:
       - name: verify authentication
         run: gcloud auth list 
 
-      - name: install
+      - name: install app
         run: make install
 
       - name: test
