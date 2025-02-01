@@ -1,5 +1,5 @@
 UV = uv run
-GS_PATH = "gs://fdua-competition"
+GS_PATH = gs://fdua-competition
 ASSETS_DIR = assets
 INSTALL_DIR = .fdua-competition
 
@@ -13,7 +13,8 @@ evaluate: install
 	${UV} python ${INSTALL_DIR}/evaluation/crag.py
 
 install: ${INSTALL_DIR}/.installed
-${INSTALL_DIR}/.installed: download-assets
+${INSTALL_DIR}/.installed: ${ASSETS_DIR}/.success
+	echo ${INSTALL_DIR}
 	-mkdir -p ${INSTALL_DIR}
 	find assets -type f -name "*.zip" -print -exec unzip -o {} -d ${INSTALL_DIR} \;
 	perl -pi -e 's/from openai import OpenAI/from openai import AzureOpenAI/' ${INSTALL_DIR}/evaluation/src/evaluator.py
