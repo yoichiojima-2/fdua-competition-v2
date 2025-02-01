@@ -47,7 +47,6 @@ def get_documents_dir(mode: Mode) -> Path:
 
 
 # [START: queries]
-@traceable
 def get_queries(mode: Mode) -> list[str]:
     match mode:
         case "test":
@@ -66,13 +65,11 @@ def get_queries(mode: Mode) -> list[str]:
 
 
 # [START: vectorstores]
-@traceable
 def get_pages(path: Path) -> Iterable[Document]:
     for doc in PyPDFium2Loader(path).lazy_load():
         yield doc
 
 
-@traceable
 def get_embedding_model(opt: str) -> OpenAIEmbeddings:
     match opt:
         case "azure":
@@ -81,7 +78,6 @@ def get_embedding_model(opt: str) -> OpenAIEmbeddings:
             raise ValueError(f"unknown model: {opt}")
 
 
-@traceable
 def get_vectorstore(mode: Mode, opt: str, embeddings: OpenAIEmbeddings) -> VectorStore:
     match opt:
         case "in-memory":
@@ -96,13 +92,16 @@ def get_vectorstore(mode: Mode, opt: str, embeddings: OpenAIEmbeddings) -> Vecto
             raise ValueError(f"unknown vectorstore: {opt}")
 
 
-@traceable
+def get_existing_sources(vectorstore: VectorStore) -> set[str]:
+    return {metadata.get("source") for metadata in vectorstore.get().get("metadatas")}
+
+
+
 @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=4, max=60))
 def add_documents_with_retry(vectorstore: VectorStore, batch: list[Document]) -> None:
     vectorstore.add_documents(batch)
 
 
-@traceable
 def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterable[Document], batch_size: int = 8) -> None:
     batch = []
     for page in tqdm(pages, desc="adding pages.."):
@@ -116,14 +115,16 @@ def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterabl
         add_documents_with_retry(vectorstore=vectorstore, batch=batch)
 
 
-@traceable
 def get_documents(document_dir: Path) -> list[Path]:
     return [path for path in document_dir.glob("*.pdf")]
 
 
-@traceable
-def add_document_to_vectorstore(documents: list[Path], vectorstore: VectorStore) -> VectorStore:
+def add_document_to_vectorstore(documents: list[Path], vectorstore: VectorStore) -> None:
+    existing_sources = get_existing_sources(vectorstore)
     for path in documents:
+        if str(path) in existing_sources:
+            continue
+
         print(f"adding document to vectorstore: {path}")
         pages = get_pages(path=path)
         add_pages_to_vectorstore_in_batches(vectorstore=vectorstore, pages=pages)
@@ -135,7 +136,6 @@ def add_document_to_vectorstore(documents: list[Path], vectorstore: VectorStore)
 # [START: chat]
 
 
-@traceable
 def get_prompt(system_prompt: str, query: str, retriever: VectorStoreRetriever, language: str = "Japanese") -> ChatPromptValue:
     relevant_pages = retriever.invoke(query)
     context = "\n".join(
@@ -157,7 +157,6 @@ def get_prompt(system_prompt: str, query: str, retriever: VectorStoreRetriever, 
     )
 
 
-@traceable
 def get_chat_model(opt: str) -> ChatOpenAI:
     match opt:
         case "azure":
@@ -169,7 +168,6 @@ def get_chat_model(opt: str) -> ChatOpenAI:
 # [END: chat]
 
 
-@traceable
 def parse_metadata(metadata: list[dict]) -> str:
     return ",  ".join([f"p{data['page']} - {Path(data['source']).name}" for data in metadata])
 
@@ -178,22 +176,15 @@ class Response(BaseModel):
     query: str = Field(description="the query that was asked")
     response: str = Field(description="the response that was given")
     reason: str = Field(description="the reason for the response")
+    organization_name: str = Field(description="the organization name that query is about")
     sources: list[str] = Field(description="the sources of the response")
 
 
-@traceable
 def main(mode: Mode, vectorstore_option: VectorStoreOption) -> None:
     embedding_model = get_embedding_model("azure")
     vectorstore = get_vectorstore(mode=mode, opt=vectorstore_option, embeddings=embedding_model)
-
     docs = get_documents(document_dir=get_documents_dir(mode=mode))
-    loaded_sources = {metadata.get("source") for metadata in vectorstore.get().get("metadatas")}
-
-    if len(docs) == len(loaded_sources):
-        print("vectorstore is already populated")
-    else:
-        add_document_to_vectorstore(docs, vectorstore)
-
+    add_document_to_vectorstore(docs, vectorstore)
     retriever = vectorstore.as_retriever()
 
     chat_model = get_chat_model("azure").with_structured_output(Response)
