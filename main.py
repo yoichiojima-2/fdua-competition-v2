@@ -21,6 +21,8 @@ from tqdm import tqdm
 
 TAG = "simple"
 
+load_dotenv("secrets/.env")
+
 
 class Mode(Enum):
     submit = "submit"
@@ -30,9 +32,6 @@ class Mode(Enum):
 class VectorStoreOption(Enum):
     chroma = "chroma"
     in_memory = "in-memory"
-
-
-load_dotenv("secrets/.env")
 
 
 # [START: paths]
@@ -61,11 +60,9 @@ def get_queries(mode: Mode) -> list[str]:
         case "test":
             df = pd.read_csv(get_root() / "validation/ans_txt.csv")
             return df["problem"].tolist()
-
         case "submit":
             df = pd.read_csv(get_root() / "query.csv")
             return df["problem"].tolist()
-
         case _:
             raise ValueError(f"unknown mode: {mode}")
 
@@ -117,7 +114,6 @@ def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterabl
         if len(batch) == batch_size:
             add_documents_with_retry(vectorstore=vectorstore, batch=batch)
             batch = []  # clear the batch
-
     # add any remaining documents in the last batch
     if batch:
         add_documents_with_retry(vectorstore=vectorstore, batch=batch)
@@ -132,7 +128,6 @@ def add_document_to_vectorstore(documents: list[Path], vectorstore: VectorStore)
     for path in documents:
         if str(path) in existing_sources:
             continue
-
         print(f"adding document to vectorstore: {path}")
         pages = get_pages(path=path)
         add_pages_to_vectorstore_in_batches(vectorstore=vectorstore, pages=pages)
@@ -149,7 +144,6 @@ def get_prompt(system_prompt: str, query: str, retriever: VectorStoreRetriever, 
     context = "\n".join(
         ["\n".join([f"metadata: {page.metadata}", f"page_content: {page.page_content}"]) for page in relevant_pages]
     )
-
     return ChatPromptTemplate.from_messages(
         [
             ("system", system_prompt),
