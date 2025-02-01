@@ -1,6 +1,4 @@
 UV = uv run
-PYTHON = ${UV} python
-PYTEST = ${UV} pytest
 GS_PATH = "gs://fdua-competition"
 
 install:
@@ -13,10 +11,10 @@ install:
 	make clean
 
 run:
-	${PYTHON} -m main
+	${UV} python -m main
 
 test:
-	${PYTEST} -vvv
+	${UV} pytest -vvv
 
 pre-commit: lint clean
 
