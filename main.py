@@ -1,6 +1,6 @@
 import warnings
-from dataclasses import dataclass
 from pathlib import Path
+from pprint import pprint
 from typing import Iterable
 
 import pandas as pd
@@ -14,9 +14,9 @@ from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_core.vectorstores.base import VectorStore, VectorStoreRetriever
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, ChatOpenAI, OpenAIEmbeddings
 from langsmith import traceable
+from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_exponential
 from tqdm import tqdm
-
 
 TAG = "simple"
 load_dotenv("secrets/.env")
@@ -114,19 +114,13 @@ def add_document_to_vectorstore(vectorstore: VectorStore) -> VectorStore:
 # [START: chat]
 
 
-@dataclass
-class GetPromptResult:
-    value: ChatPromptValue
-    metadata: list[dict]
-
-
-def get_prompt(system_prompt: str, query: str, retriever: VectorStoreRetriever, language: str = "Japanese") -> GetPromptResult:
+def get_prompt(system_prompt: str, query: str, retriever: VectorStoreRetriever, language: str = "Japanese") -> ChatPromptValue:
     relevant_pages = retriever.invoke(query)
+    context = "\n".join(
+        ["\n".join([f"metadata: {page.metadata}", f"page_content: {page.page_content}"]) for page in relevant_pages]
+    )
 
-    context = [page.page_content for page in relevant_pages]
-    metadata = [page.metadata for page in relevant_pages]
-
-    value = ChatPromptTemplate.from_messages(
+    return ChatPromptTemplate.from_messages(
         [
             ("system", system_prompt),
             ("system", "context: {context}"),
@@ -139,8 +133,6 @@ def get_prompt(system_prompt: str, query: str, retriever: VectorStoreRetriever, 
             "query": query,
         }
     )
-
-    return GetPromptResult(value=value, metadata=metadata)
 
 
 @traceable
@@ -159,14 +151,21 @@ def parse_metadata(metadata: list[dict]) -> str:
     return ",  ".join([f"p{data['page']} - {Path(data['source']).name}" for data in metadata])
 
 
+class Response(BaseModel):
+    query: str = Field(description="the query that was asked")
+    response: str = Field(description="the response that was given")
+    reason: str = Field(description="the reason for the response")
+    sources: list[str] = Field(description="the sources of the response")
+
+
 @traceable
 def main() -> None:
-    chat_model = get_chat_model("azure")
+    chat_model = get_chat_model("azure").with_structured_output(Response)
     system_prompt = "Answer the following question based only on the provided context in {language}"
 
     embedding_model = get_embedding_model("azure")
     vectorstore = get_vectorstore("chroma", embedding_model)
-    add_document_to_vectorstore(vectorstore)
+    # add_document_to_vectorstore(vectorstore)
     retriever = vectorstore.as_retriever()
 
     with get_output_path().open(mode="a") as f:
@@ -174,20 +173,8 @@ def main() -> None:
 
         for query in tqdm(get_queries(), desc="querying.."):
             prompt = get_prompt(system_prompt, query, retriever)
-            res = chat_model.invoke(prompt.value)
-
-            print(f"query: {query}")
-            f.write(f"## {query}\n")
-
-            print(f"output: {res.content}")
-            f.write(f"{res.content}\n")
-
-            parsed_metadata = parse_metadata(prompt.metadata)
-            print(f"source: {parsed_metadata}")
-            f.write(f"source: {parsed_metadata}\n")
-
-            print()
-            f.write("\n")
+            res = chat_model.invoke(prompt)
+            pprint(res)
 
 
 if __name__ == "__main__":
