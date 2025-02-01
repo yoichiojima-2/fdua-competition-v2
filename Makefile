@@ -1,7 +1,7 @@
 UV = uv run
 PYTHON = ${UV} python
 PYTEST = ${UV} pytest
-GS_PATH = "gs://yo-personal/fdua-competition"
+GS_PATH = "gs://fdua-competition"
 
 install:
 	-mkdir .fdua-competition
