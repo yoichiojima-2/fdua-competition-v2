@@ -4,7 +4,7 @@ ASSETS_DIR = assets
 INSTALL_DIR = .fdua-competition
 
 run: install
-	${UV} python -m main
+	${UV} python -m main --mode test
 
 test: install
 	${UV} pytest -vvv

@@ -1,7 +1,8 @@
+import argparse
 import warnings
 from pathlib import Path
 from pprint import pprint
-from typing import Iterable
+from typing import Iterable, Literal
 
 import pandas as pd
 from dotenv import load_dotenv
@@ -19,22 +20,26 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from tqdm import tqdm
 
 TAG = "simple"
+Mode = Literal["submit", "test"]
+
 load_dotenv("secrets/.env")
 
 
 # [START: paths]
+
+
 def get_root() -> Path:
     return Path(__file__).parent / ".fdua-competition"
 
 
-def get_documents_dir() -> Path:
-    return get_root() / "documents"
-
-
-def get_output_path() -> Path:
-    output_dir = get_root() / "results/"
-    output_dir.mkdir(exist_ok=True, parents=True)
-    return output_dir / f"result_{TAG}.md"
+def get_documents_dir(mode: Mode) -> Path:
+    match mode:
+        case "test":
+            return get_root() / "validation/documents"
+        case "submit":
+            return get_root() / "documents"
+        case _:
+            raise ValueError(f"unknown mode: {mode}")
 
 
 # [END: paths]
@@ -42,9 +47,18 @@ def get_output_path() -> Path:
 
 # [START: queries]
 @traceable
-def get_queries() -> list[str]:
-    df = pd.read_csv(get_root() / "query.csv")
-    return df["problem"].tolist()
+def get_queries(mode: Mode) -> list[str]:
+    match mode:
+        case "test":
+            df = pd.read_csv(get_root() / "validation/ans_txt.csv")
+            return df["problem"].tolist()
+
+        case "submit":
+            df = pd.read_csv(get_root() / "query.csv")
+            return df["problem"].tolist()
+
+        case _:
+            raise ValueError(f"unknown mode: {mode}")
 
 
 # [END: queries]
@@ -52,9 +66,8 @@ def get_queries() -> list[str]:
 
 # [START: vectorstores]
 @traceable
-def get_pages(filename: str) -> Iterable[Document]:
-    pdf_path = get_documents_dir() / filename
-    for doc in PyPDFium2Loader(pdf_path).lazy_load():
+def get_pages(path: Path) -> Iterable[Document]:
+    for doc in PyPDFium2Loader(path).lazy_load():
         yield doc
 
 
@@ -67,13 +80,14 @@ def get_embedding_model(opt: str) -> OpenAIEmbeddings:
             raise ValueError(f"unknown model: {opt}")
 
 
-def get_vectorstore(opt: str, embeddings: OpenAIEmbeddings) -> VectorStore:
+@traceable
+def get_vectorstore(mode: Mode, opt: str, embeddings: OpenAIEmbeddings) -> VectorStore:
     match opt:
         case "in-memory":
             return InMemoryVectorStore(embeddings)
         case "chroma":
             return Chroma(
-                collection_name="fdua-competition",
+                collection_name=f"fdua-competition_{TAG}_{mode}",
                 embedding_function=embeddings,
                 persist_directory=str(get_root() / "vectorstore/chroma"),
             )
@@ -102,10 +116,16 @@ def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterabl
 
 
 @traceable
-def add_document_to_vectorstore(vectorstore: VectorStore) -> VectorStore:
-    for path in get_documents_dir().glob("*.pdf"):
+def get_documents(document_dir: Path) -> list[Path]:
+    return [path for path in document_dir.glob("*.pdf")]
+
+
+@traceable
+def add_document_to_vectorstore(documents: list[Path], vectorstore: VectorStore) -> VectorStore:
+    for path in documents:
         print(f"adding document to vectorstore: {path}")
-        add_pages_to_vectorstore_in_batches(vectorstore=vectorstore, pages=get_pages(path))
+        pages = get_pages(path=path)
+        add_pages_to_vectorstore_in_batches(vectorstore=vectorstore, pages=pages)
 
 
 # [END: vectorstores]
@@ -114,6 +134,7 @@ def add_document_to_vectorstore(vectorstore: VectorStore) -> VectorStore:
 # [START: chat]
 
 
+@traceable
 def get_prompt(system_prompt: str, query: str, retriever: VectorStoreRetriever, language: str = "Japanese") -> ChatPromptValue:
     relevant_pages = retriever.invoke(query)
     context = "\n".join(
@@ -147,6 +168,7 @@ def get_chat_model(opt: str) -> ChatOpenAI:
 # [END: chat]
 
 
+@traceable
 def parse_metadata(metadata: list[dict]) -> str:
     return ",  ".join([f"p{data['page']} - {Path(data['source']).name}" for data in metadata])
 
@@ -159,24 +181,36 @@ class Response(BaseModel):
 
 
 @traceable
-def main() -> None:
+def main(mode: Mode) -> None:
+    embedding_model = get_embedding_model("azure")
+    vectorstore = get_vectorstore(mode=mode, opt="chroma", embeddings=embedding_model)
+
+    docs = get_documents(document_dir=get_documents_dir(mode=mode))
+    loaded_sources = {metadata.get("source") for metadata in vectorstore.get().get("metadatas")}
+
+    if len(docs) == len(loaded_sources):
+        print("vectorstore is already populated")
+    else:
+        add_document_to_vectorstore(docs, vectorstore)
+
+    retriever = vectorstore.as_retriever()
+
     chat_model = get_chat_model("azure").with_structured_output(Response)
     system_prompt = "Answer the following question based only on the provided context in {language}"
 
-    embedding_model = get_embedding_model("azure")
-    vectorstore = get_vectorstore("chroma", embedding_model)
-    # add_document_to_vectorstore(vectorstore)
-    retriever = vectorstore.as_retriever()
+    for query in tqdm(get_queries(mode=mode), desc="querying.."):
+        prompt = get_prompt(system_prompt, query, retriever)
+        res = chat_model.invoke(prompt)
+        pprint(res)
 
-    with get_output_path().open(mode="a") as f:
-        f.write("# Results\n")
 
-        for query in tqdm(get_queries(), desc="querying.."):
-            prompt = get_prompt(system_prompt, query, retriever)
-            res = chat_model.invoke(prompt)
-            pprint(res)
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mode", "-m", type=str, choices=["test", "submit"], default="test")
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
     warnings.filterwarnings("ignore", category=UserWarning)
-    main()
+    args = parse_args()
+    main(mode=args.mode)

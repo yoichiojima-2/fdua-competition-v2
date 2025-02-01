@@ -18,11 +18,11 @@ from main import (
 
 
 def test_get_document_dir():
-    assert get_documents_dir().name == "documents"
+    assert get_documents_dir("submit").name == "documents"
 
 
 def test_get_pages():
-    pages = list(get_pages("1.pdf"))
+    pages = list(get_pages(get_documents_dir("test") / "1.pdf"))
     assert len(pages)
 
 
@@ -47,7 +47,7 @@ def test_get_chat_model():
 
 
 def test_get_queries():
-    queries = get_queries()
+    queries = get_queries(mode="test")
     assert isinstance(queries, list)
     assert queries
 
@@ -66,15 +66,15 @@ def test_get_embedding_model():
 def test_get_vectorstore():
     embeddings = get_embedding_model("azure")
 
-    in_memory_vectorstore = get_vectorstore("in-memory", embeddings)
+    in_memory_vectorstore = get_vectorstore(mode="test", opt="in-memory", embeddings=embeddings)
     assert isinstance(in_memory_vectorstore, InMemoryVectorStore)
 
-    chroma = get_vectorstore("chroma", embeddings)
+    chroma = get_vectorstore(mode="test", opt="chroma", embeddings=embeddings)
     assert isinstance(chroma, Chroma)
     assert Path(get_root() / "vectorstore/chroma").exists()
 
     try:
-        get_vectorstore("should_raise_err", embeddings)
+        get_vectorstore(mode="test", opt="should_raise_err", embeddings=embeddings)
         assert False
     except ValueError:
         assert True
