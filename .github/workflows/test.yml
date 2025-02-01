@@ -32,13 +32,18 @@ jobs:
       - name: verify authentication
         run: gcloud auth list 
 
+      - name: set FDUA_DIR globally
+        run: echo "FDUA_DIR=$(pwd)" >> $GITHUB_ENV
+
       - name: install app
+        env:
+          FDUA_DIR: ${{ env.FDUA_DIR }}
         run: |
-          export FDUA_DIR=$(pwd)
           make install
 
       - name: test
         env: 
+          FDUA_DIR: ${{ env.FDUA_DIR }}
           AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
           OPENAI_API_VERSION: ${{ secrets.OPENAI_API_VERSION }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
