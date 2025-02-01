@@ -1,4 +1,5 @@
 import argparse
+import os
 import warnings
 from enum import Enum
 from pathlib import Path
@@ -35,7 +36,7 @@ class VectorStoreOption(Enum):
 
 
 def get_root() -> Path:
-    return Path(__file__).parent / ".fdua-competition"
+    return Path(os.getenv("FDUA_DIR")) / ".fdua-competition"
 
 
 def get_documents_dir(mode: Mode) -> Path:
