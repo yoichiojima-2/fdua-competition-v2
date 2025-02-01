@@ -45,7 +45,7 @@ def get_documents_dir(mode: Mode) -> Path:
         case "submit":
             return get_root() / "documents"
         case _:
-            raise ValueError(f"unknown mode: {mode}")
+            raise ValueError(f"): unknown mode: {mode}")
 
 
 def get_queries(mode: Mode) -> list[str]:
@@ -57,7 +57,7 @@ def get_queries(mode: Mode) -> list[str]:
             df = pd.read_csv(get_root() / "query.csv")
             return df["problem"].tolist()
         case _:
-            raise ValueError(f"unknown mode: {mode}")
+            raise ValueError(f"): unknown mode: {mode}")
 
 
 def get_pages(path: Path) -> Iterable[Document]:
@@ -70,7 +70,7 @@ def get_embedding_model(opt: str) -> OpenAIEmbeddings:
         case "azure":
             return AzureOpenAIEmbeddings(azure_deployment="embedding")
         case _:
-            raise ValueError(f"unknown model: {opt}")
+            raise ValueError(f"): unknown model: {opt}")
 
 
 def get_vectorstore(mode: Mode, opt: str, embeddings: OpenAIEmbeddings) -> VectorStore:
@@ -84,7 +84,7 @@ def get_vectorstore(mode: Mode, opt: str, embeddings: OpenAIEmbeddings) -> Vecto
                 persist_directory=str(get_root() / "vectorstore/chroma"),
             )
         case _:
-            raise ValueError(f"unknown vectorstore: {opt}")
+            raise ValueError(f"): unknown vectorstore: {opt}")
 
 
 def get_existing_sources(vectorstore: VectorStore) -> set[str]:
@@ -158,20 +158,11 @@ class Response(BaseModel):
     context: str = Field(description="the cleansed context in given prompt")
 
 
-def main(mode: Mode, vectorstore_option: VectorStoreOption) -> None:
-    embedding_model = get_embedding_model("azure")
-    vectorstore = get_vectorstore(mode=mode, opt=vectorstore_option, embeddings=embedding_model)
-    docs = get_documents(document_dir=get_documents_dir(mode=mode))
-    add_document_to_vectorstore(docs, vectorstore)
-    retriever = vectorstore.as_retriever()
-
-    chat_model = get_chat_model("azure").with_structured_output(Response)
-    system_prompt = "Answer the following question based only on the provided context in {language}"
-
-    for query in tqdm(get_queries(mode=mode), desc="querying.."):
-        prompt = get_prompt(system_prompt, query, retriever)
-        res = chat_model.invoke(prompt)
-        pprint(res)
+def write_result(responses: list[Response], mode: Mode) -> None:
+    output_path = get_root() / f"results/output_{TAG}_{mode}.csv"
+    df = pd.DataFrame([{"response": res.response} for res in responses])
+    df.to_csv(output_path, header=False)
+    print(f"[write_result] done: {output_path}")
 
 
 def parse_args() -> argparse.Namespace:
@@ -181,6 +172,30 @@ def parse_args() -> argparse.Namespace:
         "--vectorstore", "-v", type=str, choices=[choice.value for choice in VectorStoreOption], default="chroma"
     )
     return parser.parse_args()
+
+
+def main(mode: Mode, vectorstore_option: VectorStoreOption) -> None:
+    embedding_model = get_embedding_model("azure")
+    vectorstore = get_vectorstore(mode=mode, opt=vectorstore_option, embeddings=embedding_model)
+    docs = get_documents(document_dir=get_documents_dir(mode=mode))
+    add_document_to_vectorstore(docs, vectorstore)
+    retriever = vectorstore.as_retriever()
+
+    chat_model = get_chat_model("azure").with_structured_output(Response)
+    system_prompt = (
+        "answer the following question based only on the provided context in {language}.\n"
+        "your answer should be up to 54 tokens.\n"
+    )
+
+    responses = []
+    for query in tqdm(get_queries(mode=mode), desc="querying.."):
+        prompt = get_prompt(system_prompt, query, retriever)
+        res = chat_model.invoke(prompt)
+        pprint(res)
+        responses.append(res)
+
+    write_result(responses=responses, mode=mode)
+    print("[main] :)  done")
 
 
 if __name__ == "__main__":
