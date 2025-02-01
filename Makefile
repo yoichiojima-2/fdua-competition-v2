@@ -54,9 +54,7 @@ download-results:
 	gsutil -m cp -r ${GS_PATH}/results .fdua-competition/
 
 upload-secrets:
-	gsutil cp .env ${GS_PATH}/secrets/
-	gsutil cp google-application-credentials.json ${GS_PATH}/secrets/
+	gsutil -m cp -r secrets ${GS_PATH}/
 
 download-secrets:
-	gsutil cp ${GS_PATH}/secrets/.env .
-	gsutil cp ${GS_PATH}/secrets/google-application-credentials.json .
+	gsutil -m cp -r ${GS_PATH}/secrets .

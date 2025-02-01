@@ -17,7 +17,9 @@ from langsmith import traceable
 from tenacity import retry, stop_after_attempt, wait_exponential
 from tqdm import tqdm
 
+
 TAG = "simple"
+load_dotenv("secrets/.env")
 
 
 # [START: paths]
@@ -189,6 +191,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    load_dotenv()
     warnings.filterwarnings("ignore", category=UserWarning)
     main()
