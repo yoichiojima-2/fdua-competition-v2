@@ -34,3 +34,7 @@ clean:
 	find . -type d -name "__MACOSX" -print -exec rm -r {} +
 	find . -type f -name ".DS_Store" -print -exec rm -r {} +
 	find . -type f -name "*.Identifier" -print -exec rm -r {} +
+
+upload-secrets:
+	gsutil cp .env ${GS_PATH}/secrets/
+	gsutil cp google-application-credentials.json ${GS_PATH}/secrets/
