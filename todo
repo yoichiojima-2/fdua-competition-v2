@@ -1,0 +1,6 @@
+- reference specific vectorstore by company name to reduce false positives
+- try making ai agent with langgraph
+- evaluate rag with distributed evaluation script
+- add a makefile recipe that installs dependencies
+- try different text chunking
+- try unstructure pdf loader / ..lexical?
