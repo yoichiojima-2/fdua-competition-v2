@@ -24,7 +24,7 @@ jobs:
           credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
 
       - name: set up google cloud sdk
-        uses: google-github-actions/setup-gcloud@v1
+        uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: "fdua-competition"
           export_default_credentials: true
