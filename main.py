@@ -123,7 +123,7 @@ def add_document_to_vectorstore(documents: list[Path], vectorstore: VectorStore)
 
 def get_prompt(system_prompt: str, query: str, retriever: VectorStoreRetriever, language: str = "Japanese") -> ChatPromptValue:
     relevant_pages = retriever.invoke(query)
-    context = "\n".join(
+    context = "\n---\n".join(
         ["\n".join([f"metadata: {page.metadata}", f"page_content: {page.page_content}"]) for page in relevant_pages]
     )
     return ChatPromptTemplate.from_messages(
