@@ -8,7 +8,6 @@ from main import get_root
 
 def main() -> None:
     path = get_root() / "evaluation/src/evaluator.py"
-
     original_code = path.read_text()
     modified_code = "\n".join(
         [
@@ -18,10 +17,13 @@ def main() -> None:
             "",
             "load_dotenv(Path(__file__).parent.parent.parent.parent / 'secrets/.env')",
             "",
-            original_code.replace("OpenAI", "AzureOpenAI"),
+            (
+                original_code
+                .replace("from openai import OpenAI", "from openai import AzureOpenAI")
+                .replace("OpenAI()", "AzureOpenAI()")
+            ),
         ]
     )
-
     path.write_text(modified_code)
 
 
