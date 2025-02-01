@@ -33,7 +33,9 @@ jobs:
         run: gcloud auth list 
 
       - name: install app
-        run: make install
+        run: |
+          export FDUA_DIR=$(pwd)
+          make install
 
       - name: test
         env: 
