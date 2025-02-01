@@ -18,9 +18,9 @@ def main() -> None:
             "load_dotenv(Path(__file__).parent.parent.parent.parent / 'secrets/.env')",
             "",
             (
-                original_code
-                .replace("from openai import OpenAI", "from openai import AzureOpenAI")
-                .replace("OpenAI()", "AzureOpenAI()")
+                original_code.replace("from openai import OpenAI", "from openai import AzureOpenAI").replace(
+                    "OpenAI()", "AzureOpenAI()"
+                )
             ),
         ]
     )
