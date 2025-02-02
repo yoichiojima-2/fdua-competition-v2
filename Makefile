@@ -10,7 +10,7 @@ run: install
 	${UV} python -m main -o ${OUTPUT_NAME}
 
 test: install
-	${UV} pytest -vvv
+	${UV} pytest -vvv -s
 
 test-evaluate: install
 	uv run python ${INSTALL_DIR}/evaluation/crag.py \
