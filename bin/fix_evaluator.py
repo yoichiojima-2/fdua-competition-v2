@@ -1,7 +1,7 @@
-import os
 import sys
+from pathlib import Path
 
-sys.path.append(os.getenv("FDUA_DIR"))
+sys.path.append(str(Path(__file__).parent.parent))
 
 from main import get_root
 
@@ -11,11 +11,11 @@ def main() -> None:
     path.write_text(
         "\n".join(
             [
-                "from pathlib import Path",
+                "import os"
                 "from dotenv import load_dotenv",
                 "",
+                "load_dotenv(os.getenv('FDUA_DIR') / 'secrets/.env')",
                 "",
-                "load_dotenv(Path(__file__).parent.parent.parent.parent / 'secrets/.env')",
                 "",
                 (
                     path.read_text()
