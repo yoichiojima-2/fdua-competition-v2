@@ -1,5 +1,6 @@
 import argparse
 import os
+import re
 import warnings
 from enum import Enum
 from pathlib import Path
@@ -16,8 +17,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_core.vectorstores.base import VectorStore, VectorStoreRetriever
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, ChatOpenAI, OpenAIEmbeddings
-from pydantic import BaseModel, Field
 from langsmith import traceable
+from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_exponential
 from tqdm import tqdm
 
@@ -126,18 +127,18 @@ def add_document_to_vectorstore(documents: list[Path], vectorstore: VectorStore)
 
 def get_prompt(system_prompt: str, query: str, retriever: VectorStoreRetriever, language: str = "Japanese") -> ChatPromptValue:
     context = "\n---\n".join(
-        ["\n".join([f"metadata: {page.metadata}", f"page_content: {page.page_content}"]) for page in retriever.invoke(query)]
+        ["\n".join([f"page_content: {page.page_content}", f"metadata: {page.metadata}"]) for page in retriever.invoke(query)]
     )
     return ChatPromptTemplate.from_messages(
         [
             ("system", system_prompt),
-            ("system", "context: {context}"),
+            ("system", "**context**\n{context}"),
             ("user", "query: {query}"),
         ]
     ).invoke(
         {
             "language": language,
-            "context": "\n".join(context),
+            "context": context,
             "query": query,
         }
     )
@@ -155,7 +156,7 @@ class Response(BaseModel):
     query: str = Field(description="the query that was asked.")
     response: str = Field(
         description=(
-            "the response that was given\n"
+            "the answer for the given query\n"
             "this field must:\n"
             "- be strictly within 54 tokens regardless of language\n"
             "- provide a single, concise response\n"
@@ -170,10 +171,14 @@ class Response(BaseModel):
     context: str = Field(description="the cleansed context in given prompt.")
 
 
+def cleanse_response(response: str) -> str:
+    return re.sub(r"[\x00-\x1F]+", "", response.replace(",", ""))
+
+
 def write_result(output_name: str, responses: list[Response]) -> None:
     output_path = get_root() / f"results/{output_name}.csv"
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    df = pd.DataFrame([{"response": res.response} for res in responses])
+    df = pd.DataFrame([{"response": cleanse_response(res.response)} for res in responses])
     df.to_csv(output_path, header=False)
     print(f"[write_result] done: {output_path}")
 
@@ -197,13 +202,14 @@ def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) ->
 
     chat_model = get_chat_model("azure").with_structured_output(Response)
     system_prompt = (
-        "answer the following question based only on the provided context in {language}\n"
-        "make sure response field is strictly within 54 tokens\n"
+        "answer the question using only the provided context in {language}.\n"
+        "return your answer as valid json on a single line with no control characters.\n"
+        "ensure the 'response' field is under 54 tokens and contains no commas."
     )
+
     responses = []
     for query in tqdm(get_queries(mode=mode), desc="querying.."):
         prompt = get_prompt(system_prompt, query, retriever)
-        print(prompt)
         res = chat_model.invoke(prompt)
         pprint(res)
         responses.append(res)
