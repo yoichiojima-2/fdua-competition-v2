@@ -151,12 +151,12 @@ def get_chat_model(opt: str) -> ChatOpenAI:
 
 
 class Response(BaseModel):
-    query: str = Field(description="the query that was asked")
-    response: str = Field(description="the response that was given")
-    reason: str = Field(description="the reason for the response")
-    organization_name: str = Field(description="the organization name that the query is about")
-    sources: list[str] = Field(description="the sources of the response")
-    context: str = Field(description="the cleansed context in given prompt")
+    query: str = Field(description="the query that was asked.")
+    response: str = Field(description="the response that was given. this field should be up to 54 tokens.")
+    reason: str = Field(description="the reason for the response.")
+    organization_name: str = Field(description="the organization name that the query is about.")
+    sources: list[str] = Field(description="the sources of the response.")
+    context: str = Field(description="the cleansed context in given prompt.")
 
 
 def write_result(output_name: str, responses: list[Response]) -> None:
@@ -185,13 +185,15 @@ def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) ->
 
     chat_model = get_chat_model("azure").with_structured_output(Response)
     system_prompt = (
-        "answer the following question based only on the provided context in {language}.\n"
-        "your answer should satisfy:\n"
-        "- simple and concise with one sentence\n"
-        "- token up to 54 tokens\n"
-        "- comma should not be included\n"
+        "you must provide a single, concise response using no more than 54 tokens.\n"
+        "do NOT provide extra details, explanations, or redundant words.\n"
+        "your response must be:\n"
+        "- a single, direct sentence\n"
+        "- no commas or unnecessary phrases\n"
+        "- strictly within 54 tokens\n"
+        "- No honorifics or polite expressions; use plain, assertive language\n"
+        "if the answer is unknown, say that you don't know.'\n"
     )
-
     responses = []
     for query in tqdm(get_queries(mode=mode), desc="querying.."):
         prompt = get_prompt(system_prompt, query, retriever)
