@@ -5,13 +5,14 @@ ASSETS_DIR = assets
 INSTALL_DIR = .fdua-competition
 OUTPUT_NAME = output_simple_test
 CHAT_MODEL = 4omini
+CSV_PATH = ${INSTALL_DIR}/results/${OUTPUT_NAME}.csv
 
-run: ${INSTALL_DIR}/results/${OUTPUT_NAME}.csv
-${INSTALL_DIR}/results/${OUTPUT_NAME}.csv: ${INSTALL_DIR}/.installed
+run: ${CSV_PATH}
+${CSV_PATH}: ${INSTALL_DIR}/.installed
 	${UV} python -m main -o ${OUTPUT_NAME}
 
-evaluate: run
-	uv run python ${INSTALL_DIR}/evaluation/crag.py \
+evaluate: ${CSV_PATH}
+	${UV} python ${INSTALL_DIR}/evaluation/crag.py \
 		--model-name ${CHAT_MODEL} \
 		--result-dir ${PWD}/${INSTALL_DIR}/results \
 		--result-name ${OUTPUT_NAME}.csv \
@@ -24,7 +25,7 @@ test: install
 	${UV} pytest -vvv -s
 
 test-evaluate: install
-	uv run python ${INSTALL_DIR}/evaluation/crag.py \
+	${UV} python ${INSTALL_DIR}/evaluation/crag.py \
 		--model-name ${CHAT_MODEL} \
 		--result-dir ${PWD}/${INSTALL_DIR}/evaluation/submit \
 		--result-name predictions.csv \
