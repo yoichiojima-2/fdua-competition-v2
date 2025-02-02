@@ -37,8 +37,7 @@ jobs:
       - name: install app
         env:
           FDUA_DIR: ${{ env.FDUA_DIR }}
-        run: |
-          make install
+        run: make install
 
       - name: test
         env: 
