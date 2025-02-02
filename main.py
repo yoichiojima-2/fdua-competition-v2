@@ -186,7 +186,10 @@ def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) ->
     chat_model = get_chat_model("azure").with_structured_output(Response)
     system_prompt = (
         "answer the following question based only on the provided context in {language}.\n"
-        "your answer should be up to 54 tokens.\n"
+        "your answer should satisfy:\n"
+        "- simple and concise with one sentence\n"
+        "- token up to 54 tokens\n"
+        "- comma should not be included\n"
     )
 
     responses = []
