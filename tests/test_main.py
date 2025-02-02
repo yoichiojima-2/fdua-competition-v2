@@ -66,15 +66,15 @@ def test_get_embedding_model():
 def test_get_vectorstore():
     embeddings = get_embedding_model("azure")
 
-    in_memory_vectorstore = get_vectorstore(mode="test", opt="in-memory", embeddings=embeddings)
+    in_memory_vectorstore = get_vectorstore(output_name="test", opt="in-memory", embeddings=embeddings)
     assert isinstance(in_memory_vectorstore, InMemoryVectorStore)
 
-    chroma = get_vectorstore(mode="test", opt="chroma", embeddings=embeddings)
+    chroma = get_vectorstore(output_name="test", opt="chroma", embeddings=embeddings)
     assert isinstance(chroma, Chroma)
     assert Path(get_root() / "vectorstore/chroma").exists()
 
     try:
-        get_vectorstore(mode="test", opt="should_raise_err", embeddings=embeddings)
+        get_vectorstore(output_name="test", opt="should_raise_err", embeddings=embeddings)
         assert False
     except ValueError:
         assert True

@@ -20,7 +20,6 @@ from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_exponential
 from tqdm import tqdm
 
-TAG = "simple"
 
 load_dotenv("secrets/.env")
 
@@ -74,15 +73,17 @@ def get_embedding_model(opt: str) -> OpenAIEmbeddings:
             raise ValueError(f"): unknown model: {opt}")
 
 
-def get_vectorstore(mode: Mode, opt: str, embeddings: OpenAIEmbeddings) -> VectorStore:
+def get_vectorstore(output_name: str, opt: str, embeddings: OpenAIEmbeddings) -> VectorStore:
     match opt:
         case "in-memory":
             return InMemoryVectorStore(embeddings)
         case "chroma":
+            persist_path = get_root() / f"vectorstore/chroma/fdua-competition_{output_name}"
+            print(f"[get_vectorstore] chroma: {persist_path}")
             return Chroma(
-                collection_name=f"fdua-competition_{TAG}_{mode}",
+                collection_name=persist_path.name,
                 embedding_function=embeddings,
-                persist_directory=str(get_root() / "vectorstore/chroma"),
+                persist_directory=str(persist_path.parent),
             )
         case _:
             raise ValueError(f"): unknown vectorstore: {opt}")
@@ -159,8 +160,9 @@ class Response(BaseModel):
     context: str = Field(description="the cleansed context in given prompt")
 
 
-def write_result(responses: list[Response], mode: Mode) -> None:
-    output_path = get_root() / f"results/output_{TAG}_{mode}.csv"
+def write_result(output_name: str, responses: list[Response]) -> None:
+    output_path = get_root() / f"results/{output_name}.csv"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     df = pd.DataFrame([{"response": res.response} for res in responses])
     df.to_csv(output_path, header=False)
     print(f"[write_result] done: {output_path}")
@@ -168,16 +170,16 @@ def write_result(responses: list[Response], mode: Mode) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", "-m", type=str, choices=[choice.value for choice in Mode], default="test")
-    parser.add_argument(
-        "--vectorstore", "-v", type=str, choices=[choice.value for choice in VectorStoreOption], default="chroma"
-    )
+    opt = parser.add_argument
+    opt("--output-name", "-o", type=str)
+    opt("--mode", "-m", type=str, choices=[choice.value for choice in Mode], default="test")
+    opt("--vectorstore", "-v", type=str, choices=[choice.value for choice in VectorStoreOption], default="chroma")
     return parser.parse_args()
 
 
-def main(mode: Mode, vectorstore_option: VectorStoreOption) -> None:
+def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) -> None:
     embedding_model = get_embedding_model("azure")
-    vectorstore = get_vectorstore(mode=mode, opt=vectorstore_option, embeddings=embedding_model)
+    vectorstore = get_vectorstore(output_name=output_name, opt=vectorstore_option, embeddings=embedding_model)
     docs = get_documents(document_dir=get_documents_dir(mode=mode))
     add_document_to_vectorstore(docs, vectorstore)
     retriever = vectorstore.as_retriever()
@@ -195,11 +197,11 @@ def main(mode: Mode, vectorstore_option: VectorStoreOption) -> None:
         pprint(res)
         responses.append(res)
 
-    write_result(responses=responses, mode=mode)
+    write_result(output_name=output_name, responses=responses)
     print("[main] :)  done")
 
 
 if __name__ == "__main__":
     warnings.filterwarnings("ignore", category=UserWarning)
     args = parse_args()
-    main(mode=args.mode, vectorstore_option=args.vectorstore)
+    main(output_name=args.output_name, mode=args.mode, vectorstore_option=args.vectorstore)
