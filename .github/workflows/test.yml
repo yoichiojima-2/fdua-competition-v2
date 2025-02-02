@@ -27,7 +27,6 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: "fdua-competition"
-          export_default_credentials: true
 
       - name: verify authentication
         run: gcloud auth list 
