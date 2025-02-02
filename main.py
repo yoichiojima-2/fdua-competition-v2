@@ -17,6 +17,7 @@ from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_core.vectorstores.base import VectorStore, VectorStoreRetriever
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, ChatOpenAI, OpenAIEmbeddings
 from pydantic import BaseModel, Field
+from langsmith import traceable
 from tenacity import retry, stop_after_attempt, wait_exponential
 from tqdm import tqdm
 
@@ -116,8 +117,9 @@ def add_document_to_vectorstore(documents: list[Path], vectorstore: VectorStore)
     existing_sources = get_existing_sources(vectorstore)
     for path in documents:
         if str(path) in existing_sources:
+            print(f"[add_document_to_vectorstore] skipping existing document: {path}")
             continue
-        print(f"adding document to vectorstore: {path}")
+        print(f"[add_document_to_vectorstore] adding document to vectorstore: {path}")
         pages = get_pages(path=path)
         add_pages_to_vectorstore_in_batches(vectorstore=vectorstore, pages=pages)
 
@@ -151,7 +153,17 @@ def get_chat_model(opt: str) -> ChatOpenAI:
 
 class Response(BaseModel):
     query: str = Field(description="the query that was asked.")
-    response: str = Field(description="the response that was given. this field should be up to 54 tokens.")
+    response: str = Field(
+        description=(
+            "the response that was given\n"
+            "this field must:\n"
+            "- be strictly within 54 tokens regardless of language\n"
+            "- provide a single, concise response\n"
+            "- not provide extra details, explanations, or redundant words"
+            "- not include honorifics or polite expressions; use plain, assertive language\n"
+            "- based only from given context'\n"
+        )
+    )
     reason: str = Field(description="the reason for the response.")
     organization_name: str = Field(description="the organization name that the query is about.")
     sources: list[str] = Field(description="the sources of the response.")
@@ -175,6 +187,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+@traceable
 def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) -> None:
     embedding_model = get_embedding_model("azure")
     vectorstore = get_vectorstore(output_name=output_name, opt=vectorstore_option, embeddings=embedding_model)
@@ -184,18 +197,13 @@ def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) ->
 
     chat_model = get_chat_model("azure").with_structured_output(Response)
     system_prompt = (
-        "you must provide a single, concise response using no more than 54 tokens.\n"
-        "do NOT provide extra details, explanations, or redundant words.\n"
-        "your response must be:\n"
-        "- a single, direct sentence\n"
-        "- no commas or unnecessary phrases\n"
-        "- strictly within 54 tokens\n"
-        "- No honorifics or polite expressions; use plain, assertive language\n"
-        "if the answer is unknown, say that you don't know.'\n"
+        "answer the following question based only on the provided context in {language}\n"
+        "make sure response field is strictly within 54 tokens\n"
     )
     responses = []
     for query in tqdm(get_queries(mode=mode), desc="querying.."):
         prompt = get_prompt(system_prompt, query, retriever)
+        print(prompt)
         res = chat_model.invoke(prompt)
         pprint(res)
         responses.append(res)
