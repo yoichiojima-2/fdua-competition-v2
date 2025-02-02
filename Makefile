@@ -1,23 +1,33 @@
+PWD = $(shell pwd)
 UV = uv run
 GS_PATH = gs://fdua-competition
 ASSETS_DIR = assets
 INSTALL_DIR = .fdua-competition
-PWD = $(shell pwd)
+OUTPUT_NAME = output_simple_test
 
 run: install
-	${UV} python -m main
+	${UV} python -m main -o ${OUTPUT_NAME}
 
 test: install
 	${UV} pytest -vvv
 
-evaluate: install
-	cd ${INSTALL_DIR}/evaluation && \
-	uv run python crag.py \
+test-evaluate: install
+	uv run python ${INSTALL_DIR}/evaluation/crag.py \
 		--model-name 4omini \
 		--result-dir ${PWD}/${INSTALL_DIR}/evaluation/submit \
 		--result-name predictions.csv \
-		--ans-dir ${PWD}/${INSTALL_DIR}/validation \
-		--ans-txt ans_txt.csv
+		--ans-dir ${PWD}/${INSTALL_DIR}/evaluation/data \
+		--ans-txt ans_txt.csv \
+		--eval-result-dir ${PWD}/${INSTALL_DIR}/evaluation/result
+
+evaluate: install
+	uv run python ${INSTALL_DIR}/evaluation/crag.py \
+		--model-name 4omini \
+		--result-dir ${PWD}/${INSTALL_DIR}/results \
+		--result-name output_simple_test.csv \
+		--ans-dir ${PWD}/${INSTALL_DIR}/evaluation/data \
+		--ans-txt ans_txt.csv \
+		--eval-result-dir ${PWD}/${INSTALL_DIR}/evaluation/result
 
 install: ${INSTALL_DIR}/.installed
 ${INSTALL_DIR}/.installed: ${ASSETS_DIR}/.success
