@@ -2,6 +2,7 @@ UV = uv run
 GS_PATH = gs://fdua-competition
 ASSETS_DIR = assets
 INSTALL_DIR = .fdua-competition
+PWD = $(shell pwd)
 
 run: install
 	${UV} python -m main
@@ -11,12 +12,15 @@ test: install
 
 evaluate: install
 	cd ${INSTALL_DIR}/evaluation && \
-	uv run python crag.py --model-name 4omini
-	# uv run python crag.py --model-name 4omini --result-dir ../results --result-name output_simple_test.csv
+	uv run python crag.py \
+		--model-name 4omini \
+		--result-dir ${PWD}/${INSTALL_DIR}/evaluation/submit \
+		--result-name predictions.csv \
+		--ans-dir ${PWD}/${INSTALL_DIR}/validation \
+		--ans-txt ans_txt.csv
 
 install: ${INSTALL_DIR}/.installed
 ${INSTALL_DIR}/.installed: ${ASSETS_DIR}/.success
-	echo ${INSTALL_DIR}
 	-mkdir -p ${INSTALL_DIR}
 	find assets -type f -name "*.zip" -print -exec unzip -o {} -d ${INSTALL_DIR} \;
 	cp assets/query.csv ${INSTALL_DIR}/
