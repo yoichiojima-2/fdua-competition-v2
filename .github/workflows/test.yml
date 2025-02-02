@@ -15,6 +15,7 @@ jobs:
     steps:
       - name: checkout repository
         uses: actions/checkout@v4
+
       - name: install uv
         run: pip install --upgrade pip && pip install uv
 
