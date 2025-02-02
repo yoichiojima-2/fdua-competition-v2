@@ -6,8 +6,19 @@ INSTALL_DIR = .fdua-competition
 OUTPUT_NAME = output_simple_test
 CHAT_MODEL = 4omini
 
-run: install
+run: ${INSTALL_DIR}/results/${OUTPUT_NAME}.csv
+${INSTALL_DIR}/results/${OUTPUT_NAME}.csv: ${INSTALL_DIR}/.installed
 	${UV} python -m main -o ${OUTPUT_NAME}
+
+evaluate: run
+	uv run python ${INSTALL_DIR}/evaluation/crag.py \
+		--model-name ${CHAT_MODEL} \
+		--result-dir ${PWD}/${INSTALL_DIR}/results \
+		--result-name ${OUTPUT_NAME}.csv \
+		--ans-dir ${PWD}/${INSTALL_DIR}/evaluation/data \
+		--ans-txt ans_txt.csv \
+		--eval-result-dir ${PWD}/${INSTALL_DIR}/evaluation/result \
+		--max-num-tokens 100
 
 test: install
 	${UV} pytest -vvv -s
@@ -20,16 +31,6 @@ test-evaluate: install
 		--ans-dir ${PWD}/${INSTALL_DIR}/evaluation/data \
 		--ans-txt ans_txt.csv \
 		--eval-result-dir ${PWD}/${INSTALL_DIR}/evaluation/result
-
-evaluate: install
-	uv run python ${INSTALL_DIR}/evaluation/crag.py \
-		--model-name ${CHAT_MODEL} \
-		--result-dir ${PWD}/${INSTALL_DIR}/results \
-		--result-name ${OUTPUT_NAME}.csv \
-		--ans-dir ${PWD}/${INSTALL_DIR}/evaluation/data \
-		--ans-txt ans_txt.csv \
-		--eval-result-dir ${PWD}/${INSTALL_DIR}/evaluation/result \
-		--max-num-tokens 100
 
 install: ${INSTALL_DIR}/.installed
 ${INSTALL_DIR}/.installed: ${ASSETS_DIR}/.success
