@@ -4,6 +4,7 @@ GS_PATH = gs://fdua-competition
 ASSETS_DIR = assets
 INSTALL_DIR = .fdua-competition
 OUTPUT_NAME = output_simple_test
+CHAT_MODEL = 4omini
 
 run: install
 	${UV} python -m main -o ${OUTPUT_NAME}
@@ -13,7 +14,7 @@ test: install
 
 test-evaluate: install
 	uv run python ${INSTALL_DIR}/evaluation/crag.py \
-		--model-name 4omini \
+		--model-name ${CHAT_MODEL} \
 		--result-dir ${PWD}/${INSTALL_DIR}/evaluation/submit \
 		--result-name predictions.csv \
 		--ans-dir ${PWD}/${INSTALL_DIR}/evaluation/data \
@@ -22,12 +23,13 @@ test-evaluate: install
 
 evaluate: install
 	uv run python ${INSTALL_DIR}/evaluation/crag.py \
-		--model-name 4omini \
+		--model-name ${CHAT_MODEL} \
 		--result-dir ${PWD}/${INSTALL_DIR}/results \
-		--result-name output_simple_test.csv \
+		--result-name ${OUTPUT_NAME}.csv \
 		--ans-dir ${PWD}/${INSTALL_DIR}/evaluation/data \
 		--ans-txt ans_txt.csv \
-		--eval-result-dir ${PWD}/${INSTALL_DIR}/evaluation/result
+		--eval-result-dir ${PWD}/${INSTALL_DIR}/evaluation/result \
+		--max-num-tokens 100
 
 install: ${INSTALL_DIR}/.installed
 ${INSTALL_DIR}/.installed: ${ASSETS_DIR}/.success
@@ -63,10 +65,10 @@ clean:
 	find . -type f -name "*.Identifier" -print -exec rm -r {} +
 
 upload-results:
-	gsutil -m cp -r .fdua-competition/results ${GS_PATH}/
+	gsutil -m cp -r ${INSTALL_DIR}/results ${GS_PATH}/
 
 download-results:
-	gsutil -m cp -r ${GS_PATH}/results .fdua-competition/
+	gsutil -m cp -r ${GS_PATH}/results ${INSTALL_DIR}
 
 upload-secrets:
 	gsutil -m cp -r secrets ${GS_PATH}/
