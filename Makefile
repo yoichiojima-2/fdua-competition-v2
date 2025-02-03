@@ -19,7 +19,7 @@ evaluate: ${CSV_PATH}
 		--ans-dir ${PWD}/${INSTALL_DIR}/evaluation/data \
 		--ans-txt ans_txt.csv \
 		--eval-result-dir ${PWD}/${INSTALL_DIR}/evaluation/result \
-		--max-num-tokens 100
+		--max-num-tokens 150  # should be removed
 
 test: install
 	${UV} pytest -vvv -s
