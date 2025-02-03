@@ -26,7 +26,7 @@ summarize-result: evaluate
 	${UV} python bin/summarize_result.py
 
 test: install
-	${UV} pytest -vvv -s
+	${UV} pytest -vvv
 
 test-evaluate: install
 	${UV} python ${INSTALL_DIR}/evaluation/crag.py \
