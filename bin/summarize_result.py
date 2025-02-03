@@ -10,9 +10,10 @@ from main import get_root
 
 def main():
     print(" score ".center(88, "="))
-    print("")
+    print()
     calc_score()
     print(" detail ".center(88, "="))
+    print()
     show_detail()
 
 
