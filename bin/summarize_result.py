@@ -43,7 +43,7 @@ def calc_score():
     converted_scores = df["evaluation"].map(lambda x: evaluation_to_score[x])
 
     print(f"score: {converted_scores.mean()}\n")
-    print(tabulate(df.groupby("evaluation").count()))
+    print(tabulate(df[["index", "evaluation"]].groupby("evaluation").count()))
     print()
 
 
