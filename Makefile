@@ -37,6 +37,12 @@ test-evaluate: install
 		--ans-txt ans_txt.csv \
 		--eval-result-dir ${PWD}/${INSTALL_DIR}/evaluation/result
 
+clear-results:
+	rm ${CSV_PATH}
+	rm ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv
+
+
+
 install: ${INSTALL_DIR}/.installed
 ${INSTALL_DIR}/.installed: ${ASSETS_DIR}/.success
 	-mkdir -p ${INSTALL_DIR}
