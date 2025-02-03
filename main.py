@@ -1,6 +1,5 @@
 import argparse
 import os
-import re
 import warnings
 from enum import Enum
 from pathlib import Path
@@ -12,10 +11,10 @@ from dotenv import load_dotenv
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import PyPDFium2Loader
 from langchain_core.documents import Document
-from langchain_core.prompt_values import ChatPromptValue
+from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.vectorstores import InMemoryVectorStore
-from langchain_core.vectorstores.base import VectorStore, VectorStoreRetriever
+from langchain_core.vectorstores.base import VectorStore
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, ChatOpenAI, OpenAIEmbeddings
 from langsmith import traceable
 from pydantic import BaseModel, Field
@@ -125,25 +124,6 @@ def add_document_to_vectorstore(documents: list[Path], vectorstore: VectorStore)
         add_pages_to_vectorstore_in_batches(vectorstore=vectorstore, pages=pages)
 
 
-def get_prompt(system_prompt: str, query: str, retriever: VectorStoreRetriever, language: str = "Japanese") -> ChatPromptValue:
-    context = "\n---\n".join(
-        ["\n".join([f"page_content: {page.page_content}", f"metadata: {page.metadata}"]) for page in retriever.invoke(query)]
-    )
-    return ChatPromptTemplate.from_messages(
-        [
-            ("system", system_prompt),
-            ("system", "**context**\n{context}"),
-            ("user", "query: {query}"),
-        ]
-    ).invoke(
-        {
-            "language": language,
-            "context": context,
-            "query": query,
-        }
-    )
-
-
 def get_chat_model(opt: str) -> ChatOpenAI:
     match opt:
         case "azure":
@@ -154,31 +134,32 @@ def get_chat_model(opt: str) -> ChatOpenAI:
 
 class Response(BaseModel):
     query: str = Field(description="the query that was asked.")
-    response: str = Field(
-        description=(
-            "the answer for the given query\n"
-            "this field must:\n"
-            "- be strictly within 54 tokens regardless of language\n"
-            "- provide a single, concise response\n"
-            "- not provide extra details, explanations, or redundant words"
-            "- not include honorifics or polite expressions; use plain, assertive language\n"
-            "- be based only from given context'\n"
-        )
-    )
+    response: str = Field(description="the answer for the given query")
     reason: str = Field(description="the reason for the response.")
     organization_name: str = Field(description="the organization name that the query is about.")
-    sources: list[str] = Field(description="the sources of the response.")
-    context: str = Field(description="the cleansed context in given prompt.")
+    contexts: list[str] = Field(description="the context that the response was based on with its file path and page number.")
 
 
-def cleanse_response(response: str) -> str:
-    return re.sub(r"[\x00-\x1F]+", "", response.replace(",", ""))
+def get_prompt_template() -> ChatPromptTemplate:
+    return ChatPromptTemplate.from_messages(
+        [
+            ("system", "{system_prompt}"),
+            ("system", "**context**:\n{context}"),
+            ("user", "**query**:\n{query}"),
+        ]
+    )
+
+
+def build_context(vectorstore: VectorStore, query: str) -> str:
+    pages = vectorstore.as_retriever().invoke(query)
+    contexts = ["\n".join([f"page_content: {page.page_content}", f"metadata: {page.metadata}"]) for page in pages]
+    return "\n---\n".join(contexts)
 
 
 def write_result(output_name: str, responses: list[Response]) -> None:
     output_path = get_root() / f"results/{output_name}.csv"
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    df = pd.DataFrame([{"response": cleanse_response(res.response)} for res in responses])
+    df = pd.DataFrame([{"response": res["response"]} for res in responses])
     df.to_csv(output_path, header=False)
     print(f"[write_result] done: {output_path}")
 
@@ -194,26 +175,40 @@ def parse_args() -> argparse.Namespace:
 
 @traceable
 def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) -> None:
-    embedding_model = get_embedding_model("azure")
-    vectorstore = get_vectorstore(output_name=output_name, opt=vectorstore_option, embeddings=embedding_model)
+    vectorstore = get_vectorstore(output_name=output_name, opt=vectorstore_option, embeddings=get_embedding_model("azure"))
     docs = get_documents(document_dir=get_documents_dir(mode=mode))
     add_document_to_vectorstore(docs, vectorstore)
-    retriever = vectorstore.as_retriever()
 
-    chat_model = get_chat_model("azure").with_structured_output(Response)
-    system_prompt = (
-        "answer the question using only the provided context in {language}.\n"
-        "return your answer as valid json on a single line with no control characters.\n"
-        "ensure the 'response' field is under 54 tokens and contains no commas."
+    prompt_template = get_prompt_template()
+    chat_model = get_chat_model("azure")
+    parser = JsonOutputParser(pydantic_object=Response)
+    chain = prompt_template | chat_model | parser
+
+    system_prompt = " ".join(
+        [
+            "answer the question using only the provided context in {language}.",
+            "return a json object that contains the following keys: query, response, reason, organization_name, contexts.",
+            "make sure that the response field is under 54 tokens and contains no commas. other fields do not have token limits.",
+            "do not include honorifics or polite expressions; use plain, assertive language in the response field.",
+            "the response field must be based only from given context.",
+            "do not include any special characters that can cause json parsing errors across all fields. this must be satisfied regardless of the language.",
+        ]
     )
 
     responses = []
     for query in tqdm(get_queries(mode=mode), desc="querying.."):
-        prompt = get_prompt(system_prompt, query, retriever)
-        res = chat_model.invoke(prompt)
+        res = chain.invoke(
+            {
+                "system_prompt": system_prompt,
+                "query": query,
+                "context": build_context(vectorstore=vectorstore, query=query),
+                "language": "Japanese",
+            }
+        )
         pprint(res)
         responses.append(res)
 
+    pprint(responses)
     write_result(output_name=output_name, responses=responses)
     print("[main] :)  done")
 
