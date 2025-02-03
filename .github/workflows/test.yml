@@ -48,7 +48,7 @@ jobs:
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
         run: make test
 
-      - name: evaluate 
+      - name: run
         env: 
           FDUA_DIR: ${{ env.FDUA_DIR }}
           AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
