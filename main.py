@@ -216,6 +216,7 @@ def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) ->
             },
         )
         pprint(res)
+        print()
         responses.append(res)
 
     pprint(responses)
