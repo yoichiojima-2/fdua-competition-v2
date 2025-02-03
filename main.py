@@ -162,7 +162,7 @@ class Response(BaseModel):
             "- provide a single, concise response\n"
             "- not provide extra details, explanations, or redundant words"
             "- not include honorifics or polite expressions; use plain, assertive language\n"
-            "- based only from given context'\n"
+            "- be based only from given context'\n"
         )
     )
     reason: str = Field(description="the reason for the response.")
