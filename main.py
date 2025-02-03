@@ -93,7 +93,7 @@ def get_existing_sources(vectorstore: VectorStore) -> set[str]:
     return {metadata.get("source") for metadata in vectorstore.get().get("metadatas")}
 
 
-@retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=4, max=60))
+@retry(stop=stop_after_attempt(10), wait=wait_none())
 def add_documents_with_retry(vectorstore: VectorStore, batch: list[Document]) -> None:
     vectorstore.add_documents(batch)
 
