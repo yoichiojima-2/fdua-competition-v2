@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from langchain_chroma import Chroma
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, OpenAIEmbeddings
 
@@ -10,7 +11,7 @@ from main import (
     get_documents_dir,
     get_embedding_model,
     get_pages,
-    get_prompt,
+    get_prompt_template,
     get_queries,
     get_root,
     get_vectorstore,
@@ -26,13 +27,9 @@ def test_get_pages():
     assert len(pages)
 
 
-def test_get_prompt():
-    system_prompt = "test system prompt: {language}"
-    query = "test query"
-    embeddings = AzureOpenAIEmbeddings(model="embedding")
-    retriever = InMemoryVectorStore(embeddings).as_retriever()
-    prompt = get_prompt(system_prompt, query, retriever)
-    assert prompt
+def test_get_prompt_template():
+    prompt = get_prompt_template()
+    assert isinstance(prompt, ChatPromptTemplate)
 
 
 def test_get_chat_model():
