@@ -34,6 +34,10 @@ class VectorStoreOption(Enum):
     in_memory = "in-memory"
 
 
+def print_before_retry(retry_state):
+    print(f"retrying attempt {retry_state.attempt_number} after exception: {retry_state.outcome.exception()}")
+
+
 def get_root() -> Path:
     return Path(os.getenv("FDUA_DIR")) / ".fdua-competition"
 
@@ -91,10 +95,6 @@ def get_vectorstore(output_name: str, opt: str, embeddings: OpenAIEmbeddings) ->
 
 def get_existing_sources(vectorstore: VectorStore) -> set[str]:
     return {metadata.get("source") for metadata in vectorstore.get().get("metadatas")}
-
-
-def print_before_retry(retry_state):
-    print(f"retrying attempt {retry_state.attempt_number} after exception: {retry_state.outcome.exception()}")
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_fixed(10), before_sleep=print_before_retry)
@@ -177,7 +177,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-@retry(stop=stop_after_attempt(10), wait=wait_fixed(10))
+@retry(stop=stop_after_attempt(24), wait=wait_fixed(10), before_sleep=print_before_retry)
 def invoke_chain_with_retry(chain, payload):
     return chain.invoke(payload)
 
