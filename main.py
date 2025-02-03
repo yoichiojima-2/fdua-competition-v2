@@ -18,7 +18,7 @@ from langchain_core.vectorstores.base import VectorStore
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, ChatOpenAI, OpenAIEmbeddings
 from langsmith import traceable
 from pydantic import BaseModel, Field
-from tenacity import retry, stop_after_attempt, wait_none
+from tenacity import retry, stop_after_attempt, wait_fixed
 from tqdm import tqdm
 
 load_dotenv("secrets/.env")
@@ -93,7 +93,11 @@ def get_existing_sources(vectorstore: VectorStore) -> set[str]:
     return {metadata.get("source") for metadata in vectorstore.get().get("metadatas")}
 
 
-@retry(stop=stop_after_attempt(10), wait=wait_none())
+def print_before_retry(retry_state):
+    print(f"retrying attempt {retry_state.attempt_number} after exception: {retry_state.outcome.exception()}")
+
+
+@retry(stop=stop_after_attempt(18), wait=wait_fixed(1), before_sleep=print_before_retry)
 def add_documents_with_retry(vectorstore: VectorStore, batch: list[Document]) -> None:
     vectorstore.add_documents(batch)
 
