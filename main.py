@@ -25,13 +25,21 @@ load_dotenv("secrets/.env")
 
 
 class Mode(Enum):
-    submit = "submit"
-    test = "test"
+    SUBMIT = "submit"
+    TEST = "test"
+
+
+class ChatModelOption(Enum):
+    AZURE = "azure"
+
+
+class EmbeddingModelOption(Enum):
+    AZURE = "azure"
 
 
 class VectorStoreOption(Enum):
-    chroma = "chroma"
-    in_memory = "in-memory"
+    CHROMA = "chroma"
+    IN_MEMORY = "in-memory"
 
 
 def print_before_retry(retry_state):
@@ -44,9 +52,9 @@ def get_root() -> Path:
 
 def get_documents_dir(mode: Mode) -> Path:
     match mode:
-        case "test":
+        case Mode.TEST:
             return get_root() / "validation/documents"
-        case "submit":
+        case Mode.SUBMIT:
             return get_root() / "documents"
         case _:
             raise ValueError(f"): unknown mode: {mode}")
@@ -54,10 +62,10 @@ def get_documents_dir(mode: Mode) -> Path:
 
 def get_queries(mode: Mode) -> list[str]:
     match mode:
-        case "test":
+        case Mode.TEST:
             df = pd.read_csv(get_root() / "validation/ans_txt.csv")
             return df["problem"].tolist()
-        case "submit":
+        case Mode.SUBMIT:
             df = pd.read_csv(get_root() / "query.csv")
             return df["problem"].tolist()
         case _:
@@ -69,19 +77,19 @@ def get_pages(path: Path) -> Iterable[Document]:
         yield doc
 
 
-def get_embedding_model(opt: str) -> OpenAIEmbeddings:
+def get_embedding_model(opt: EmbeddingModelOption) -> OpenAIEmbeddings:
     match opt:
-        case "azure":
+        case EmbeddingModelOption.AZURE:
             return AzureOpenAIEmbeddings(azure_deployment="embedding")
         case _:
             raise ValueError(f"): unknown model: {opt}")
 
 
-def get_vectorstore(output_name: str, opt: str, embeddings: OpenAIEmbeddings) -> VectorStore:
+def get_vectorstore(output_name: str, opt: VectorStoreOption, embeddings: OpenAIEmbeddings) -> VectorStore:
     match opt:
-        case "in-memory":
+        case VectorStoreOption.IN_MEMORY:
             return InMemoryVectorStore(embeddings)
-        case "chroma":
+        case VectorStoreOption.CHROMA:
             persist_path = get_root() / f"vectorstore/chroma/fdua-competition_{output_name}"
             print(f"[get_vectorstore] chroma: {persist_path}")
             return Chroma(
@@ -128,9 +136,9 @@ def add_document_to_vectorstore(documents: list[Path], vectorstore: VectorStore)
         add_pages_to_vectorstore_in_batches(vectorstore=vectorstore, pages=pages)
 
 
-def get_chat_model(opt: str) -> ChatOpenAI:
+def get_chat_model(opt: ChatModelOption) -> ChatOpenAI:
     match opt:
-        case "azure":
+        case ChatModelOption.AZURE:
             return AzureChatOpenAI(azure_deployment="4omini")
         case _:
             raise ValueError(f"unknown model: {opt}")
@@ -173,8 +181,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     opt = parser.add_argument
     opt("--output-name", "-o", type=str)
-    opt("--mode", "-m", type=str, choices=[choice.value for choice in Mode], default="test")
-    opt("--vectorstore", "-v", type=str, choices=[choice.value for choice in VectorStoreOption], default="chroma")
+    opt("--mode", "-m", type=str, choices=[choice.value for choice in Mode], default=Mode.TEST.value)
+    opt("--vectorstore", "-v", type=str, choices=[choice.value for choice in VectorStoreOption], default=VectorStoreOption.CHROMA.value)
     return parser.parse_args()
 
 
@@ -228,4 +236,8 @@ def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) ->
 if __name__ == "__main__":
     warnings.filterwarnings("ignore", category=UserWarning)
     args = parse_args()
-    main(output_name=args.output_name, mode=args.mode, vectorstore_option=args.vectorstore)
+    main(
+        output_name=args.output_name,
+        mode=Mode(args.mode),
+        vectorstore_option=VectorStoreOption(args.vectorstore)
+    )

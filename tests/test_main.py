@@ -6,6 +6,10 @@ from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, OpenAIEmbeddings
 
 from main import (
+    Mode,
+    VectorStoreOption,
+    EmbeddingModelOption,
+    ChatModelOption,
     add_documents_with_retry,
     get_chat_model,
     get_documents_dir,
@@ -19,11 +23,11 @@ from main import (
 
 
 def test_get_document_dir():
-    assert get_documents_dir("submit").name == "documents"
+    assert get_documents_dir(Mode.TEST).name == "documents"
 
 
 def test_get_pages():
-    pages = list(get_pages(get_documents_dir("test") / "1.pdf"))
+    pages = list(get_pages(get_documents_dir(Mode.TEST) / "1.pdf"))
     assert len(pages)
 
 
@@ -33,7 +37,7 @@ def test_get_prompt_template():
 
 
 def test_get_chat_model():
-    chat_model = get_chat_model("azure")
+    chat_model = get_chat_model(ChatModelOption.AZURE)
     assert isinstance(chat_model, AzureChatOpenAI)
 
     try:
@@ -44,13 +48,13 @@ def test_get_chat_model():
 
 
 def test_get_queries():
-    queries = get_queries(mode="test")
+    queries = get_queries(mode=Mode.TEST)
     assert isinstance(queries, list)
     assert queries
 
 
 def test_get_embedding_model():
-    model = get_embedding_model("azure")
+    model = get_embedding_model(EmbeddingModelOption.AZURE)
     assert isinstance(model, OpenAIEmbeddings)
 
     try:
@@ -61,12 +65,19 @@ def test_get_embedding_model():
 
 
 def test_get_vectorstore():
-    embeddings = get_embedding_model("azure")
-
-    in_memory_vectorstore = get_vectorstore(output_name="test", opt="in-memory", embeddings=embeddings)
+    embeddings = AzureOpenAIEmbeddings(model=EmbeddingModelOption.AZURE)
+    in_memory_vectorstore = get_vectorstore(
+        output_name=Mode.TEST,
+        opt=VectorStoreOption.IN_MEMORY,
+        embeddings=embeddings
+    )
     assert isinstance(in_memory_vectorstore, InMemoryVectorStore)
 
-    chroma = get_vectorstore(output_name="test", opt="chroma", embeddings=embeddings)
+    chroma = get_vectorstore(
+        output_name=VectorStoreOption.CHROMA,
+        opt=VectorStoreOption.CHROMA,
+        embeddings=embeddings
+    )
     assert isinstance(chroma, Chroma)
     assert Path(get_root() / "vectorstore/chroma").exists()
 
@@ -78,7 +89,7 @@ def test_get_vectorstore():
 
 
 def test_add_documents_with_retry():
-    embeddings = AzureOpenAIEmbeddings(model="embedding")
+    embeddings = AzureOpenAIEmbeddings(model=EmbeddingModelOption.AZURE)
     vectorstore = InMemoryVectorStore(embeddings)
     pages = get_pages("1.pdf")
     add_documents_with_retry(vectorstore, pages)
