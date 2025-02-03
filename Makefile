@@ -11,7 +11,7 @@ run: ${CSV_PATH}
 ${CSV_PATH}: ${INSTALL_DIR}/.installed
 	${UV} python -m main -o ${OUTPUT_NAME}
 
-evaluate: ${CSV_PATH}
+evaluate: run
 	${UV} python ${INSTALL_DIR}/evaluation/crag.py \
 		--model-name ${CHAT_MODEL} \
 		--result-dir ${PWD}/${INSTALL_DIR}/results \
