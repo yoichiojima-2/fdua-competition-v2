@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+
 import pandas as pd
 from tabulate import tabulate
 
@@ -35,7 +36,7 @@ def show_detail():
 
 
 def calc_score():
-    df = pd.read_csv(get_root() / "evaluation/result/scoring.csv", header = None)
+    df = pd.read_csv(get_root() / "evaluation/result/scoring.csv", header=None)
     df.columns = ["index", "evaluation", "score"]
 
     evaluation_to_score = {"Perfect": 1, "Acceptable": 0.5, "Missing": 0, "Incorrect": -1}
@@ -44,7 +45,7 @@ def calc_score():
     print(f"score: {converted_scores.mean()}\n")
     print(tabulate(df.groupby("evaluation").count()))
     print()
-    
+
 
 if __name__ == "__main__":
     main()
