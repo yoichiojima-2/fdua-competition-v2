@@ -97,7 +97,7 @@ def print_before_retry(retry_state):
     print(f"retrying attempt {retry_state.attempt_number} after exception: {retry_state.outcome.exception()}")
 
 
-@retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=print_before_retry)
+@retry(stop=stop_after_attempt(24), wait=wait_fixed(10), before_sleep=print_before_retry)
 def add_documents_with_retry(vectorstore: VectorStore, batch: list[Document]) -> None:
     vectorstore.add_documents(batch)
 
