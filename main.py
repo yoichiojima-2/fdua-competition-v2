@@ -99,7 +99,7 @@ def add_documents_with_retry(vectorstore: VectorStore, batch: list[Document]) ->
     vectorstore.add_documents(batch)
 
 
-def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterable[Document], batch_size: int = 8) -> None:
+def add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterable[Document], batch_size: int = 2) -> None:
     batch = []
     for page in tqdm(pages, desc="adding pages.."):
         batch.append(page)
