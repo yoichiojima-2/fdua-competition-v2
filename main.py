@@ -155,9 +155,9 @@ class Response(BaseModel):
 def get_prompt_template() -> ChatPromptTemplate:
     return ChatPromptTemplate.from_messages(
         [
-            ("system", "{system_prompt}"),
-            ("system", "**context**:\n{context}"),
-            ("user", "**query**:\n{query}"),
+            ("system", "# {system_prompt}"),
+            ("system", "## context\n{context}"),
+            ("user", "## query\n{query}"),
         ]
     )
 
