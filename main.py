@@ -182,7 +182,13 @@ def parse_args() -> argparse.Namespace:
     opt = parser.add_argument
     opt("--output-name", "-o", type=str)
     opt("--mode", "-m", type=str, choices=[choice.value for choice in Mode], default=Mode.TEST.value)
-    opt("--vectorstore", "-v", type=str, choices=[choice.value for choice in VectorStoreOption], default=VectorStoreOption.CHROMA.value)
+    opt(
+        "--vectorstore",
+        "-v",
+        type=str,
+        choices=[choice.value for choice in VectorStoreOption],
+        default=VectorStoreOption.CHROMA.value,
+    )
     return parser.parse_args()
 
 
@@ -193,12 +199,13 @@ def invoke_chain_with_retry(chain, payload):
 
 @traceable
 def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) -> None:
-    vectorstore = get_vectorstore(output_name=output_name, opt=vectorstore_option, embeddings=get_embedding_model("azure"))
+    embeddings = get_embedding_model(EmbeddingModelOption.AZURE)
+    vectorstore = get_vectorstore(output_name=output_name, opt=vectorstore_option, embeddings=embeddings)
     docs = get_documents(document_dir=get_documents_dir(mode=mode))
     add_document_to_vectorstore(docs, vectorstore)
 
     prompt_template = get_prompt_template()
-    chat_model = get_chat_model("azure")
+    chat_model = get_chat_model(ChatModelOption.AZURE)
     parser = JsonOutputParser(pydantic_object=Response)
     chain = prompt_template | chat_model | parser
 
@@ -236,8 +243,4 @@ def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) ->
 if __name__ == "__main__":
     warnings.filterwarnings("ignore", category=UserWarning)
     args = parse_args()
-    main(
-        output_name=args.output_name,
-        mode=Mode(args.mode),
-        vectorstore_option=VectorStoreOption(args.vectorstore)
-    )
+    main(output_name=args.output_name, mode=Mode(args.mode), vectorstore_option=VectorStoreOption(args.vectorstore))

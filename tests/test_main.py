@@ -6,10 +6,10 @@ from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, OpenAIEmbeddings
 
 from main import (
+    ChatModelOption,
+    EmbeddingModelOption,
     Mode,
     VectorStoreOption,
-    EmbeddingModelOption,
-    ChatModelOption,
     add_documents_with_retry,
     get_chat_model,
     get_documents_dir,
@@ -66,18 +66,10 @@ def test_get_embedding_model():
 
 def test_get_vectorstore():
     embeddings = AzureOpenAIEmbeddings(model=EmbeddingModelOption.AZURE)
-    in_memory_vectorstore = get_vectorstore(
-        output_name=Mode.TEST,
-        opt=VectorStoreOption.IN_MEMORY,
-        embeddings=embeddings
-    )
+    in_memory_vectorstore = get_vectorstore(output_name=Mode.TEST, opt=VectorStoreOption.IN_MEMORY, embeddings=embeddings)
     assert isinstance(in_memory_vectorstore, InMemoryVectorStore)
 
-    chroma = get_vectorstore(
-        output_name=VectorStoreOption.CHROMA,
-        opt=VectorStoreOption.CHROMA,
-        embeddings=embeddings
-    )
+    chroma = get_vectorstore(output_name=VectorStoreOption.CHROMA, opt=VectorStoreOption.CHROMA, embeddings=embeddings)
     assert isinstance(chroma, Chroma)
     assert Path(get_root() / "vectorstore/chroma").exists()
 
