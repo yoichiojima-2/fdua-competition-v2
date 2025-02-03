@@ -21,6 +21,9 @@ evaluate: run
 		--eval-result-dir ${PWD}/${INSTALL_DIR}/evaluation/result \
 		--max-num-tokens 150  # should be removed
 
+summarize-result: evaluate
+	${UV} python bin/summarize_result.py
+
 test: install
 	${UV} pytest -vvv -s
 

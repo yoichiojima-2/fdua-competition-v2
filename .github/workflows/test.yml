@@ -55,3 +55,6 @@ jobs:
           OPENAI_API_VERSION: ${{ secrets.OPENAI_API_VERSION }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
         run: make evaluate
+
+      - name: summarize result
+        run: make summarize-result
