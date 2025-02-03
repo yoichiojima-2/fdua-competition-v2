@@ -177,6 +177,11 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+@retry(stop=stop_after_attempt(10), wait=wait_fixed(10))
+def invoke_chain_with_retry(chain, payload):
+    return chain.invoke(payload)
+
+
 @traceable
 def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) -> None:
     vectorstore = get_vectorstore(output_name=output_name, opt=vectorstore_option, embeddings=get_embedding_model("azure"))
@@ -201,13 +206,14 @@ def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) ->
 
     responses = []
     for query in tqdm(get_queries(mode=mode), desc="querying.."):
-        res = chain.invoke(
+        res = invoke_chain_with_retry(
+            chain,
             {
                 "system_prompt": system_prompt,
                 "query": query,
                 "context": build_context(vectorstore=vectorstore, query=query),
-                "language": "Japanese",
-            }
+                "language": "English",
+            },
         )
         pprint(res)
         responses.append(res)
