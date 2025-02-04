@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 import warnings
 from enum import Enum
 from pathlib import Path
@@ -43,7 +44,7 @@ class VectorStoreOption(Enum):
 
 
 def print_before_retry(retry_state):
-    print(f"retrying attempt {retry_state.attempt_number} after exception: {retry_state.outcome.exception()}")
+    print(f"retrying attempt {retry_state.attempt_number} after exception: {retry_state.outcome.exception()}", file=sys.stderr)
 
 
 def get_root() -> Path:
