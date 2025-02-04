@@ -55,7 +55,7 @@ ${INSTALL_DIR}/.installed: ${ASSETS_DIR}/.success
 
 download-assets: ${ASSETS_DIR}/.success
 ${ASSETS_DIR}/.success:
-	-mkdir assets
+	-mkdir -p ${ASSETS_DIR}
 	gsutil -m cp -r ${GS_PATH}/assets/* assets/
 	touch ${ASSETS_DIR}/.success
 
