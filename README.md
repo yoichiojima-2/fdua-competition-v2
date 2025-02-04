@@ -26,8 +26,6 @@ LANGCHAIN_API_KEY=YOUR_LANGCHAIN_API_KEY
 
 ```bash
 export GOOGLE_APPLICATION_CREDENTIALS="${PWD}/secrets/google-application-credentials.json"
-
-make install
 ```
 
 ## run 
