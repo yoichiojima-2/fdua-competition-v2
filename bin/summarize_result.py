@@ -30,10 +30,7 @@ def calc_score():
     df = (
         df[["index", "evaluation", "unit_score"]]
         .groupby(["evaluation", "unit_score"])
-        .agg(
-            count=("unit_score", "count"),
-            sum_unit_score=("unit_score", "sum")
-        )
+        .count()
         .reset_index()
         .sort_values("unit_score", ascending=False)
     )
