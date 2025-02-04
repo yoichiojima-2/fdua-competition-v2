@@ -18,6 +18,29 @@ def main():
     show_detail()
 
 
+def calc_score():
+    df = pd.read_csv(get_root() / "evaluation/result/scoring.csv", header=None)
+    df.columns = ["index", "evaluation", "crag_score"]
+
+    evaluation_to_score = {"Perfect": 1, "Acceptable": 0.5, "Missing": 0, "Incorrect": -1}
+    df["unit_score"] = df["evaluation"].apply(lambda x: evaluation_to_score[x])
+
+    print(f"score: {df["unit_score"].mean()}\n")
+
+    df = (
+        df[["index", "evaluation", "unit_score"]]
+        .groupby(["evaluation", "unit_score"])
+        .agg(
+            count=("unit_score", "count"),
+            sum_unit_score=("unit_score", "sum")
+        )
+        .reset_index()
+        .sort_values("unit_score", ascending=False)
+    )
+    print(tabulate(df, headers=df.columns, tablefmt="grid", showindex=False))
+    print()
+
+
 def show_detail():
     answer_df = pd.read_csv(get_root() / "evaluation/data/ans_txt.csv", header=None)
     answer_df.columns = ["index", "answer"]
@@ -33,18 +56,6 @@ def show_detail():
         print(f"output: {output}")
         print(f"evaluation: {score}")
         print()
-
-
-def calc_score():
-    df = pd.read_csv(get_root() / "evaluation/result/scoring.csv", header=None)
-    df.columns = ["index", "evaluation", "score"]
-
-    evaluation_to_score = {"Perfect": 1, "Acceptable": 0.5, "Missing": 0, "Incorrect": -1}
-    converted_scores = df["evaluation"].map(lambda x: evaluation_to_score[x])
-
-    print(f"score: {converted_scores.mean()}\n")
-    print(tabulate(df[["index", "evaluation"]].groupby("evaluation").count()))
-    print()
 
 
 if __name__ == "__main__":
