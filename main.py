@@ -228,7 +228,7 @@ def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) ->
                 "system_prompt": system_prompt,
                 "query": query,
                 "context": build_context(vectorstore=vectorstore, query=query),
-                "language": "English",
+                "language": "japanese",
             },
         )
         pprint(res)
