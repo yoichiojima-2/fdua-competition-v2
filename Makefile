@@ -23,7 +23,7 @@ ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv: ${CSV_PATH}
 		--eval-result-dir ${PWD}/${INSTALL_DIR}/evaluation/result \
 		--max-num-tokens 150  # should be removed
 
-summarize-result: evaluate
+summary: evaluate
 	${UV} python bin/summarize_result.py
 
 test: install
