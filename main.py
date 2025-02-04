@@ -224,8 +224,8 @@ def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) ->
     responses = []
     for query in tqdm(get_queries(mode=mode), desc="querying.."):
         res = invoke_chain_with_retry(
-            chain,
-            {
+            chain=chain,
+            payload={
                 "system_prompt": system_prompt,
                 "query": query,
                 "context": build_context(vectorstore=vectorstore, query=query),
@@ -236,7 +236,6 @@ def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) ->
         print()
         responses.append(res)
 
-    pprint(responses)
     write_result(output_name=output_name, responses=responses)
     print("[main] :)  done")
 
