@@ -50,6 +50,7 @@ ${INSTALL_DIR}/.installed: ${ASSETS_DIR}/.success
 	cp assets/query.csv ${INSTALL_DIR}/
 	cp assets/readme.md ${INSTALL_DIR}/
 	${UV} python bin/fix_evaluator.py
+	pip install --upgrade pip && pip install uv
 	make clean
 	touch ${INSTALL_DIR}/.installed
 
