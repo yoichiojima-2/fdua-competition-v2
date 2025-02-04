@@ -2,6 +2,7 @@ PWD = $(shell pwd)
 UV = uv run
 GS_PATH = gs://fdua-competition
 ASSETS_DIR = assets
+SECRETS_DIR = secrets
 INSTALL_DIR = .fdua-competition
 OUTPUT_NAME = output_simple_test
 CHAT_MODEL = 4omini
@@ -41,9 +42,7 @@ clear-results:
 	rm ${CSV_PATH}
 	rm ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv
 
-
-
-install: ${INSTALL_DIR}/.installed
+install: download-assets download-secrets ${INSTALL_DIR}/.installed
 ${INSTALL_DIR}/.installed: ${ASSETS_DIR}/.success
 	-mkdir -p ${INSTALL_DIR}
 	find assets -type f -name "*.zip" -print -exec unzip -o {} -d ${INSTALL_DIR} \;
@@ -59,6 +58,10 @@ ${ASSETS_DIR}/.success:
 	-mkdir assets
 	gsutil -m cp -r ${GS_PATH}/assets/* assets/
 	touch ${ASSETS_DIR}/.success
+
+download-secrets: ${SECRETS_DIR}/.env ${SECRETS_DIR}/google-application-credentials.json
+${SECRETS_DIR}/.env ${SECRETS_DIR}/google-application-credentials.json:
+	gsutil -m cp -r ${GS_PATH}/secrets .
 
 pre-commit: lint clean
 
@@ -85,6 +88,3 @@ download-results:
 
 upload-secrets:
 	gsutil -m cp -r secrets ${GS_PATH}/
-
-download-secrets:
-	gsutil -m cp -r ${GS_PATH}/secrets .
