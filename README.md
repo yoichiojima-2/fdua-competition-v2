@@ -25,6 +25,8 @@ to build dev container, run:
 docker build -t fdua:latest .
 # run the container
 docker run -it --name fdua -v ${PWD}:/fdua-competition fdua:latest bash
+# enter the container
+docker run -it -v ${PWD}:/fdua-competition fdua bash
 ```
 
 ## usage
