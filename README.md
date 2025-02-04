@@ -13,9 +13,9 @@ pyenv install 3.12
 
 ## installation
 
-`fdua-competition/secrets/.env`
 
 ```bash
+# fdua-competition/secrets/.env
 FDUA_DIR="path/to/fdua-competition"
 AZURE_OPENAI_API_KEY=YOUR_AZURE_OPENAI_API_KEY
 AZURE_OPENAI_ENDPOINT=YOUR_AZURE_OPENAI_ENDPOINT
