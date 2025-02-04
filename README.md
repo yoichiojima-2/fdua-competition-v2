@@ -1,8 +1,3 @@
-## requirements
-- python@3.12
-- make
-- unzip
-- google-cloud-sdk
 
 ## installation
 
@@ -34,6 +29,14 @@ AZURE_OPENAI_ENDPOINT="YOUR_AZURE_OPENAI_ENDPOINT"
 OPENAI_API_VERSION="YOUR_AZURE_OPENAI_API_VERSION"
 LANGCHAIN_TRACING_V2=true
 LANGCHAIN_API_KEY="YOUR_LANGCHAIN_API_KEY"
+```
+
+to build dev container, run:
+```bash
+# build the container
+docker build -t fdua:latest .
+# run the container
+docker run -it --name fdua -v ${PWD}:/app fdua:latest bash
 ```
 
 ## usage

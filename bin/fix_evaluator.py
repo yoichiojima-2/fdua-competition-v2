@@ -1,13 +1,8 @@
-import sys
 from pathlib import Path
-
-sys.path.append(str(Path(__file__).parent.parent))
-
-from main import get_root
 
 
 def main() -> None:
-    path = get_root() / "evaluation/src/evaluator.py"
+    path = Path(__file__).parent.parent / ".fdua-competition/evaluation/src/evaluator.py"
 
     path.write_text(
         "\n".join(
