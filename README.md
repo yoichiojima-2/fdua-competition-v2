@@ -1,18 +1,6 @@
 
 ## installation
 
-place the following files in the `assets` directory at the repository root:
-
-```bash
-assets
-├── documents.zip
-├── evaluation.zip
-├── query.csv
-├── readme.md
-├── sample_submit.zip
-└── validation.zip
-```
-
 place the following files in the `secrets` directory at the repository root:
 
 ```bash
@@ -42,7 +30,7 @@ docker run -it --name fdua -v ${PWD}:/app fdua:latest bash
 ## usage
 to run the main script:
 ```bash
-make run
+make run  # this collects required data on first execution
 ```
 
 to evaluate the results:
