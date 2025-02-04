@@ -10,7 +10,7 @@ RUN curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cl
     ./google-cloud-sdk/install.sh && \
     rm google-cloud-cli-linux-x86_64.tar.gz
 ENV PATH="/opt/google-cloud-sdk/bin:${PATH}"
-COPY secrets/google-application-credentials.json /app/secrets/google-application-credentials.json
-RUN gcloud auth activate-service-account --key-file="/app/secrets/google-application-credentials.json"
+COPY secrets/google-application-credentials.json /fdua-competition/secrets/google-application-credentials.json
+RUN gcloud auth activate-service-account --key-file="/fdua-competition/secrets/google-application-credentials.json"
 
-WORKDIR /app
+WORKDIR /fdua-competition
