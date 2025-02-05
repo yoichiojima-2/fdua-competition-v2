@@ -14,11 +14,7 @@ from fdua_competition.chat import get_chat_model, get_prompt_template, get_queri
 from fdua_competition.enums import ChatModelOption, Mode, VectorStoreOption
 from fdua_competition.parser import get_output_parser
 from fdua_competition.utils import write_result
-<<<<<<< HEAD
-from fdua_competition.vectorstore import build_vectorstore, build_context
-=======
 from fdua_competition.vectorstore import build_context, build_vectorstore
->>>>>>> 1a06baa (hotfix: remove from chat import build_context)
 
 load_dotenv("secrets/.env")
 
