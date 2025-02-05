@@ -7,7 +7,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import AzureChatOpenAI
 
 sys.path.append(str(Path(__file__).parent.parent))
-from fdua_competition.chat import get_chat_model, get_prompt_template, get_queries, invoke_chain_with_retry
+from fdua_competition.chat import get_chat_model, get_prompt_template, invoke_chain_with_retry
 from fdua_competition.enums import ChatModelOption, Mode
 
 load_dotenv(Path(__file__).parent.parent / "secrets/.env")
