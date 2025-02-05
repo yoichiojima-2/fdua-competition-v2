@@ -39,8 +39,8 @@ test-evaluate: install
 		--eval-result-dir ${PWD}/${INSTALL_DIR}/evaluation/result
 
 clear-results:
-	rm ${CSV_PATH}
-	rm ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv
+	-rm ${CSV_PATH}
+	-rm ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv
 
 install: download-assets download-secrets ${INSTALL_DIR}/.installed
 ${INSTALL_DIR}/.installed: ${ASSETS_DIR}/.success
