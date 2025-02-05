@@ -2,18 +2,14 @@ import sys
 import typing as t
 from pathlib import Path
 
-import pandas as pd
 from langchain.schema.runnable import Runnable
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 sys.path.append(str(Path(__file__).parent.parent))
-from fdua_competition.enums import ChatModelOption, Mode
-from fdua_competition.utils import get_root, print_before_retry
-
-
-
+from fdua_competition.enums import ChatModelOption
+from fdua_competition.utils import print_before_retry
 
 
 def get_chat_model(opt: ChatModelOption) -> ChatOpenAI:

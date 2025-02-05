@@ -8,8 +8,8 @@ from tabulate import tabulate
 project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
-from fdua_competition.utils import get_root, get_queries
 from fdua_competition.enums import Mode
+from fdua_competition.utils import get_queries, get_root
 
 load_dotenv(project_root / "secrets/.env")
 
@@ -53,7 +53,9 @@ def show_detail():
     score_df = pd.read_csv(get_root() / "evaluation/result/scoring.csv", header=None)
     score_df.columns = ["index", "evaluation", "score"]
 
-    for question, ansewr, output, score in zip(get_queries(Mode.TEST), answer_df["answer"], output_df["output"], score_df["evaluation"]):
+    for question, ansewr, output, score in zip(
+        get_queries(Mode.TEST), answer_df["answer"], output_df["output"], score_df["evaluation"]
+    ):
         print(f"question: {question}")
         print(f"answer: {ansewr}")
         print(f"output: {output}")
