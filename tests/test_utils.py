@@ -4,11 +4,18 @@ from pathlib import Path
 import pandas as pd
 
 sys.path.append(str(Path(__file__).parent.parent))
-from fdua_competition.utils import get_root, write_result
+from fdua_competition.enums import Mode
+from fdua_competition.utils import get_queries, get_root, write_result
 
 
 def test_get_root():
     assert get_root().name == ".fdua-competition"
+
+
+def test_get_queries():
+    queries = get_queries(mode=Mode.TEST)
+    assert isinstance(queries, list)
+    assert queries
 
 
 def test_write_result(tmp_path):
