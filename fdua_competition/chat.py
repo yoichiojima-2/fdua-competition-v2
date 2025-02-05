@@ -27,7 +27,3 @@ def get_prompt_template() -> ChatPromptTemplate:
             ("user", "query:\n{query}"),
         ]
     )
-
-
-def invoke_chain_with_retry(chain: Runnable, payload: dict[str, t.Any]) -> t.Any:
-    return chain.invoke(payload)
