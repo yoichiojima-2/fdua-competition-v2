@@ -2,11 +2,15 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+from dotenv import load_dotenv
 from tabulate import tabulate
 
-sys.path.append(str(Path(__file__).parent.parent))
+project_root = Path(__file__).parent.parent
+sys.path.append(str(project_root))
 
-from main import get_root
+from fdua_competition.utils import get_root
+
+load_dotenv(project_root / "secrets/.env")
 
 
 def main():
@@ -25,7 +29,7 @@ def calc_score():
     evaluation_to_score = {"Perfect": 1, "Acceptable": 0.5, "Missing": 0, "Incorrect": -1}
     df["unit_score"] = df["evaluation"].apply(lambda x: evaluation_to_score[x])
 
-    print(f"score: {df["unit_score"].mean()}\n")
+    print(f"score: {df['unit_score'].mean()}\n")
 
     df = (
         df[["index", "evaluation", "unit_score"]]
