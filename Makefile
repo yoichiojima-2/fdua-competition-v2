@@ -10,10 +10,13 @@ CSV_PATH = ${INSTALL_DIR}/results/${OUTPUT_NAME}.csv
 
 run: ${CSV_PATH}
 ${CSV_PATH}: ${INSTALL_DIR}/.installed
+	@echo "\nrunning..."
 	${UV} python -m fdua_competition.main -o ${OUTPUT_NAME}
+	@echo "done"
 
 evaluate: ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv
 ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv: ${CSV_PATH}
+	@echo "\nevaluating..."
 	${UV} python ${INSTALL_DIR}/evaluation/crag.py \
 		--model-name ${CHAT_MODEL} \
 		--result-dir ${PWD}/${INSTALL_DIR}/results \
@@ -22,12 +25,17 @@ ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv: ${CSV_PATH}
 		--ans-txt ans_txt.csv \
 		--eval-result-dir ${PWD}/${INSTALL_DIR}/evaluation/result \
 		--max-num-tokens 150  # should be removed
+	@echo "done"
 
 summary: evaluate
+	@echo "\nsummarizing..."
 	${UV} python bin/summarize_result.py
+	@echo "done"
 
 test: install
+	@echo "\ntesting..."
 	${UV} pytest -vvv
+	@echo "done"
 
 test-evaluate: install
 	${UV} python ${INSTALL_DIR}/evaluation/crag.py \
@@ -44,6 +52,7 @@ clear-results:
 
 install: ${INSTALL_DIR}/.installed
 ${INSTALL_DIR}/.installed: ${ASSETS_DIR}/.success ${SECRETS_DIR}/.success
+	@echo "\ninstalling..."
 	-mkdir -p ${INSTALL_DIR}
 	find assets -type f -name "*.zip" -print -exec unzip -o {} -d ${INSTALL_DIR} \;
 	cp assets/query.csv ${INSTALL_DIR}/
@@ -52,12 +61,15 @@ ${INSTALL_DIR}/.installed: ${ASSETS_DIR}/.success ${SECRETS_DIR}/.success
 	pip install --upgrade pip && pip install uv
 	make clean
 	touch ${INSTALL_DIR}/.installed
+	@echo "done"
 
 download-assets: ${ASSETS_DIR}/.success
 ${ASSETS_DIR}/.success:
+	@echo "\ndownloading assets..."
 	-mkdir -p ${ASSETS_DIR}
 	gsutil -m cp -r ${GS_PATH}/assets/* assets/
 	touch ${ASSETS_DIR}/.success
+	@echo "done"
 
 download-secrets: ${SECRETS_DIR}/.success
 ${SECRETS_DIR}/.success:
@@ -67,24 +79,30 @@ ${SECRETS_DIR}/.success:
 pre-commit: lint clean
 
 lint:
+	@echo "\nlinting..."
 	${UV} isort .
 	${UV} ruff check . --fix
 	${UV} ruff format .
+	@echo "done"
 
 clean:
+	@echo "\ncleaning..."
 	find . -type d -name "__pycache__" -print -exec rm -r {} +
 	find . -type d -name ".pytest_cache" -print -exec rm -r {} +
 	find . -type d -name ".ruff_cache" -print -exec rm -r {} +
 	find . -type d -name "__MACOSX" -print -exec rm -r {} +
 	find . -type f -name ".DS_Store" -print -exec rm -r {} +
 	find . -type f -name "*.Identifier" -print -exec rm -r {} +
+	@echo "done"
 
 uninstall: clean
+	@echo "\nuninstalling..."
 	-rm -rf .venv
 	-rm uv.lock
 	-rm -rf ${INSTALL_DIR}
 	-rm -rf ${ASSETS_DIR}
 	-rm -rf ${SECRETS_DIR}
+	@echo "done"
 
 upload-results:
 	gsutil -m cp -r ${INSTALL_DIR}/results ${GS_PATH}/
