@@ -1,25 +1,20 @@
+import sys
 from pathlib import Path
 
 from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.vectorstores import InMemoryVectorStore
-from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings, OpenAIEmbeddings
+from langchain_openai import (AzureChatOpenAI, AzureOpenAIEmbeddings,
+                              OpenAIEmbeddings)
 
-from main import (
-    ChatModelOption,
-    EmbeddingModelOption,
-    Mode,
-    VectorStoreOption,
-    add_documents_with_retry,
-    get_chat_model,
-    get_documents_dir,
-    get_embedding_model,
-    get_pages,
-    get_prompt_template,
-    get_queries,
-    get_root,
-    get_vectorstore,
-)
+sys.path.append(str(Path(__file__).parent.parent))
+
+from fdua_competition.main import (ChatModelOption, EmbeddingModelOption, Mode,
+                                   VectorStoreOption, add_documents_with_retry,
+                                   get_chat_model, get_documents_dir,
+                                   get_embedding_model, get_pages,
+                                   get_prompt_template, get_queries, get_root,
+                                   get_vectorstore)
 
 
 def test_get_document_dir():

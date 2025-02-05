@@ -6,7 +6,7 @@ from tabulate import tabulate
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from main import get_root
+from fdua_competition.main import get_root
 
 
 def main():
@@ -25,7 +25,7 @@ def calc_score():
     evaluation_to_score = {"Perfect": 1, "Acceptable": 0.5, "Missing": 0, "Incorrect": -1}
     df["unit_score"] = df["evaluation"].apply(lambda x: evaluation_to_score[x])
 
-    print(f"score: {df["unit_score"].mean()}\n")
+    print(f"score: {df['unit_score'].mean()}\n")
 
     df = (
         df[["index", "evaluation", "unit_score"]]

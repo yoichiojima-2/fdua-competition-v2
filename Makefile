@@ -10,7 +10,7 @@ CSV_PATH = ${INSTALL_DIR}/results/${OUTPUT_NAME}.csv
 
 run: ${CSV_PATH}
 ${CSV_PATH}: ${INSTALL_DIR}/.installed
-	${UV} python -m main -o ${OUTPUT_NAME}
+	${UV} python -m fdua_competition.main -o ${OUTPUT_NAME}
 
 evaluate: ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv
 ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv: ${CSV_PATH}

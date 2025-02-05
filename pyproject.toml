@@ -27,3 +27,4 @@ dev = [
 
 [tool.ruff]
 line-length = 127
+ignore = ["E402"]
