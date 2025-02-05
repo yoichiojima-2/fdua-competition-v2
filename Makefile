@@ -8,6 +8,20 @@ OUTPUT_NAME = output_simple_test
 CHAT_MODEL = 4omini
 CSV_PATH = ${INSTALL_DIR}/results/${OUTPUT_NAME}.csv
 
+
+up:
+	@echo "\starting container..."
+	docker compose up -d
+
+down:
+	@echo "\nstopping container..."
+	docker compose down
+
+in:
+	@echo "\nentering container..."
+	docker run -it -v .:/fdua-competition fdua-competition bash
+
+
 run: ${CSV_PATH}
 ${CSV_PATH}: ${INSTALL_DIR}/.installed
 	@echo "\nrunning..."

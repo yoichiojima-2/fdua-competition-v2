@@ -21,10 +21,11 @@ LANGCHAIN_API_KEY="YOUR_LANGCHAIN_API_KEY"
 
 to build dev container, run:
 ```bash
-# run the container
-docker compose up -d
+# start the container
+make up
+
 # enter the container
-docker run -it -v .:/fdua-competition fdua-competition bash
+make in
 ```
 
 ## usage
@@ -45,5 +46,5 @@ make evaluate
 
 to summarize the result:
 ```bash
-make summarize-result
+make summary
 ```
