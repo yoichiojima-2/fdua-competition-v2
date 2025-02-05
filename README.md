@@ -11,7 +11,7 @@ secrets
 
 the `.env` file should contain the following environment variables:
 ```bash
-FDUA_DIR="path/to/fdua-competition"
+FDUA_DIR=/fdua-competition
 AZURE_OPENAI_API_KEY="YOUR_AZURE_OPENAI_API_KEY"
 AZURE_OPENAI_ENDPOINT="YOUR_AZURE_OPENAI_ENDPOINT"
 OPENAI_API_VERSION="YOUR_AZURE_OPENAI_API_VERSION"
