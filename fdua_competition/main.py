@@ -39,16 +39,7 @@ def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) ->
     parser = get_output_parser()
     chain = prompt_template | chat_model | parser
 
-    system_prompt = " ".join(
-        [
-            "answer the question using only the provided context in {language}.",
-            "return a json object that contains the following keys: query, response, reason, organization_name, contexts.",
-            "make sure that the response field is under 54 tokens and contains no commas. other fields do not have token limits.",
-            "do not include honorifics or polite expressions; use plain, assertive language in the response field.",
-            "the response field must be based only from given context.",
-            "do not include any special characters that can cause json parsing errors across all fields. this must be satisfied regardless of the language.",
-        ]
-    )
+    system_prompt = (Path(__file__).parent / "prompts/system_prompt.txt").read_text()
 
     responses = []
     for query in tqdm(get_queries(mode=mode), desc="querying.."):
