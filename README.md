@@ -24,7 +24,7 @@ to build dev container, run:
 # run the container
 docker compose up -d
 # enter the container
-docker exec -it fdua-competition bash
+docker run -it -v .:/fdua-competition fdua bash
 ```
 
 ## usage
