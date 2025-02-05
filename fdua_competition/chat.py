@@ -51,6 +51,6 @@ def build_context(vectorstore: VectorStore, query: str) -> str:
     return "\n---\n".join(contexts)
 
 
-@retry(stop=stop_after_attempt(24), wait=wait_fixed(10), before_sleep=print_before_retry)
+@retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=print_before_retry)
 def invoke_chain_with_retry(chain: Runnable, payload: dict[str, t.Any]) -> t.Any:
     return chain.invoke(payload)
