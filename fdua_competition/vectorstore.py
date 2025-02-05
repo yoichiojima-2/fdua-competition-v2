@@ -49,12 +49,13 @@ def prepare_vectorstore(output_name: str, opt: VectorStoreOption, embeddings: Op
         case VectorStoreOption.IN_MEMORY:
             return InMemoryVectorStore(embeddings)
         case VectorStoreOption.CHROMA:
-            path = get_root() / f"vectorstores/chroma/{output_name}"
-            print(f"[prepare_vectorstore] chroma: {path}")
+            persist_directory = get_root() / "vectorstores/chroma"
+            print(f"[prepare_vectorstore] chroma: {persist_directory}")
+            persist_directory.mkdir(parents=True, exist_ok=True)
             return Chroma(
-                collection_name=path.name,
+                collection_name=output_name,
                 embedding_function=embeddings,
-                persist_directory=str(path.parent),
+                persist_directory=str(persist_directory),
             )
         case _:
             raise ValueError(f"): unknown vectorstore: {opt}")
@@ -75,7 +76,7 @@ def _add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterab
         _add_documents_with_retry(vectorstore=vectorstore, batch=batch)
 
 
-@retry(stop=stop_after_attempt(2), wait=wait_fixed(1), before_sleep=print_before_retry)
+@retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=print_before_retry)
 def _add_documents_with_retry(vectorstore: VectorStore, batch: list[Document]) -> None:
     vectorstore.add_documents(batch)
 
