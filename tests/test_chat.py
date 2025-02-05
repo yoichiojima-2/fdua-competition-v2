@@ -13,11 +13,6 @@ from fdua_competition.enums import ChatModelOption, Mode
 load_dotenv(Path(__file__).parent.parent / "secrets/.env")
 
 
-def test_get_queries():
-    queries = get_queries(mode=Mode.TEST)
-    assert isinstance(queries, list)
-    assert queries
-
 
 def test_get_chat_model():
     chat_model = get_chat_model(ChatModelOption.AZURE)

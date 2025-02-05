@@ -13,16 +13,7 @@ from fdua_competition.enums import ChatModelOption, Mode
 from fdua_competition.utils import get_root, print_before_retry
 
 
-def get_queries(mode: Mode) -> list[str]:
-    match mode:
-        case Mode.TEST:
-            df = pd.read_csv(get_root() / "validation/ans_txt.csv")
-            return df["problem"].tolist()
-        case Mode.SUBMIT:
-            df = pd.read_csv(get_root() / "query.csv")
-            return df["problem"].tolist()
-        case _:
-            raise ValueError(f"): unknown mode: {mode}")
+
 
 
 def get_chat_model(opt: ChatModelOption) -> ChatOpenAI:
