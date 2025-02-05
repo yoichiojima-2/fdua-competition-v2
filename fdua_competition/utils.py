@@ -25,7 +25,7 @@ def get_queries(mode: Mode) -> list[str]:
 
 
 def print_before_retry(retry_state):
-    print(f"retrying attempt {retry_state.attempt_number} after exception: {retry_state.outcome.exception()}", file=sys.stderr)
+    print(f":( retrying attempt {retry_state.attempt_number} after exception: {retry_state.outcome.exception()}", file=sys.stderr)
 
 
 def write_result(output_name: str, responses: list[ChatResponse]) -> None:
