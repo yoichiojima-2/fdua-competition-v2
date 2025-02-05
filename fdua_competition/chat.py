@@ -9,7 +9,6 @@ from tenacity import retry, stop_after_attempt, wait_fixed
 
 sys.path.append(str(Path(__file__).parent.parent))
 from fdua_competition.enums import ChatModelOption
-from fdua_competition.utils import print_before_retry
 
 
 def get_chat_model(opt: ChatModelOption) -> ChatOpenAI:
@@ -30,6 +29,5 @@ def get_prompt_template() -> ChatPromptTemplate:
     )
 
 
-@retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=print_before_retry)
 def invoke_chain_with_retry(chain: Runnable, payload: dict[str, t.Any]) -> t.Any:
     return chain.invoke(payload)
