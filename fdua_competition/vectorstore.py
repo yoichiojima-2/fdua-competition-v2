@@ -13,8 +13,7 @@ from tqdm import tqdm
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from fdua_competition.enums import (EmbeddingModelOption, Mode,
-                                    VectorStoreOption)
+from fdua_competition.enums import EmbeddingModelOption, Mode, VectorStoreOption
 from fdua_competition.utils import get_root, print_before_retry
 
 
@@ -50,12 +49,12 @@ def prepare_vectorstore(output_name: str, opt: VectorStoreOption, embeddings: Op
         case VectorStoreOption.IN_MEMORY:
             return InMemoryVectorStore(embeddings)
         case VectorStoreOption.CHROMA:
-            persist_path = get_root() / f"vectorstore/chroma/fdua-competition_{output_name}"
-            print(f"[prepare_vectorstore] chroma: {persist_path}")
+            path = get_root() / f"vectorstores/chroma/{output_name}"
+            print(f"[prepare_vectorstore] chroma: {path}")
             return Chroma(
-                collection_name=persist_path.name,
+                collection_name=path.name,
                 embedding_function=embeddings,
-                persist_directory=str(persist_path.parent),
+                persist_directory=str(path.parent),
             )
         case _:
             raise ValueError(f"): unknown vectorstore: {opt}")
@@ -65,7 +64,7 @@ def _get_existing_sources_in_vectorstore(vectorstore: VectorStore) -> set[str]:
     return {metadata.get("source") for metadata in vectorstore.get().get("metadatas")}
 
 
-def _add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterable[Document], batch_size: int = 36) -> None:
+def _add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterable[Document], batch_size: int = 12) -> None:
     batch = []
     for page in tqdm(pages, desc="adding pages.."):
         batch.append(page)
@@ -76,7 +75,7 @@ def _add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterab
         _add_documents_with_retry(vectorstore=vectorstore, batch=batch)
 
 
-@retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=print_before_retry)
+@retry(stop=stop_after_attempt(2), wait=wait_fixed(1), before_sleep=print_before_retry)
 def _add_documents_with_retry(vectorstore: VectorStore, batch: list[Document]) -> None:
     vectorstore.add_documents(batch)
 

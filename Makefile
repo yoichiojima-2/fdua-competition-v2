@@ -42,8 +42,8 @@ clear-results:
 	-rm ${CSV_PATH}
 	-rm ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv
 
-install: download-assets download-secrets ${INSTALL_DIR}/.installed
-${INSTALL_DIR}/.installed: ${ASSETS_DIR}/.success
+install: ${INSTALL_DIR}/.installed
+${INSTALL_DIR}/.installed: ${ASSETS_DIR}/.success ${SECRETS_DIR}/.success
 	-mkdir -p ${INSTALL_DIR}
 	find assets -type f -name "*.zip" -print -exec unzip -o {} -d ${INSTALL_DIR} \;
 	cp assets/query.csv ${INSTALL_DIR}/
@@ -59,9 +59,10 @@ ${ASSETS_DIR}/.success:
 	gsutil -m cp -r ${GS_PATH}/assets/* assets/
 	touch ${ASSETS_DIR}/.success
 
-download-secrets: ${SECRETS_DIR}/.env ${SECRETS_DIR}/google-application-credentials.json
-${SECRETS_DIR}/.env ${SECRETS_DIR}/google-application-credentials.json:
+download-secrets: ${SECRETS_DIR}/.success
+${SECRETS_DIR}/.success:
 	gsutil -m cp -r ${GS_PATH}/secrets .
+	touch ${SECRETS_DIR}/.success
 
 pre-commit: lint clean
 
@@ -71,14 +72,19 @@ lint:
 	${UV} ruff format .
 
 clean:
-	-rm -rf .venv
-	-rm uv.lock
 	find . -type d -name "__pycache__" -print -exec rm -r {} +
 	find . -type d -name ".pytest_cache" -print -exec rm -r {} +
 	find . -type d -name ".ruff_cache" -print -exec rm -r {} +
 	find . -type d -name "__MACOSX" -print -exec rm -r {} +
 	find . -type f -name ".DS_Store" -print -exec rm -r {} +
 	find . -type f -name "*.Identifier" -print -exec rm -r {} +
+
+uninstall: clean
+	-rm -rf .venv
+	-rm uv.lock
+	-rm -rf ${INSTALL_DIR}
+	-rm -rf ${ASSETS_DIR}
+	-rm -rf ${SECRETS_DIR}
 
 upload-results:
 	gsutil -m cp -r ${INSTALL_DIR}/results ${GS_PATH}/

@@ -10,9 +10,7 @@ from tqdm import tqdm
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from fdua_competition.chat import (build_context, get_chat_model,
-                                   get_prompt_template, get_queries,
-                                   invoke_chain_with_retry)
+from fdua_competition.chat import build_context, get_chat_model, get_prompt_template, get_queries, invoke_chain_with_retry
 from fdua_competition.enums import ChatModelOption, Mode, VectorStoreOption
 from fdua_competition.parser import get_output_parser
 from fdua_competition.utils import write_result

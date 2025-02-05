@@ -7,11 +7,9 @@ from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import AzureChatOpenAI
 
 sys.path.append(str(Path(__file__).parent.parent))
-from fdua_competition.chat import (build_context, get_chat_model,
-                                   get_prompt_template, get_queries)
+from fdua_competition.chat import build_context, get_chat_model, get_prompt_template, get_queries
 from fdua_competition.enums import ChatModelOption, EmbeddingModelOption, Mode
-from fdua_competition.vectorstore import (get_documents_dir,
-                                          get_embedding_model, load_pages)
+from fdua_competition.vectorstore import get_documents_dir, get_embedding_model, load_pages
 
 load_dotenv(Path(__file__).parent.parent / "secrets/.env")
 
