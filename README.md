@@ -21,12 +21,10 @@ LANGCHAIN_API_KEY="YOUR_LANGCHAIN_API_KEY"
 
 to build dev container, run:
 ```bash
-# build the container
-docker build -t fdua:latest .
 # run the container
-docker run -it --name fdua -v ${PWD}:/fdua-competition fdua:latest bash
+docker compose up -d
 # enter the container
-docker run -it -v ${PWD}:/fdua-competition fdua bash
+docker exec -it fdua-competition bash
 ```
 
 ## usage

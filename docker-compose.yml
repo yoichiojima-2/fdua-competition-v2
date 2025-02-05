@@ -1,0 +1,9 @@
+services:
+  fdua:
+    image: fdua-competition:latest
+    build:
+      context: .
+    container_name: fdua-competition
+    volumes:
+      - .:/fdua-competition
+    tty: true
