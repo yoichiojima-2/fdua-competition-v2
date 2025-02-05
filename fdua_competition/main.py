@@ -10,27 +10,23 @@ from tqdm import tqdm
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from fdua_competition.chat import build_context, get_chat_model, get_prompt_template, get_queries, invoke_chain_with_retry
+from fdua_competition.chat import get_chat_model, get_prompt_template, get_queries, invoke_chain_with_retry
 from fdua_competition.enums import ChatModelOption, Mode, VectorStoreOption
 from fdua_competition.parser import get_output_parser
 from fdua_competition.utils import write_result
-from fdua_competition.vectorstore import build_vectorstore
+from fdua_competition.vectorstore import build_vectorstore, build_context
 
 load_dotenv("secrets/.env")
 
 
 def parse_args() -> argparse.Namespace:
+    # fmt: off
     parser = argparse.ArgumentParser()
     opt = parser.add_argument
     opt("--output-name", "-o", type=str)
     opt("--mode", "-m", type=str, choices=[choice.value for choice in Mode], default=Mode.TEST.value)
-    opt(
-        "--vectorstore",
-        "-v",
-        type=str,
-        choices=[choice.value for choice in VectorStoreOption],
-        default=VectorStoreOption.CHROMA.value,
-    )
+    opt("--vectorstore", "-v", type=str, choices=[choice.value for choice in VectorStoreOption], default=VectorStoreOption.CHROMA.value)
+    # fmt: on
     return parser.parse_args()
 
 

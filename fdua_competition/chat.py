@@ -45,12 +45,5 @@ def get_prompt_template() -> ChatPromptTemplate:
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=print_before_retry)
-def build_context(vectorstore: VectorStore, query: str) -> str:
-    pages = vectorstore.as_retriever().invoke(query)
-    contexts = ["\n".join([f"page_content: {page.page_content}", f"metadata: {page.metadata}"]) for page in pages]
-    return "\n---\n".join(contexts)
-
-
-@retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=print_before_retry)
 def invoke_chain_with_retry(chain: Runnable, payload: dict[str, t.Any]) -> t.Any:
     return chain.invoke(payload)

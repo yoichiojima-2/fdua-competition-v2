@@ -98,3 +98,10 @@ def build_vectorstore(output_name: str, mode: Mode, vectorstore_option: VectorSt
     docs = get_document_list(document_dir=get_documents_dir(mode=mode))
     add_documents_to_vectorstore(docs, vectorstore)
     return vectorstore
+
+
+@retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=print_before_retry)
+def build_context(vectorstore: VectorStore, query: str) -> str:
+    pages = vectorstore.as_retriever().invoke(query)
+    contexts = ["\n".join([f"page_content: {page.page_content}", f"metadata: {page.metadata}"]) for page in pages]
+    return "\n---\n".join(contexts)

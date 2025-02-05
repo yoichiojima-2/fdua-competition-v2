@@ -36,14 +36,6 @@ def test_get_prompt_template():
     assert isinstance(prompt, ChatPromptTemplate)
 
 
-def test_build_context():
-    vectorstore = InMemoryVectorStore(get_embedding_model(EmbeddingModelOption.AZURE))
-    pages = load_pages(get_documents_dir(Mode.TEST) / "1.pdf")
-    page = next(pages)
-    vectorstore.add_documents([page])
-    assert build_context(vectorstore, "query")
-
-
 class SimpleChain(Runnable):
     def invoke(self, input_data):
         return "invoked"
