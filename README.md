@@ -33,6 +33,11 @@ to run the main script:
 make run  # this collects required data on first execution
 ```
 
+to test:
+```bash
+make test
+```
+
 to evaluate the results:
 ```bash
 make evaluate
@@ -41,9 +46,4 @@ make evaluate
 to summarize the result:
 ```bash
 make summarize-result
-```
-
-to test:
-```bash
-make test
 ```
