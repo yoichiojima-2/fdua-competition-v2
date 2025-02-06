@@ -1,7 +1,7 @@
 
-## installation
+## インストール
 
-place the following files in the `secrets` directory at the repository root:
+リポジトリのルートにある secrets ディレクトリに、以下のファイルを配置する
 
 ```bash
 secrets
@@ -9,42 +9,54 @@ secrets
 └── google-application-credentials.json
 ```
 
-the `.env` file should contain the following environment variables:
+.env ファイルには、以下の環境変数を設定する
+
 ```bash
-FDUA_DIR=/fdua-competition
-AZURE_OPENAI_API_KEY="YOUR_AZURE_OPENAI_API_KEY"
-AZURE_OPENAI_ENDPOINT="YOUR_AZURE_OPENAI_ENDPOINT"
-OPENAI_API_VERSION="YOUR_AZURE_OPENAI_API_VERSION"
+OUTPUT_NAME=結果csvファイル名
+AZURE_OPENAI_API_KEY=YOUR_AZURE_OPENAI_API_KEY
+AZURE_OPENAI_ENDPOINT=YOUR_AZURE_OPENAI_ENDPOINT
+OPENAI_API_VERSION=YOUR_OPENAI_API_VERSION
 LANGCHAIN_TRACING_V2=true
-LANGCHAIN_API_KEY="YOUR_LANGCHAIN_API_KEY"
+LANGCHAIN_API_KEY=YOUR_LANGCHAIN_API_KEY
 ```
 
-to build dev container, run:
+## 開発コンテナのビルド
+
+以下のコマンドを実行してください
+
 ```bash
-# start the container
-make up  # this also starts jupyter lab. open http://localhost:8888 on your browser
-
-# enter the container
-make in
+make up # コンテナを起動
 ```
 
-## usage
-to run the main script:
 ```bash
-make run  # this collects required data on first execution
+make in # コンテナに入る
 ```
 
-to test:
+`make up` はjupyter labも起動する. (`http://localhost:8888`)
+
+
+## 使い方
+
+メインスクリプトを実行する
+
+```bash
+make run  # 初回実行時に必要なデータを収集する
+```
+
+テストを実行する
+
 ```bash
 make test
 ```
 
-to evaluate the results:
+結果を評価する
+
 ```bash
 make evaluate
 ```
 
-to summarize the result:
+結果とスコアを見る
+
 ```bash
 make summary
 ```
