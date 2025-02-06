@@ -13,3 +13,4 @@ COPY secrets/google-application-credentials.json /fdua-competition/secrets/googl
 RUN gcloud auth activate-service-account --key-file="/fdua-competition/secrets/google-application-credentials.json"
 
 WORKDIR /fdua-competition
+CMD bash

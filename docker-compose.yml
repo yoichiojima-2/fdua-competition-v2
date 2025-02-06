@@ -1,5 +1,5 @@
 services:
-  fdua:
+  fdua-competition:
     image: fdua-competition:latest
     build:
       context: .
@@ -7,3 +7,15 @@ services:
     volumes:
       - .:/fdua-competition
     tty: true
+
+  fdua-notebook:
+    image: fdua-competition:latest
+    build:
+      context: .
+    container_name: fdua-notebook
+    volumes:
+      - .:/fdua-competition
+    tty: true
+    command: uv run jupyter lab --ip 0.0.0.0 --port=8888 --allow-root --no-browser --NotebookApp.token=''
+    ports:
+      - "8888:8888"
