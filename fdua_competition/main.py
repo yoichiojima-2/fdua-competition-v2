@@ -1,9 +1,3 @@
-"""メイン処理を定義するモジュール。
-
-このモジュールは、コマンドライン引数の解析、ベクトルストアの構築、
-ResearchAssistant の呼び出し、及び結果の書き出しを行います。
-"""
-
 import argparse
 import warnings
 from pprint import pprint
@@ -18,10 +12,9 @@ from fdua_competition.vectorstore import build_vectorstore
 
 
 def parse_args() -> argparse.Namespace:
-    """コマンドライン引数を解析する関数。
-
+    """
     Returns:
-        argparse.Namespace: 解析されたコマンドライン引数のオブジェクト。
+        argparse.Namespace
     """
     # fmt: off
     parser = argparse.ArgumentParser()
@@ -40,18 +33,14 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-
 @traceable
 def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) -> None:
-    """メインの処理を実行する関数。
-
-    ベクトルストアを構築し、各クエリに対して ResearchAssistant の処理を呼び出し、
-    その結果を CSV ファイルに保存します。
-
+    """
+    ベクトルストアを構築し、各クエリに対してRAGに回答させ, 結果を CSV ファイルに保存します。
     Args:
-        output_name (str): 出力ファイル名（拡張子なし）。
-        mode (Mode): 動作モード（TEST または SUBMIT）。
-        vectorstore_option (VectorStoreOption): 使用するベクトルストアのオプション。
+        output_name (str): 出力ファイル名（拡張子なし）
+        mode (Mode): 動作モード (TEST または SUBMIT)
+        vectorstore_option (VectorStoreOption): 使用するベクトルストアのオプション
     """
     # ベクトルストアを構築
     vectorstore = build_vectorstore(output_name, mode, vectorstore_option)
@@ -80,8 +69,4 @@ if __name__ == "__main__":
     args = parse_args()
 
     # 引数を元に main 関数を実行
-    main(
-        output_name=args.output_name,
-        mode=Mode(args.mode),
-        vectorstore_option=VectorStoreOption(args.vectorstore)
-    )
+    main(output_name=args.output_name, mode=Mode(args.mode), vectorstore_option=VectorStoreOption(args.vectorstore))
