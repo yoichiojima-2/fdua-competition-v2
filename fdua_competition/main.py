@@ -1,6 +1,6 @@
 """
 example:
-    python fdua_competition/main.py -o example -m test -v chroma
+    uv run python fdua_competition/main.py -o example -m test -v chroma
 """
 
 
@@ -25,17 +25,29 @@ def parse_args() -> argparse.Namespace:
     # fmt: off
     parser = argparse.ArgumentParser()
     opt = parser.add_argument
-
-    # 出力ファイル名の指定
-    opt("--output-name", "-o", type=str)
-
-    # 動作モードの指定（"submit" または "test"）
-    opt("--mode", "-m", type=str, choices=[choice.value for choice in Mode], default=Mode.TEST.value)
-
-    # 使用するvectorstoreの指定
-    opt("--vectorstore", "-v", type=str, choices=[choice.value for choice in VectorStoreOption], default=VectorStoreOption.CHROMA.value)
+    opt(
+        "--output-name",
+        "-o",
+        type=str,
+        help="出力ファイル名の指定"
+    )
+    opt(
+        "--mode",
+        "-m",
+        type=str,
+        help="動作モードの指定",
+        choices=[choice.value for choice in Mode],
+        default=Mode.TEST.value
+    )
+    opt(
+        "--vectorstore",
+        "-v",
+        help="使用するvectorstoreの指定",
+        type=str,
+        choices=[choice.value for choice in VectorStoreOption],
+        default=VectorStoreOption.CHROMA.value
+    )
     # fmt: on
-
     return parser.parse_args()
 
 
