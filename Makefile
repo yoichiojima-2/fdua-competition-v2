@@ -19,7 +19,7 @@ down:
 
 in:
 	@echo "\nentering container..."
-	docker run -it -v .:/fdua-competition fdua-competition
+	docker compose run fdua-competition
 
 
 run: ${CSV_PATH}
