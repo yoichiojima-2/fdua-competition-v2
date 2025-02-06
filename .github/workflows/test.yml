@@ -35,8 +35,10 @@ jobs:
       - name: download secrets
         run: bash bin/download-secrets
 
-      - name: set FDUA_DIR globally
-        run: echo "FDUA_DIR=$(pwd)" >> $GITHUB_ENV
+      - name: set environment variables
+        run: |
+          echo "FDUA_DIR=$(pwd)" >> $GITHUB_ENV
+          echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
 
       - name: install app
         env:
