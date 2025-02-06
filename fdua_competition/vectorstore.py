@@ -54,7 +54,7 @@ def load_pages(path: Path) -> t.Iterable[Document]:
     PDF ファイルからページごとのDocument(Document)を読み込むジェネレーター
     args:
         path (Path): PDF ファイルのパス
-    Yields:
+    yields:
         Document: 読み込まれたDocumentページ
     """
     for doc in PyPDFium2Loader(path).lazy_load():
