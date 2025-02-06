@@ -9,10 +9,12 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.vectorstores.base import VectorStore
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from pydantic import BaseModel, Field
+from tenacity import retry, stop_after_attempt, wait_fixed
 
 sys.path.append(str(Path(__file__).parent.parent))
 
 from fdua_competition.enums import ChatModelOption
+from fdua_competition.utils import print_before_retry
 from fdua_competition.vectorstore import build_context
 
 
@@ -53,6 +55,7 @@ class RAG(ABC):
     def chain(self) -> Runnable:
         return self.prompt_template | self.chat_model
 
+    @retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=print_before_retry)
     def invoke(self, query: str) -> BaseModel:
         payload = self.build_payload(query)
         payload["context"] = build_context(vectorstore=self.vectorstore, query=query)
