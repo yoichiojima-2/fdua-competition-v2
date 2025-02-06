@@ -1,6 +1,5 @@
 services:
   fdua-competition:
-    image: fdua-competition:latest
     build:
       context: .
     container_name: fdua-competition
@@ -11,7 +10,6 @@ services:
       - secrets/.env
 
   fdua-notebook:
-    image: fdua-competition:latest
     build:
       context: .
     container_name: fdua-notebook

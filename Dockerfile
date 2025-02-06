@@ -14,4 +14,5 @@ RUN gcloud auth activate-service-account --key-file="/fdua-competition/secrets/g
 
 WORKDIR /fdua-competition
 ENV PYTHONPATH=/fdua-competition
+ENV FDUA_DIR=/fdua-competition
 CMD bash
