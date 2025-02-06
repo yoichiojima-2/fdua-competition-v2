@@ -62,7 +62,7 @@ def _get_existing_sources_in_vectorstore(vectorstore: VectorStore) -> set[str]:
     return {metadata.get("source") for metadata in vectorstore.get().get("metadatas")}
 
 
-def _add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterable[Document], batch_size: int = 12) -> None:
+def _add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterable[Document], batch_size: int = 8) -> None:
     batch = []
     for page in tqdm(pages, desc="adding pages.."):
         batch.append(page)
