@@ -123,16 +123,6 @@ class RAG(ABC):
 
 # [start: research_assistant]
 class ResearchAssistantResponse(BaseModel):
-    """
-    ResearchAssistant の応答を表す Pydantic モデル.
-    attributes:
-        query (str): 質問内容
-        response (str): 回答内容
-        reason (str): 回答の理由
-        organization_name (str): 関連する組織名
-        contexts (list[str]): 回答に基づく文脈情報のリスト
-    """
-
     query: str = Field(description="the query that was asked.")
     response: str = Field(description="the answer for the given query")
     reason: str = Field(description="the reason for the response.")
@@ -141,34 +131,14 @@ class ResearchAssistantResponse(BaseModel):
 
 
 class ResearchAssistant(RAG):
-    """
-    質問に対する文脈に基づいた回答を生成するRAGの実装
-    attributes:
-        vectorstore (VectorStore): 使用するvectorstore
-        chat_model_option (ChatModelOption): 使用するchatモデルのオプション
-        language (str): 使用する言語（デフォルトは "japanese")
-    """
-
     def __init__(
         self, vectorstore: VectorStore, chat_model_option: ChatModelOption = ChatModelOption.AZURE, language: str = "japanese"
     ):
-        """
-        ResearchAssistant のインスタンスを初期化する
-        args:
-            vectorstore (VectorStore): 使用するvectorstore
-            chat_model_option (ChatModelOption, optional): chatモデルのオプション
-            language (str, optional): 使用する言語
-        """
         super().__init__(vectorstore=vectorstore, chat_model_option=chat_model_option)
         self.language = language
 
     @property
     def prompt_template(self) -> ChatPromptTemplate:
-        """
-        ResearchAssistant 用のプロンプトテンプレートを返すプロパティ
-        returns:
-            ChatPromptTemplate: プロンプトテンプレートのインスタンス
-        """
         return ChatPromptTemplate.from_messages(
             [
                 ("system", "{system_prompt}"),
@@ -178,22 +148,10 @@ class ResearchAssistant(RAG):
         )
 
     def build_payload(self, query: str) -> dict[str, t.Any]:
-        """
-        クエリに基づいてペイロードを構築する
-        args:
-            query (str): ユーザーからの質問
-        returns:
-            dict[str, Any]: ペイロードの辞書
-        """
         return {"system_prompt": read_prompt("research_assistant"), "query": query, "language": self.language}
 
     @property
     def output_structure(self) -> BaseModel:
-        """
-        ResearchAssistant の出力構造を返すプロパティ
-        returns:
-            BaseModel: ResearchAssistantResponseモデル
-        """
         return ResearchAssistantResponse
 
 
