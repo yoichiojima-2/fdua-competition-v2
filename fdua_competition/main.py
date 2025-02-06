@@ -81,10 +81,6 @@ def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) ->
 
 
 if __name__ == "__main__":
-    # ユーザー警告（UserWarning）を無視する設定
     warnings.filterwarnings("ignore", category=UserWarning)
-
     args = parse_args()
-
-    # 引数を元に main 関数を実行
     main(output_name=args.output_name, mode=Mode(args.mode), vectorstore_option=VectorStoreOption(args.vectorstore))
