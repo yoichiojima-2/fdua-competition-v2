@@ -3,9 +3,9 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+from pydantic import BaseModel
 
 from fdua_competition.enums import Mode
-from fdua_competition.parser import ChatResponse
 
 
 def get_root() -> Path:
@@ -30,7 +30,8 @@ def print_before_retry(retry_state):
     )
 
 
-def write_result(output_name: str, responses: list[ChatResponse]) -> None:
+def write_result(output_name: str, responses: list[BaseModel]) -> None:
+    assert responses[0].response, "response field is missing"
     output_path = get_root() / f"results/{output_name}.csv"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     df = pd.DataFrame([{"response": res.response} for res in responses])
