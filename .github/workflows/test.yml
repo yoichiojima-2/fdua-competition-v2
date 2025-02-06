@@ -32,11 +32,11 @@ jobs:
       - name: verify authentication
         run: gcloud auth list 
 
-      - name: set FDUA_DIR globally
-        run: echo "FDUA_DIR=$(pwd)" >> $GITHUB_ENV
-
       - name: download secrets
         run: bash bin/download-secrets
+
+      - name: set FDUA_DIR globally
+        run: echo "FDUA_DIR=$(pwd)" >> $GITHUB_ENV
 
       - name: install app
         env:
