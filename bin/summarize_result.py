@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from tabulate import tabulate
 
@@ -38,7 +39,7 @@ def show_detail():
     answer_df = pd.read_csv(get_root() / "evaluation/data/ans_txt.csv", header=None)
     answer_df.columns = ["index", "answer"]
 
-    output_df = pd.read_csv(get_root() / "results/output_simple_test.csv", header=None)
+    output_df = pd.read_csv(get_root() / f"results/{os.getenv("OUTPUT_NAME")}.csv", header=None)
     output_df.columns = ["index", "output"]
 
     score_df = pd.read_csv(get_root() / "evaluation/result/scoring.csv", header=None)
