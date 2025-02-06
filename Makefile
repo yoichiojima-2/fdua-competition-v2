@@ -4,7 +4,6 @@ GS_PATH = gs://fdua-competition
 ASSETS_DIR = assets
 SECRETS_DIR = secrets
 INSTALL_DIR = .fdua-competition
-OUTPUT_NAME = one_assistant_test
 CHAT_MODEL = 4omini
 CSV_PATH = ${INSTALL_DIR}/results/${OUTPUT_NAME}.csv
 
@@ -107,6 +106,7 @@ clean:
 	find . -type d -name "__MACOSX" -print -exec rm -r {} +
 	find . -type f -name ".DS_Store" -print -exec rm -r {} +
 	find . -type f -name "*.Identifier" -print -exec rm -r {} +
+	find . -type d -name ".ipynb_checkpoints" -print -exec rm -r {} +
 	@echo "done"
 
 uninstall: clean
