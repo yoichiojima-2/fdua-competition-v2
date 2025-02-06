@@ -74,7 +74,7 @@ make summary
 score: 0.05
 
 +--------------+--------------+---------+
-| evaluation   |   unit_score |   index |
+| evaluation   |   unit_score |   count |
 +==============+==============+=========+
 | Perfect      |          1   |      14 |
 +--------------+--------------+---------+
