@@ -1,10 +1,8 @@
-import sys
 from pathlib import Path
 
 import pandas as pd
 from pydantic import BaseModel, Field
 
-sys.path.append(str(Path(__file__).parent.parent))
 from fdua_competition.enums import Mode
 from fdua_competition.utils import get_queries, get_root, write_result
 

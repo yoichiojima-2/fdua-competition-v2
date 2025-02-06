@@ -1,4 +1,3 @@
-import sys
 import typing as t
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -10,8 +9,6 @@ from langchain_core.vectorstores.base import VectorStore
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_fixed
-
-sys.path.append(str(Path(__file__).parent.parent))
 
 from fdua_competition.enums import ChatModelOption
 from fdua_competition.utils import print_before_retry

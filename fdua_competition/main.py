@@ -1,21 +1,14 @@
 import argparse
-import sys
 import warnings
-from pathlib import Path
 from pprint import pprint
 
-from dotenv import load_dotenv
 from langsmith import traceable
 from tqdm import tqdm
-
-sys.path.append(str(Path(__file__).parent.parent))
 
 from fdua_competition.enums import Mode, VectorStoreOption
 from fdua_competition.rag import ResearchAssistant
 from fdua_competition.utils import get_queries, write_result
 from fdua_competition.vectorstore import build_vectorstore
-
-load_dotenv("secrets/.env")
 
 
 def parse_args() -> argparse.Namespace:

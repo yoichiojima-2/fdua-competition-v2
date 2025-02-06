@@ -1,13 +1,9 @@
-import sys
 from pathlib import Path
 
-from dotenv import load_dotenv
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import AzureOpenAIEmbeddings, OpenAIEmbeddings
-
-sys.path.append(str(Path(__file__).parent.parent))
 
 from fdua_competition.enums import EmbeddingModelOption, Mode, VectorStoreOption
 from fdua_competition.utils import get_root
@@ -23,8 +19,6 @@ from fdua_competition.vectorstore import (
     load_pages,
     prepare_vectorstore,
 )
-
-load_dotenv(Path(__file__).parent.parent / "secrets/.env")
 
 
 def test_get_document_dir():

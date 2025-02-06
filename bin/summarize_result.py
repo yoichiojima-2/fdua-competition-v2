@@ -1,17 +1,8 @@
-import sys
-from pathlib import Path
-
 import pandas as pd
-from dotenv import load_dotenv
 from tabulate import tabulate
-
-project_root = Path(__file__).parent.parent
-sys.path.append(str(project_root))
 
 from fdua_competition.enums import Mode
 from fdua_competition.utils import get_queries, get_root
-
-load_dotenv(project_root / "secrets/.env")
 
 
 def main():

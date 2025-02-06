@@ -1,7 +1,4 @@
-from dotenv import load_dotenv
 from openai import AzureOpenAI
-
-load_dotenv("secrets/.env")
 
 
 def test_chat():

@@ -1,4 +1,3 @@
-import sys
 from pathlib import Path
 from typing import Iterable
 
@@ -10,8 +9,6 @@ from langchain_core.vectorstores.base import VectorStore
 from langchain_openai import AzureOpenAIEmbeddings, OpenAIEmbeddings
 from tenacity import retry, stop_after_attempt, wait_fixed
 from tqdm import tqdm
-
-sys.path.append(str(Path(__file__).parent.parent))
 
 from fdua_competition.enums import EmbeddingModelOption, Mode, VectorStoreOption
 from fdua_competition.utils import get_root, print_before_retry
