@@ -28,7 +28,7 @@ def get_queries(mode: Mode) -> list[str]:
         mode (Mode): 動作モード (TEST または SUBMIT)
     returns:
         list[str]: クエリのリスト
-    Raises:
+    raises:
         ValueError: 未知のモードが指定された場合
     """
     match mode:

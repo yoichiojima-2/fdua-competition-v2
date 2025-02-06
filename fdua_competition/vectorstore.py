@@ -24,7 +24,7 @@ def get_documents_dir(mode: Mode) -> Path:
         mode (Mode): 動作モード(TEST または SUBMIT)
     returns:
         Path: PDFが入っているパス
-    Raises:
+    raises:
         ValueError: 未知のモードが指定された場合
     """
     match mode:
@@ -68,7 +68,7 @@ def get_embedding_model(opt: EmbeddingModelOption) -> OpenAIEmbeddings:
         opt (EmbeddingModelOption): embeddingモデルのオプション
     returns:
         OpenAIEmbeddings: embeddingモデルのインスタンス
-    Raises:
+    raises:
         ValueError: 未知のモデルオプションが指定された場合
     """
     match opt:
@@ -87,7 +87,7 @@ def prepare_vectorstore(output_name: str, opt: VectorStoreOption, embeddings: Op
         embeddings (OpenAIEmbeddings): embeddingモデルのインスタンス
     returns:
         VectorStore: 構築されたvectorstore
-    Raises:
+    raises:
         ValueError: 未知のvectorstoreオプションが指定された場合
     """
     match opt:

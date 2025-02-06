@@ -26,7 +26,7 @@ def get_chat_model(opt: ChatModelOption) -> ChatOpenAI:
         opt (ChatModelOption): 使用するchatモデルのオプション
     returns:
         ChatOpenAI: 選択されたchatモデルのインスタンス
-    Raises:
+    raises:
         ValueError: 未知のモデルオプションが指定された場合
     """
     match opt:
