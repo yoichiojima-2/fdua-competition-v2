@@ -1,3 +1,6 @@
+include secrets/.env
+export $(shell sed 's/=.*//' secrets/.env)
+
 PWD = $(shell pwd)
 UV = uv run
 GS_PATH = gs://fdua-competition
