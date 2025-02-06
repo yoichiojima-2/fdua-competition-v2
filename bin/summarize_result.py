@@ -29,6 +29,7 @@ def calc_score():
         df[["index", "evaluation", "unit_score"]]
         .groupby(["evaluation", "unit_score"])
         .count()
+        .rename(columns={"index": "count"})
         .reset_index()
         .sort_values("unit_score", ascending=False)
     )
