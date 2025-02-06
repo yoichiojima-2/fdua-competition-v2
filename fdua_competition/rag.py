@@ -89,15 +89,48 @@ class ResearchAssistant(RAG):
         )
 
     def build_payload(self, query: str) -> dict[str, t.Any]:
+        return {"system_prompt": read_prompt("research_assistant"), "query": query, "language": self.language}
+
+    @property
+    def output_structure(self) -> BaseModel:
+        return ResearchAssistantResponse
+
+
+# [end: research_assistant]
+
+
+# [start: fact check]
+class FactCheckerResponse(BaseModel):
+    score: str = Field(description="score")
+    reason: str = Field(description="reason")
+
+
+class FactChecker(RAG):
+    def __init__(
+        self, vectorstore: VectorStore, chat_model_option: ChatModelOption = ChatModelOption.AZURE, language: str = "japanese"
+    ):
+        super().__init__(vectorstore=vectorstore, chat_model_option=chat_model_option)
+        self.language = language
+
+    @property
+    def prompt_template(self) -> ChatPromptTemplate:
+        return ChatPromptTemplate.from_messages(
+            [
+                ("system", "fact check given ai response"),
+                ("system", "context:\n{context}"),
+                ("user", "ai-response:\n{ai_response}"),
+            ]
+        )
+
+    def build_payload(self, query: str) -> dict[str, t.Any]:
         return {
-            "system_prompt": read_prompt("research_assistant"),
-            "query": query,
+            "ai_response": query,
             "language": self.language,
         }
 
     @property
     def output_structure(self) -> BaseModel:
-        return ResearchAssistantResponse
+        return FactCheckerResponse
 
 
 # [end: research_assistant]
