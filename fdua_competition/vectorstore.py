@@ -120,13 +120,24 @@ def _get_existing_sources_in_vectorstore(vectorstore: VectorStore) -> set[str]:
     return {metadata.get("source") for metadata in vectorstore.get().get("metadatas")}
 
 
+@retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=print_before_retry)
+def _add_documents_with_retry(vectorstore: VectorStore, batch: list[Document]) -> None:
+    """
+    リトライ機能付きで文書のバッチをベクトルストアに追加する
+    Args:
+        vectorstore (VectorStore): ベクトルストアのインスタンス
+        batch (list[Document]): 追加する文書のバッチ
+    """
+    vectorstore.add_documents(batch)
+
+
 def _add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterable[Document], batch_size: int = 8) -> None:
     """
     文書ページをバッチごとにベクトルストアへ追加する
     Args:
         vectorstore (VectorStore): ベクトルストアのインスタンス
         pages (Iterable[Document]): 追加する文書ページのイテラブル
-        batch_size (int, optional): バッチサイズ。デフォルトは 8
+        batch_size (int, optional): バッチサイズ (デフォルトは8)
     """
     batch = []
 
@@ -139,17 +150,6 @@ def _add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterab
 
     if batch:
         _add_documents_with_retry(vectorstore=vectorstore, batch=batch)
-
-
-@retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=print_before_retry)
-def _add_documents_with_retry(vectorstore: VectorStore, batch: list[Document]) -> None:
-    """
-    リトライ機能付きで文書のバッチをベクトルストアに追加する
-    Args:
-        vectorstore (VectorStore): ベクトルストアのインスタンス
-        batch (list[Document]): 追加する文書のバッチ
-    """
-    vectorstore.add_documents(batch)
 
 
 def add_documents_to_vectorstore(documents: list[Path], vectorstore: VectorStore) -> None:
@@ -175,7 +175,7 @@ def add_documents_to_vectorstore(documents: list[Path], vectorstore: VectorStore
 def build_vectorstore(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) -> VectorStore:
     """
     指定されたパラメータに基づいてベクトルストアを構築する
-    PDF ファイルを読み込み、文書をベクトルストアに追加します
+    PDF ファイルを読み込み、文書をベクトルストアに追加する
     Args:
         output_name (str): ベクトルストアのコレクション名
         mode (Mode): 動作モード(TEST または SUBMIT)
