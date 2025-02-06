@@ -4,7 +4,7 @@ GS_PATH = gs://fdua-competition
 ASSETS_DIR = assets
 SECRETS_DIR = secrets
 INSTALL_DIR = .fdua-competition
-OUTPUT_NAME = output_simple_test
+OUTPUT_NAME = one_assistant_test
 CHAT_MODEL = 4omini
 CSV_PATH = ${INSTALL_DIR}/results/${OUTPUT_NAME}.csv
 

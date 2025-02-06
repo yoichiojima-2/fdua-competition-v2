@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+from pydantic import BaseModel, Field
 
 sys.path.append(str(Path(__file__).parent.parent))
 from fdua_competition.enums import Mode
@@ -18,12 +19,12 @@ def test_get_queries():
     assert queries
 
 
+class ChatResponse(BaseModel):
+    response: str = Field(...)
+
+
 def test_write_result(tmp_path):
-    responses = [
-        {"response": "response1"},
-        {"response": "response2"},
-        {"response": "response3"},
-    ]
+    responses = [ChatResponse(response=f"test_{i}") for i in range(3)]
     write_result("test", responses)
     assert Path(get_root() / "results/test.csv").exists()
     df = pd.read_csv(get_root() / "results/test.csv", header=None)

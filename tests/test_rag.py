@@ -2,12 +2,11 @@ import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import AzureChatOpenAI
 
 sys.path.append(str(Path(__file__).parent.parent))
-from fdua_competition.chat import get_chat_model, get_prompt_template
 from fdua_competition.enums import ChatModelOption
+from fdua_competition.rag import get_chat_model, read_prompt
 
 load_dotenv(Path(__file__).parent.parent / "secrets/.env")
 
@@ -22,6 +21,5 @@ def test_get_chat_model():
         assert True
 
 
-def test_get_prompt_template():
-    prompt = get_prompt_template()
-    assert isinstance(prompt, ChatPromptTemplate)
+def test_read_prompt():
+    assert read_prompt("test") == "this is a test"
