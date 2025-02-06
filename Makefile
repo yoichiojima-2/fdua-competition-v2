@@ -67,7 +67,7 @@ clear-results:
 	-rm ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv
 
 install: ${INSTALL_DIR}/.installed
-${INSTALL_DIR}/.installed: ${ASSETS_DIR}/.success ${SECRETS_DIR}/.success
+${INSTALL_DIR}/.installed: ${ASSETS_DIR}/.success
 	@echo "\ninstalling..."
 	-mkdir -p ${INSTALL_DIR}
 	find assets -type f -name "*.zip" -print -exec unzip -o {} -d ${INSTALL_DIR} \;
@@ -86,11 +86,6 @@ ${ASSETS_DIR}/.success:
 	gsutil -m cp -r ${GS_PATH}/assets/* assets/
 	touch ${ASSETS_DIR}/.success
 	@echo "done"
-
-download-secrets: ${SECRETS_DIR}/.success
-${SECRETS_DIR}/.success:
-	gsutil -m cp -r ${GS_PATH}/secrets .
-	touch ${SECRETS_DIR}/.success
 
 pre-commit: lint clean
 
