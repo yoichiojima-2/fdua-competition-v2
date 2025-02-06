@@ -12,7 +12,7 @@ from fdua_competition.vectorstore import (
     _add_pages_to_vectorstore_in_batches,
     _get_existing_sources_in_vectorstore,
     add_documents_to_vectorstore,
-    build_context,
+    retrieve_context,
     get_document_list,
     get_documents_dir,
     get_embedding_model,
@@ -134,9 +134,9 @@ def test_add_documents_to_vectorstore():
     assert db.get(ids=["1"])
 
 
-def test_build_context():
+def test_retrieve_context():
     vectorstore = InMemoryVectorStore(get_embedding_model(EmbeddingModelOption.AZURE))
     pages = load_pages(get_documents_dir(Mode.TEST) / "1.pdf")
     page = next(pages)
     _add_documents_with_retry(vectorstore, [page])
-    assert build_context(vectorstore, "query")
+    assert retrieve_context(vectorstore, "query")

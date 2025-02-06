@@ -16,7 +16,7 @@ from tenacity import retry, stop_after_attempt, wait_fixed
 
 from fdua_competition.enums import ChatModelOption
 from fdua_competition.utils import print_before_retry
-from fdua_competition.vectorstore import build_context
+from fdua_competition.vectorstore import retrieve_context
 
 
 def get_chat_model(opt: ChatModelOption) -> ChatOpenAI:
@@ -119,7 +119,7 @@ class RAG(ABC):
         payload = self.build_payload(query)
 
         # ベクトルストアから文脈を構築してペイロードに追加
-        payload["context"] = build_context(vectorstore=self.vectorstore, query=query)
+        payload["context"] = retrieve_context(vectorstore=self.vectorstore, query=query)
 
         return self.chain.invoke(payload)
 

@@ -192,7 +192,7 @@ def build_vectorstore(output_name: str, mode: Mode, vectorstore_option: VectorSt
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=print_before_retry)
-def build_context(vectorstore: VectorStore, query: str) -> str:
+def retrieve_context(vectorstore: VectorStore, query: str) -> str:
     """
     指定されたクエリに対して、関連文書から文脈を構築する
     Args:
