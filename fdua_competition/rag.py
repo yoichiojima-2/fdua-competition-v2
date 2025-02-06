@@ -64,14 +64,15 @@ class RAG(ABC):
     @abstractmethod
     def prompt_template(self) -> ChatPromptTemplate:
         """
-        プロンプトテンプレートを返すプロパティ. サブクラスで実装する
+        プロンプトテンプレートを返すプロパティ. サブクラスで実装する.
+        * プレースホルダを含める -> {query}, {context}
         """
         ...
 
     @abstractmethod
     def build_payload(self, query: str) -> dict[str, t.Any]:
         """
-        クエリに応じたペイロードを構築するメソッド. サブクラスで実装する
+        クエリに応じたペイロードを構築するプロパティ. サブクラスで実装する
         args:
             query (str): ユーザーからの質問
         returns:
@@ -114,12 +115,7 @@ class RAG(ABC):
         returns:
             BaseModel: 構造化された回答を含むPydanticモデル
         """
-        payload = self.build_payload(query)
-
-        # vectorstoreから文脈を構築してペイロードに追加
-        payload["context"] = retrieve_context(vectorstore=self.vectorstore, query=query)
-
-        return self.chain.invoke(payload)
+        return self.chain.invoke({**self.build_payload(query), "context": retrieve_context(vectorstore=self.vectorstore, query=query)})
 
 
 # [end: base rag class]
