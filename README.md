@@ -22,7 +22,7 @@ LANGCHAIN_API_KEY="YOUR_LANGCHAIN_API_KEY"
 to build dev container, run:
 ```bash
 # start the container
-make up
+make up  # this also starts jupyter lab. open http://localhost:8888 on your browser
 
 # enter the container
 make in
