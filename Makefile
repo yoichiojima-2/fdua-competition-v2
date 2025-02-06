@@ -21,10 +21,6 @@ in:
 	@echo "\nentering container..."
 	docker run -it -v .:/fdua-competition fdua-competition
 
-notebook:
-	@echo "\nstarting notebook..."
-	docker run -v .:/fdua-competition -p 8888:8888 fdua-notebook
-
 
 run: ${CSV_PATH}
 ${CSV_PATH}: ${INSTALL_DIR}/.installed
