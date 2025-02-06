@@ -9,7 +9,7 @@ class Mode(Enum):
     """
     動作モードを表すenum
 
-    Attributes:
+    attributes:
         SUBMIT: 提出用モード
         TEST: テスト用モード
     """
@@ -22,7 +22,7 @@ class ChatModelOption(Enum):
     """
     chatモデルのオプションを表すenum
 
-    Attributes:
+    attributes:
         AZURE: Azure のchatモデルを使用
     """
 
@@ -33,7 +33,7 @@ class EmbeddingModelOption(Enum):
     """
     embeddingモデルのオプションを表すenum.
 
-    Attributes:
+    attributes:
         AZURE: Azure のembeddingモデルを使用
     """
 
@@ -44,7 +44,7 @@ class VectorStoreOption(Enum):
     """
     vectorstoreのオプションを表すenum.
 
-    Attributes:
+    attributes:
         CHROMA: Chroma vectorstore
         IN_MEMORY: インメモリのvectorstore
     """

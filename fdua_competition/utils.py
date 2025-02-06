@@ -15,7 +15,7 @@ from fdua_competition.enums import Mode
 def get_root() -> Path:
     """
     .fdua-competitionディレクトリを取得する
-    Returns:
+    returns:
         Path: .fdua-competitionディレクトリを取得する
     """
     return Path(os.getenv("FDUA_DIR")) / ".fdua-competition"
@@ -24,9 +24,9 @@ def get_root() -> Path:
 def get_queries(mode: Mode) -> list[str]:
     """
     指定されたモードに基づいてクエリ（問題）のリストを取得する
-    Args:
+    args:
         mode (Mode): 動作モード (TEST または SUBMIT)
-    Returns:
+    returns:
         list[str]: クエリのリスト
     Raises:
         ValueError: 未知のモードが指定された場合
@@ -49,7 +49,7 @@ def get_queries(mode: Mode) -> list[str]:
 def print_before_retry(retry_state):
     """
     リトライ前に呼び出されるコールバック関数
-    Args:
+    args:
         retry_state: リトライ状態を示すオブジェクト
     """
     print(
@@ -60,7 +60,7 @@ def print_before_retry(retry_state):
 def write_result(output_name: str, responses: list[BaseModel]) -> None:
     """
     回答結果を CSV ファイルに書き出す
-    Args:
+    args:
         output_name (str): 出力ファイル名（拡張子なし）
         responses (list[BaseModel]): 各クエリに対する応答結果のリスト
     """

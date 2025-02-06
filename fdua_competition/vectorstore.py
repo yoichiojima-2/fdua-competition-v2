@@ -20,9 +20,9 @@ from fdua_competition.utils import get_root, print_before_retry
 def get_documents_dir(mode: Mode) -> Path:
     """
     指定されたモードに基づいてPDFが入っているパスを取得する
-    Args:
+    args:
         mode (Mode): 動作モード(TEST または SUBMIT)
-    Returns:
+    returns:
         Path: PDFが入っているパス
     Raises:
         ValueError: 未知のモードが指定された場合
@@ -41,9 +41,9 @@ def get_documents_dir(mode: Mode) -> Path:
 def get_document_list(document_dir: Path) -> list[Path]:
     """
     指定されたディレクトリ内の PDF ファイルのパスのリストを取得する
-    Args:
+    args:
         document_dir (Path): Documentディレクトリのパス
-    Returns:
+    returns:
         list[Path]: PDF ファイルのパスのリスト
     """
     return [path for path in document_dir.glob("*.pdf")]
@@ -52,7 +52,7 @@ def get_document_list(document_dir: Path) -> list[Path]:
 def load_pages(path: Path) -> t.Iterable[Document]:
     """
     PDF ファイルからページごとのDocument(Document)を読み込むジェネレーター
-    Args:
+    args:
         path (Path): PDF ファイルのパス
     Yields:
         Document: 読み込まれたDocumentページ
@@ -64,9 +64,9 @@ def load_pages(path: Path) -> t.Iterable[Document]:
 def get_embedding_model(opt: EmbeddingModelOption) -> OpenAIEmbeddings:
     """
     指定されたembeddingモデルオプションに基づいてembeddingモデルを取得する
-    Args:
+    args:
         opt (EmbeddingModelOption): embeddingモデルのオプション
-    Returns:
+    returns:
         OpenAIEmbeddings: embeddingモデルのインスタンス
     Raises:
         ValueError: 未知のモデルオプションが指定された場合
@@ -81,11 +81,11 @@ def get_embedding_model(opt: EmbeddingModelOption) -> OpenAIEmbeddings:
 def prepare_vectorstore(output_name: str, opt: VectorStoreOption, embeddings: OpenAIEmbeddings) -> VectorStore:
     """
     指定されたパラメータに基づいてvectorstoreを準備する
-    Args:
+    args:
         output_name (str): vectorstoreのコレクション名
         opt (VectorStoreOption): vectorstoreのオプション
         embeddings (OpenAIEmbeddings): embeddingモデルのインスタンス
-    Returns:
+    returns:
         VectorStore: 構築されたvectorstore
     Raises:
         ValueError: 未知のvectorstoreオプションが指定された場合
@@ -111,9 +111,9 @@ def prepare_vectorstore(output_name: str, opt: VectorStoreOption, embeddings: Op
 def _get_existing_sources_in_vectorstore(vectorstore: VectorStore) -> set[str]:
     """
     vectorstore内に既に登録されているDocumentのソース一覧を取得する
-    Args:
+    args:
         vectorstore (VectorStore): vectorstoreのインスタンス
-    Returns:
+    returns:
         set[str]: 登録済みDocumentのソースの集合
     """
     return {metadata.get("source") for metadata in vectorstore.get().get("metadatas")}
@@ -123,7 +123,7 @@ def _get_existing_sources_in_vectorstore(vectorstore: VectorStore) -> set[str]:
 def _add_documents_with_retry(vectorstore: VectorStore, batch: list[Document]) -> None:
     """
     リトライ機能付きでDocumentのバッチをvectorstoreに追加する
-    Args:
+    args:
         vectorstore (VectorStore): vectorstoreのインスタンス
         batch (list[Document]): 追加するDocumentのバッチ
     """
@@ -133,7 +133,7 @@ def _add_documents_with_retry(vectorstore: VectorStore, batch: list[Document]) -
 def _add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: t.Iterable[Document], batch_size: int = 8) -> None:
     """
     Documentページをバッチごとにvectorstoreへ追加する
-    Args:
+    args:
         vectorstore (VectorStore): vectorstoreのインスタンス
         pages (Iterable[Document]): 追加するDocumentページのIterable
         batch_size (int, optional): バッチサイズ (デフォルトは8)
@@ -155,7 +155,7 @@ def add_documents_to_vectorstore(documents: list[Path], vectorstore: VectorStore
     """
     指定された PDF ファイル群をvectorstoreに追加する
     既に登録されているDocumentはスキップされる
-    Args:
+    args:
         documents (list[Path]): PDF ファイルのパスのリスト
         vectorstore (VectorStore): vectorstoreのインスタンス
     """
@@ -175,11 +175,11 @@ def build_vectorstore(output_name: str, mode: Mode, vectorstore_option: VectorSt
     """
     指定されたパラメータに基づいてvectorstoreを構築する
     PDF ファイルを読み込み, Documentをvectorstoreに追加する
-    Args:
+    args:
         output_name (str): vectorstoreのコレクション名
         mode (Mode): 動作モード(TEST または SUBMIT)
         vectorstore_option (VectorStoreOption): 使用するvectorstoreのオプション
-    Returns:
+    returns:
         VectorStore: 構築されたvectorstore
     """
     embeddings = get_embedding_model(EmbeddingModelOption.AZURE)
@@ -194,10 +194,10 @@ def build_vectorstore(output_name: str, mode: Mode, vectorstore_option: VectorSt
 def retrieve_context(vectorstore: VectorStore, query: str) -> str:
     """
     指定されたクエリに対して, 関連Documentから文脈を構築する
-    Args:
+    args:
         vectorstore (VectorStore): vectorstoreのインスタンス
         query (str): クエリ
-    Returns:
+    returns:
         str: 構築された文脈情報
     """
     pages = vectorstore.as_retriever().invoke(query)

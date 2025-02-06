@@ -19,7 +19,7 @@ from fdua_competition.vectorstore import build_vectorstore
 
 def parse_args() -> argparse.Namespace:
     """
-    Returns:
+    returns:
         argparse.Namespace
     """
     # fmt: off
@@ -43,7 +43,7 @@ def parse_args() -> argparse.Namespace:
 def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) -> None:
     """
     vectorstoreを構築し, 各クエリに対してRAGに回答させ, 結果をCSVファイルに保存
-    Args:
+    args:
         output_name (str): 出力ファイル名（拡張子なし）
         mode (Mode): 動作モード (TEST または SUBMIT)
         vectorstore_option (VectorStoreOption): 使用するvectorstoreのオプション

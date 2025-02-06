@@ -22,9 +22,9 @@ from fdua_competition.vectorstore import retrieve_context
 def get_chat_model(opt: ChatModelOption) -> ChatOpenAI:
     """
     指定されたchatモデルオプションに基づいてchatモデルを取得する
-    Args:
+    args:
         opt (ChatModelOption): 使用するchatモデルのオプション
-    Returns:
+    returns:
         ChatOpenAI: 選択されたchatモデルのインスタンス
     Raises:
         ValueError: 未知のモデルオプションが指定された場合
@@ -39,9 +39,9 @@ def get_chat_model(opt: ChatModelOption) -> ChatOpenAI:
 def read_prompt(target: str) -> str:
     """
     プロンプトファイルからテキストを読み込む
-    Args:
+    args:
         target (str): プロンプトファイル名（拡張子なし）
-    Returns:
+    returns:
         str: プロンプトの内容
     """
     return (Path(__file__).parent / f"prompts/{target}.txt").read_text()
@@ -52,7 +52,7 @@ def read_prompt(target: str) -> str:
 class RAG(ABC):
     """
     RAGの基底クラス
-    Attributes:
+    attributes:
         vectorstore (VectorStore): 使用するvectorstore
         chat_model_option (ChatModelOption): 使用するchatモデルのオプション(デフォルトはAZURE)
     """
@@ -72,9 +72,9 @@ class RAG(ABC):
     def build_payload(self, query: str) -> dict[str, t.Any]:
         """
         クエリに応じたペイロードを構築するメソッド. サブクラスで実装する
-        Args:
+        args:
             query (str): ユーザーからの質問
-        Returns:
+        returns:
             dict[str, Any]: ペイロードの辞書
         """
         ...
@@ -91,7 +91,7 @@ class RAG(ABC):
     def chat_model(self) -> ChatOpenAI:
         """
         構造化出力を設定したchatモデルを返すプロパティ
-        Returns:
+        returns:
             ChatOpenAI: 構造化出力を持つchatモデルのインスタンス
         """
         return get_chat_model(self.chat_model_option).with_structured_output(self.output_structure)
@@ -100,7 +100,7 @@ class RAG(ABC):
     def chain(self) -> Runnable:
         """
         プロンプトテンプレートとchatモデルを連結したチェーンを返すプロパティ
-        Returns:
+        returns:
             Runnable: チェーンのインスタンス
         """
         return self.prompt_template | self.chat_model
@@ -109,9 +109,9 @@ class RAG(ABC):
     def invoke(self, query: str) -> BaseModel:
         """
         クエリに対してRAGチェーンを実行し回答を取得する
-        Args:
+        args:
             query (str): ユーザーからの質問
-        Returns:
+        returns:
             BaseModel: 構造化された回答を含むPydanticモデル
         """
         payload = self.build_payload(query)
@@ -129,7 +129,7 @@ class RAG(ABC):
 class ResearchAssistantResponse(BaseModel):
     """
     ResearchAssistant の応答を表す Pydantic モデル.
-    Attributes:
+    attributes:
         query (str): 質問内容
         response (str): 回答内容
         reason (str): 回答の理由
@@ -147,7 +147,7 @@ class ResearchAssistantResponse(BaseModel):
 class ResearchAssistant(RAG):
     """
     質問に対する文脈に基づいた回答を生成するRAGの実装
-    Attributes:
+    attributes:
         vectorstore (VectorStore): 使用するvectorstore
         chat_model_option (ChatModelOption): 使用するchatモデルのオプション
         language (str): 使用する言語（デフォルトは "japanese")
@@ -158,7 +158,7 @@ class ResearchAssistant(RAG):
     ):
         """
         ResearchAssistant のインスタンスを初期化する
-        Args:
+        args:
             vectorstore (VectorStore): 使用するvectorstore
             chat_model_option (ChatModelOption, optional): chatモデルのオプション
             language (str, optional): 使用する言語
@@ -170,7 +170,7 @@ class ResearchAssistant(RAG):
     def prompt_template(self) -> ChatPromptTemplate:
         """
         ResearchAssistant 用のプロンプトテンプレートを返すプロパティ
-        Returns:
+        returns:
             ChatPromptTemplate: プロンプトテンプレートのインスタンス
         """
         return ChatPromptTemplate.from_messages(
@@ -184,9 +184,9 @@ class ResearchAssistant(RAG):
     def build_payload(self, query: str) -> dict[str, t.Any]:
         """
         クエリに基づいてペイロードを構築する
-        Args:
+        args:
             query (str): ユーザーからの質問
-        Returns:
+        returns:
             dict[str, Any]: ペイロードの辞書
         """
         return {"system_prompt": read_prompt("research_assistant"), "query": query, "language": self.language}
@@ -195,7 +195,7 @@ class ResearchAssistant(RAG):
     def output_structure(self) -> BaseModel:
         """
         ResearchAssistant の出力構造を返すプロパティ
-        Returns:
+        returns:
             BaseModel: ResearchAssistantResponseモデル
         """
         return ResearchAssistantResponse
