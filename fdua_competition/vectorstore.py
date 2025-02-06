@@ -3,8 +3,7 @@ vectorstoreの構築
 """
 
 from pathlib import Path
-from typing import Iterable
-
+import typing as t
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import PyPDFium2Loader
 from langchain_core.documents import Document
@@ -43,20 +42,20 @@ def get_document_list(document_dir: Path) -> list[Path]:
     """
     指定されたディレクトリ内の PDF ファイルのパスのリストを取得する
     Args:
-        document_dir (Path): 文書ディレクトリのパス
+        document_dir (Path): Documentディレクトリのパス
     Returns:
         list[Path]: PDF ファイルのパスのリスト
     """
     return [path for path in document_dir.glob("*.pdf")]
 
 
-def load_pages(path: Path) -> Iterable[Document]:
+def load_pages(path: Path) -> t.Iterable[Document]:
     """
-    PDF ファイルからページごとの文書(Document)を読み込むジェネレーター
+    PDF ファイルからページごとのDocument(Document)を読み込むジェネレーター
     Args:
         path (Path): PDF ファイルのパス
     Yields:
-        Document: 読み込まれた文書ページ
+        Document: 読み込まれたDocumentページ
     """
     for doc in PyPDFium2Loader(path).lazy_load():
         yield doc
@@ -64,11 +63,11 @@ def load_pages(path: Path) -> Iterable[Document]:
 
 def get_embedding_model(opt: EmbeddingModelOption) -> OpenAIEmbeddings:
     """
-    指定された埋め込みモデルオプションに基づいて埋め込みモデルを取得する
+    指定されたembeddingモデルオプションに基づいてembeddingモデルを取得する
     Args:
-        opt (EmbeddingModelOption): 埋め込みモデルのオプション
+        opt (EmbeddingModelOption): embeddingモデルのオプション
     Returns:
-        OpenAIEmbeddings: 埋め込みモデルのインスタンス
+        OpenAIEmbeddings: embeddingモデルのインスタンス
     Raises:
         ValueError: 未知のモデルオプションが指定された場合
     """
@@ -81,15 +80,15 @@ def get_embedding_model(opt: EmbeddingModelOption) -> OpenAIEmbeddings:
 
 def prepare_vectorstore(output_name: str, opt: VectorStoreOption, embeddings: OpenAIEmbeddings) -> VectorStore:
     """
-    指定されたパラメータに基づいてベクトルストアを準備する
+    指定されたパラメータに基づいてvectorstoreを準備する
     Args:
-        output_name (str): ベクトルストアのコレクション名
-        opt (VectorStoreOption): ベクトルストアのオプション
-        embeddings (OpenAIEmbeddings): 埋め込みモデルのインスタンス
+        output_name (str): vectorstoreのコレクション名
+        opt (VectorStoreOption): vectorstoreのオプション
+        embeddings (OpenAIEmbeddings): embeddingモデルのインスタンス
     Returns:
-        VectorStore: 構築されたベクトルストア
+        VectorStore: 構築されたvectorstore
     Raises:
-        ValueError: 未知のベクトルストアオプションが指定された場合
+        ValueError: 未知のvectorstoreオプションが指定された場合
     """
     match opt:
         case VectorStoreOption.IN_MEMORY:
@@ -111,11 +110,11 @@ def prepare_vectorstore(output_name: str, opt: VectorStoreOption, embeddings: Op
 
 def _get_existing_sources_in_vectorstore(vectorstore: VectorStore) -> set[str]:
     """
-    ベクトルストア内に既に登録されている文書のソース一覧を取得する
+    vectorstore内に既に登録されているDocumentのソース一覧を取得する
     Args:
-        vectorstore (VectorStore): ベクトルストアのインスタンス
+        vectorstore (VectorStore): vectorstoreのインスタンス
     Returns:
-        set[str]: 登録済み文書のソースの集合
+        set[str]: 登録済みDocumentのソースの集合
     """
     return {metadata.get("source") for metadata in vectorstore.get().get("metadatas")}
 
@@ -123,20 +122,20 @@ def _get_existing_sources_in_vectorstore(vectorstore: VectorStore) -> set[str]:
 @retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=print_before_retry)
 def _add_documents_with_retry(vectorstore: VectorStore, batch: list[Document]) -> None:
     """
-    リトライ機能付きで文書のバッチをベクトルストアに追加する
+    リトライ機能付きでDocumentのバッチをvectorstoreに追加する
     Args:
-        vectorstore (VectorStore): ベクトルストアのインスタンス
-        batch (list[Document]): 追加する文書のバッチ
+        vectorstore (VectorStore): vectorstoreのインスタンス
+        batch (list[Document]): 追加するDocumentのバッチ
     """
     vectorstore.add_documents(batch)
 
 
-def _add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterable[Document], batch_size: int = 8) -> None:
+def _add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: t.Iterable[Document], batch_size: int = 8) -> None:
     """
-    文書ページをバッチごとにベクトルストアへ追加する
+    Documentページをバッチごとにvectorstoreへ追加する
     Args:
-        vectorstore (VectorStore): ベクトルストアのインスタンス
-        pages (Iterable[Document]): 追加する文書ページのイテラブル
+        vectorstore (VectorStore): vectorstoreのインスタンス
+        pages (Iterable[Document]): 追加するDocumentページのIterable
         batch_size (int, optional): バッチサイズ (デフォルトは8)
     """
     batch = []
@@ -154,11 +153,11 @@ def _add_pages_to_vectorstore_in_batches(vectorstore: VectorStore, pages: Iterab
 
 def add_documents_to_vectorstore(documents: list[Path], vectorstore: VectorStore) -> None:
     """
-    指定された PDF ファイル群をベクトルストアに追加する
-    既に登録されている文書はスキップされる
+    指定された PDF ファイル群をvectorstoreに追加する
+    既に登録されているDocumentはスキップされる
     Args:
         documents (list[Path]): PDF ファイルのパスのリスト
-        vectorstore (VectorStore): ベクトルストアのインスタンス
+        vectorstore (VectorStore): vectorstoreのインスタンス
     """
     existing_sources = _get_existing_sources_in_vectorstore(vectorstore)
 
@@ -174,14 +173,14 @@ def add_documents_to_vectorstore(documents: list[Path], vectorstore: VectorStore
 
 def build_vectorstore(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) -> VectorStore:
     """
-    指定されたパラメータに基づいてベクトルストアを構築する
-    PDF ファイルを読み込み、文書をベクトルストアに追加する
+    指定されたパラメータに基づいてvectorstoreを構築する
+    PDF ファイルを読み込み, Documentをvectorstoreに追加する
     Args:
-        output_name (str): ベクトルストアのコレクション名
+        output_name (str): vectorstoreのコレクション名
         mode (Mode): 動作モード(TEST または SUBMIT)
-        vectorstore_option (VectorStoreOption): 使用するベクトルストアのオプション
+        vectorstore_option (VectorStoreOption): 使用するvectorstoreのオプション
     Returns:
-        VectorStore: 構築されたベクトルストア
+        VectorStore: 構築されたvectorstore
     """
     embeddings = get_embedding_model(EmbeddingModelOption.AZURE)
     vectorstore = prepare_vectorstore(output_name=output_name, opt=vectorstore_option, embeddings=embeddings)
@@ -194,10 +193,10 @@ def build_vectorstore(output_name: str, mode: Mode, vectorstore_option: VectorSt
 @retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=print_before_retry)
 def retrieve_context(vectorstore: VectorStore, query: str) -> str:
     """
-    指定されたクエリに対して、関連文書から文脈を構築する
+    指定されたクエリに対して, 関連Documentから文脈を構築する
     Args:
-        vectorstore (VectorStore): ベクトルストアのインスタンス
-        query (str): クエリ（質問）
+        vectorstore (VectorStore): vectorstoreのインスタンス
+        query (str): クエリ
     Returns:
         str: 構築された文脈情報
     """

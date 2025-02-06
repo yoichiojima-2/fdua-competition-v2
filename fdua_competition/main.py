@@ -1,3 +1,9 @@
+"""
+example:
+    python fdua_competition/main.py -o example -m test -v chroma
+"""
+
+
 import argparse
 import warnings
 from pprint import pprint
@@ -26,7 +32,7 @@ def parse_args() -> argparse.Namespace:
     # 動作モードの指定（"submit" または "test"）
     opt("--mode", "-m", type=str, choices=[choice.value for choice in Mode], default=Mode.TEST.value)
 
-    # 使用するベクトルストアの指定
+    # 使用するvectorstoreの指定
     opt("--vectorstore", "-v", type=str, choices=[choice.value for choice in VectorStoreOption], default=VectorStoreOption.CHROMA.value)
     # fmt: on
 
@@ -36,13 +42,13 @@ def parse_args() -> argparse.Namespace:
 @traceable
 def main(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) -> None:
     """
-    ベクトルストアを構築し、各クエリに対してRAGに回答させ, 結果を CSV ファイルに保存します。
+    vectorstoreを構築し, 各クエリに対してRAGに回答させ, 結果をCSVファイルに保存
     Args:
         output_name (str): 出力ファイル名（拡張子なし）
         mode (Mode): 動作モード (TEST または SUBMIT)
-        vectorstore_option (VectorStoreOption): 使用するベクトルストアのオプション
+        vectorstore_option (VectorStoreOption): 使用するvectorstoreのオプション
     """
-    # ベクトルストアを構築
+    # vectorstoreを構築
     vectorstore = build_vectorstore(output_name, mode, vectorstore_option)
 
     # ResearchAssistant のインスタンスを生成

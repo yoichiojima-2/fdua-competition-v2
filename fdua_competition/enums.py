@@ -1,5 +1,5 @@
 """
-各種オプションを定義する列挙型
+各種オプションを定義するenum
 """
 
 from enum import Enum
@@ -7,7 +7,7 @@ from enum import Enum
 
 class Mode(Enum):
     """
-    動作モードを表す列挙型
+    動作モードを表すenum
 
     Attributes:
         SUBMIT: 提出用モード
@@ -20,10 +20,10 @@ class Mode(Enum):
 
 class ChatModelOption(Enum):
     """
-    チャットモデルのオプションを表す列挙型
+    chatモデルのオプションを表すenum
 
     Attributes:
-        AZURE: Azure のチャットモデルを使用
+        AZURE: Azure のchatモデルを使用
     """
 
     AZURE = "azure"
@@ -31,10 +31,10 @@ class ChatModelOption(Enum):
 
 class EmbeddingModelOption(Enum):
     """
-    埋め込みモデルのオプションを表す列挙型。
+    embeddingモデルのオプションを表すenum.
 
     Attributes:
-        AZURE: Azure の埋め込みモデルを使用
+        AZURE: Azure のembeddingモデルを使用
     """
 
     AZURE = "azure"
@@ -42,11 +42,11 @@ class EmbeddingModelOption(Enum):
 
 class VectorStoreOption(Enum):
     """
-    ベクトルストアのオプションを表す列挙型。
+    vectorstoreのオプションを表すenum.
 
     Attributes:
-        CHROMA: Chroma ベクトルストア
-        IN_MEMORY: インメモリのベクトルストア
+        CHROMA: Chroma vectorstore
+        IN_MEMORY: インメモリのvectorstore
     """
 
     CHROMA = "chroma"

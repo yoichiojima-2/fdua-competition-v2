@@ -21,11 +21,11 @@ from fdua_competition.vectorstore import retrieve_context
 
 def get_chat_model(opt: ChatModelOption) -> ChatOpenAI:
     """
-    指定されたチャットモデルオプションに基づいてチャットモデルを取得する
+    指定されたchatモデルオプションに基づいてchatモデルを取得する
     Args:
-        opt (ChatModelOption): 使用するチャットモデルのオプション
+        opt (ChatModelOption): 使用するchatモデルのオプション
     Returns:
-        ChatOpenAI: 選択されたチャットモデルのインスタンス
+        ChatOpenAI: 選択されたchatモデルのインスタンス
     Raises:
         ValueError: 未知のモデルオプションが指定された場合
     """
@@ -47,16 +47,14 @@ def read_prompt(target: str) -> str:
     return (Path(__file__).parent / f"prompts/{target}.txt").read_text()
 
 
-# =============================================================================
 # [start: base rag class]
-# =============================================================================
 @dataclass
 class RAG(ABC):
     """
     RAGの基底クラス
     Attributes:
-        vectorstore (VectorStore): 使用するベクトルストア
-        chat_model_option (ChatModelOption): 使用するチャットモデルのオプション(デフォルトはAZURE)
+        vectorstore (VectorStore): 使用するvectorstore
+        chat_model_option (ChatModelOption): 使用するchatモデルのオプション(デフォルトはAZURE)
     """
 
     vectorstore: VectorStore
@@ -92,49 +90,45 @@ class RAG(ABC):
     @property
     def chat_model(self) -> ChatOpenAI:
         """
-        構造化出力を設定したチャットモデルを返すプロパティ
+        構造化出力を設定したchatモデルを返すプロパティ
         Returns:
-            ChatOpenAI: 構造化出力を持つチャットモデルのインスタンス
+            ChatOpenAI: 構造化出力を持つchatモデルのインスタンス
         """
         return get_chat_model(self.chat_model_option).with_structured_output(self.output_structure)
 
     @property
     def chain(self) -> Runnable:
         """
-        プロンプトテンプレートとチャットモデルを連結したチェーンを返すプロパティ
+        プロンプトテンプレートとchatモデルを連結したチェーンを返すプロパティ
         Returns:
-            Runnable: チェーンの実行可能なオブジェクト
+            Runnable: チェーンのインスタンス
         """
         return self.prompt_template | self.chat_model
 
     @retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=print_before_retry)
     def invoke(self, query: str) -> BaseModel:
         """
-        クエリに対して RAG チェーンを実行し、回答を取得する
+        クエリに対してRAGチェーンを実行し回答を取得する
         Args:
             query (str): ユーザーからの質問
         Returns:
-            BaseModel: 構造化された回答を含む Pydantic モデル
+            BaseModel: 構造化された回答を含むPydanticモデル
         """
         payload = self.build_payload(query)
 
-        # ベクトルストアから文脈を構築してペイロードに追加
+        # vectorstoreから文脈を構築してペイロードに追加
         payload["context"] = retrieve_context(vectorstore=self.vectorstore, query=query)
 
         return self.chain.invoke(payload)
 
 
-# =============================================================================
 # [end: base rag class]
-# =============================================================================
 
 
-# =============================================================================
 # [start: research_assistant]
-# =============================================================================
 class ResearchAssistantResponse(BaseModel):
     """
-    ResearchAssistant の応答を表す Pydantic モデル。
+    ResearchAssistant の応答を表す Pydantic モデル.
     Attributes:
         query (str): 質問内容
         response (str): 回答内容
@@ -154,9 +148,9 @@ class ResearchAssistant(RAG):
     """
     質問に対する文脈に基づいた回答を生成するRAGの実装
     Attributes:
-        vectorstore (VectorStore): 使用するベクトルストア
-        chat_model_option (ChatModelOption): 使用するチャットモデルのオプション
-        language (str): 使用する言語（デフォルトは "japanese"）
+        vectorstore (VectorStore): 使用するvectorstore
+        chat_model_option (ChatModelOption): 使用するchatモデルのオプション
+        language (str): 使用する言語（デフォルトは "japanese")
     """
 
     def __init__(
@@ -165,9 +159,9 @@ class ResearchAssistant(RAG):
         """
         ResearchAssistant のインスタンスを初期化する
         Args:
-            vectorstore (VectorStore): 使用するベクトルストア
-            chat_model_option (ChatModelOption, optional): チャットモデルのオプション。デフォルトは ChatModelOption.AZURE
-            language (str, optional): 使用する言語。デフォルトは "japanese"
+            vectorstore (VectorStore): 使用するvectorstore
+            chat_model_option (ChatModelOption, optional): chatモデルのオプション
+            language (str, optional): 使用する言語
         """
         super().__init__(vectorstore=vectorstore, chat_model_option=chat_model_option)
         self.language = language
@@ -207,6 +201,4 @@ class ResearchAssistant(RAG):
         return ResearchAssistantResponse
 
 
-# =============================================================================
 # [end: research_assistant]
-# =============================================================================

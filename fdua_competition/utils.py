@@ -33,12 +33,12 @@ def get_queries(mode: Mode) -> list[str]:
     """
     match mode:
         case Mode.TEST:
-            # テストモードの場合、validation ディレクトリの CSV を読み込む
+            # テストモードの場合, validation ディレクトリの CSV を読み込む
             df = pd.read_csv(get_root() / "validation/ans_txt.csv")
             return df["problem"].tolist()
 
         case Mode.SUBMIT:
-            # 提出モードの場合、query.csv を読み込む
+            # 提出モードの場合, query.csv を読み込む
             df = pd.read_csv(get_root() / "query.csv")
             return df["problem"].tolist()
 
