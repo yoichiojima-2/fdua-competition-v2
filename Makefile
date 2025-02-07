@@ -45,7 +45,8 @@ ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv: ${CSV_PATH}
 
 summary: evaluate
 	@echo "\nsummarizing..."
-	${UV} python bin/summarize_result.py
+	-mkdir -p ${INSTALL_DIR}/summary
+	${UV} python bin/summarize_result.py > ${INSTALL_DIR}/summary/${OUTPUT_NAME}.txt
 	@echo "done"
 
 test: install
