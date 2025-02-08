@@ -13,7 +13,7 @@ class ReferenceOutput(BaseModel):
     reason: str = Field(..., title="The reason for selecting this source.")
 
 
-def search_source_to_refer(query: str) -> ReferenceOutput:
+def search_source_to_refer(query: str, output_name: str) -> ReferenceOutput:
     role = textwrap.dedent(
         """
         You are an intelligent assistant specializing in information retrieval. Your task is to analyze a user query and determine which sources from the provided dataset should be referenced to answer it.
@@ -38,7 +38,7 @@ def search_source_to_refer(query: str) -> ReferenceOutput:
     )
 
     prompt_template = ChatPromptTemplate.from_messages(
-        [("system", role), ("system", f"index: {read_index()}"), ("user", f"query: {query}")]
+        [("system", role), ("system", f"index: {read_index(output_name)}"), ("user", f"query: {query}")]
     )
 
     chat_model = create_chat_model().with_structured_output(ReferenceOutput)

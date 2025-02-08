@@ -21,12 +21,8 @@ class AnswerQueryOutput(BaseModel):
     reference: str = Field(description="the reference source of the context.")
 
 
-<<<<<<< HEAD
-=======
-<<<<<<< Updated upstream
-=======
+
 @tool
->>>>>>> f1c7f0b (fix: resolve conflict)
 def round_number(number: str, decimals: str) -> str:
     """
     rounds a number to a specified number of decimals.
@@ -37,10 +33,8 @@ def round_number(number: str, decimals: str) -> str:
     return str(round(float(number), int(decimals - 1)))
 
 
-<<<<<<< HEAD
-=======
+
 @tool
->>>>>>> f1c7f0b (fix: resolve conflict)
 def divide_number(a: str, b: str) -> str:
     """
     divides two numbers.
@@ -51,13 +45,9 @@ def divide_number(a: str, b: str) -> str:
     return str(float(a) / float(b))
 
 
-<<<<<<< HEAD
-=======
->>>>>>> Stashed changes
->>>>>>> f1c7f0b (fix: resolve conflict)
 @retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=log_retry)
-def answer_query(query: str, vectorstore: FduaVectorStore):
-    reference = search_source_to_refer(query)
+def answer_query(query: str, vectorstore: FduaVectorStore, output_name: str):
+    reference = search_source_to_refer(query, output_name)
     context = vectorstore.as_retriever().invoke(query, filter={"source": reference.source})
 
     parsed_context = yaml.dump(

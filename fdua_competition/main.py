@@ -25,7 +25,7 @@ def main():
 
     responses = []
     for query in tqdm(read_queries(Mode(args.mode))):
-        response = answer_query(query=query, vectorstore=vs)
+        response = answer_query(query=query, vectorstore=vs, output_name=args.output_name)
         print(response)
         responses.append(response)
 

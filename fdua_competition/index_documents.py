@@ -77,12 +77,12 @@ def parse_args():
 
 def main(output_name: str):
     embeddings = create_embeddings()
-    vs = FduaVectorStore(output_name=os.environ["OUTPUT_NAME"], embeddings=embeddings)
+    vs = FduaVectorStore(output_name=output_name, embeddings=embeddings)
     write_index(output_name=output_name, vectorstore=vs)
 
 
-def read_index() -> str:
-    index_path = OUTPUT_DIR / f"{os.environ['OUTPUT_NAME']}.json"
+def read_index(output_name: str) -> str:
+    index_path = OUTPUT_DIR / f"{output_name}.json"
     index = json.load(index_path.open())
     return yaml.dump(index, allow_unicode=True, default_flow_style=False, sort_keys=False)
 
