@@ -14,7 +14,7 @@ from fdua_competition.vectorstore import FduaVectorStore
 
 class AnswerQueryOutput(BaseModel):
     query: str = Field(description="the query that was asked.")
-    response: str = Field(description="the answer for the given query")
+    response: str = Field(description="the answer for the given query", max_length=50)
     reason: str = Field(description="the reason for the response.")
     organization_name: str = Field(description="the organization name that the query is about.")
     contexts: list[str] = Field(description="the context that the response was based on with its file path and page number.")
