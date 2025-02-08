@@ -22,20 +22,23 @@ in:
 	@echo "\nentering container..."
 	docker compose run fdua-competition-v2
 
-vectorstore:
-	@echo "\npreparing vectorstore..."
-	${UV} python -m fdua_competition.vectorstore -o ${OUTPUT_NAME}
-	@echo "done"
-
-index:
-	@echo "\npreparing index..."
-	${UV} python -m fdua_competition.index -o ${OUTPUT_NAME}
-	@echo "done"
-
 run: ${CSV_PATH}
-${CSV_PATH}: ${INSTALL_DIR}/.installed
+${CSV_PATH}: ${INSTALL_DIR}/index/${OUTPUT_NAME}.json
 	@echo "\nrunning..."
 	${UV} python -m fdua_competition.main -o ${OUTPUT_NAME} -m ${MODE}
+	@echo "done"
+
+vectorstore: ${INSTALL_DIR}/vectorstore/chroma/${OUTPUT_NAME}/.success
+${INSTALL_DIR}/vectorstore/chroma/${OUTPUT_NAME}/.success: ${INSTALL_DIR}/.installed
+	@echo "\npreparing vectorstore..."
+	${UV} python -m fdua_competition.vectorstore -o ${OUTPUT_NAME}
+	touch ${INSTALL_DIR}/vectorstore/chroma/${OUTPUT_NAME}/.success
+	@echo "done"
+
+index: ${INSTALL_DIR}/index/${OUTPUT_NAME}.json
+${INSTALL_DIR}/index/${OUTPUT_NAME}.json: ${INSTALL_DIR}/vectorstore/chroma/${OUTPUT_NAME}/.success
+	@echo "\npreparing index..."
+	${UV} python -m fdua_competition.index -o ${OUTPUT_NAME}
 	@echo "done"
 
 evaluate: ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv
