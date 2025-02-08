@@ -9,6 +9,7 @@ SECRETS_DIR = secrets
 INSTALL_DIR = .fdua-competition
 CSV_PATH = ${INSTALL_DIR}/results/${OUTPUT_NAME}.csv
 MODE = test
+OUTPUT_NAME = $(shell uv run python bin/get_version.py)
 
 up:
 	@echo "\starting container..."

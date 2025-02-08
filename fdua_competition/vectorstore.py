@@ -21,6 +21,7 @@ class FduaVectorStore:
         self.embeddings = embeddings
         self.persist_directory = Path(os.getenv("FDUA_DIR")) / f".fdua-competition/vectorstores/chroma/{output_name}"
         self.persist_directory.mkdir(parents=True, exist_ok=True)
+        print(f"[FduaVectorStore] {self.persist_directory}")
         self.vectorstore = Chroma(
             collection_name="fdua-competition",
             embedding_function=self.embeddings,

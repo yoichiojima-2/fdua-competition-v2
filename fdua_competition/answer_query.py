@@ -1,6 +1,7 @@
 import textwrap
 
 import yaml
+from langchain_core.tools import tool
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_fixed
@@ -20,6 +21,12 @@ class AnswerQueryOutput(BaseModel):
     reference: str = Field(description="the reference source of the context.")
 
 
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+=======
+@tool
+>>>>>>> f1c7f0b (fix: resolve conflict)
 def round_number(number: str, decimals: str) -> str:
     """
     rounds a number to a specified number of decimals.
@@ -30,6 +37,10 @@ def round_number(number: str, decimals: str) -> str:
     return str(round(float(number), int(decimals - 1)))
 
 
+<<<<<<< HEAD
+=======
+@tool
+>>>>>>> f1c7f0b (fix: resolve conflict)
 def divide_number(a: str, b: str) -> str:
     """
     divides two numbers.
@@ -40,6 +51,10 @@ def divide_number(a: str, b: str) -> str:
     return str(float(a) / float(b))
 
 
+<<<<<<< HEAD
+=======
+>>>>>>> Stashed changes
+>>>>>>> f1c7f0b (fix: resolve conflict)
 @retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=log_retry)
 def answer_query(query: str, vectorstore: FduaVectorStore):
     reference = search_source_to_refer(query)
@@ -86,8 +101,8 @@ def answer_query(query: str, vectorstore: FduaVectorStore):
 
     chat_model = (
         create_chat_model()
-        .with_structured_output(AnswerQueryOutput)
         .bind_tools([round_number, divide_number])
+        .with_structured_output(AnswerQueryOutput)
     )
     chain = prompt_template | chat_model
 
