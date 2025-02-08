@@ -106,6 +106,7 @@ clean:
 	find . -type f -name ".DS_Store" -print -exec rm -r {} +
 	find . -type f -name "*.Identifier" -print -exec rm -r {} +
 	find . -type d -name ".ipynb_checkpoints" -print -exec rm -r {} +
+	find . -type f -name "*.ipynb" -print -exec ${UV} jupyter nbconvert --clear-output {} \;
 	@echo "done"
 
 uninstall: clean
