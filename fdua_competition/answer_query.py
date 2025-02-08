@@ -14,7 +14,7 @@ from fdua_competition.vectorstore import FduaVectorStore
 
 class AnswerQueryOutput(BaseModel):
     query: str = Field(description="the query that was asked.")
-    response: str = Field(description="the answer for the given query", max_length=50)
+    response:str  = Field(description="the answer for the given query")
     reason: str = Field(description="the reason for the response.")
     organization_name: str = Field(description="the organization name that the query is about.")
     contexts: list[str] = Field(description="the context that the response was based on with its file path and page number.")
@@ -48,7 +48,8 @@ def divide_number(a: str, b: str) -> str:
 @retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=log_retry)
 def answer_query(query: str, vectorstore: FduaVectorStore, output_name: str):
     reference = search_source_to_refer(query, output_name)
-    context = vectorstore.as_retriever().invoke(query, filter={"source": reference.source})
+
+    context = vectorstore.as_retriever(search_kwargs={"k": 4}).invoke(query, filter={"source": reference.source})
 
     parsed_context = yaml.dump(
         [{"content": i.page_content, "metadata": i.metadata} for i in context],
@@ -59,7 +60,7 @@ def answer_query(query: str, vectorstore: FduaVectorStore, output_name: str):
 
     role = textwrap.dedent(
         """ 
-        You are a research assistant. You have access to the user’s query and a set of documents referred to as “context.”
+        You are a research assistant. You have access to the user's query and a set of documents referred to as “context.”
         You must answer the query using only the information from the context. If the answer cannot be found in the context, 
         simply state that the information is unavailable or unknown.
 
@@ -94,6 +95,7 @@ def answer_query(query: str, vectorstore: FduaVectorStore, output_name: str):
         .bind_tools([round_number, divide_number])
         .with_structured_output(AnswerQueryOutput)
     )
+
     chain = prompt_template | chat_model
 
     return chain.invoke({"role": role, "context": parsed_context, "query": query, "language": "japanese"})
