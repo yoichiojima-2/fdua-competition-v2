@@ -8,6 +8,7 @@ ASSETS_DIR = assets
 SECRETS_DIR = secrets
 INSTALL_DIR = .fdua-competition
 CSV_PATH = ${INSTALL_DIR}/results/${OUTPUT_NAME}.csv
+MODE = test
 
 up:
 	@echo "\starting container..."
@@ -34,7 +35,7 @@ index:
 run: ${CSV_PATH}
 ${CSV_PATH}: ${INSTALL_DIR}/.installed
 	@echo "\nrunning..."
-	${UV} python -m fdua_competition.main -o ${OUTPUT_NAME}
+	${UV} python -m fdua_competition.main -o ${OUTPUT_NAME} -m ${MODE}
 	@echo "done"
 
 evaluate: ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv
