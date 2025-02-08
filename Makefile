@@ -28,11 +28,11 @@ ${CSV_PATH}: ${INSTALL_DIR}/index/${OUTPUT_NAME}.json
 	${UV} python -m fdua_competition.main -o ${OUTPUT_NAME} -m ${MODE}
 	@echo "done"
 
-vectorstore: ${INSTALL_DIR}/vectorstore/chroma/${OUTPUT_NAME}/.success
-${INSTALL_DIR}/vectorstore/chroma/${OUTPUT_NAME}/.success: ${INSTALL_DIR}/.installed
+vectorstore: ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success
+${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success: ${INSTALL_DIR}/.installed
 	@echo "\npreparing vectorstore..."
 	${UV} python -m fdua_competition.vectorstore -o ${OUTPUT_NAME}
-	touch ${INSTALL_DIR}/vectorstore/chroma/${OUTPUT_NAME}/.success
+	touch ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success
 	@echo "done"
 
 index: ${INSTALL_DIR}/index/${OUTPUT_NAME}.json
