@@ -19,7 +19,12 @@ down:
 
 in:
 	@echo "\nentering container..."
-	docker compose run fdua-competition
+	docker compose run fdua-competition-v2
+
+vectorstore:
+	@echo "\npreparing vectorstore..."
+	${UV} python -m fdua_competition.vectorstore
+	@echo "done"
 
 run: ${CSV_PATH}
 ${CSV_PATH}: ${INSTALL_DIR}/.installed
