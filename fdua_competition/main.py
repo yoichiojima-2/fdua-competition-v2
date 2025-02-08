@@ -1,4 +1,4 @@
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 
 from tqdm import tqdm
 
@@ -9,7 +9,7 @@ from fdua_competition.utils import read_queries, write_result
 from fdua_competition.vectorstore import FduaVectorStore
 
 
-def parse_args():
+def parse_args() -> Namespace:
     parser = ArgumentParser()
     opt = parser.add_argument
     opt("--output_name", "-o", type=str, required=True)

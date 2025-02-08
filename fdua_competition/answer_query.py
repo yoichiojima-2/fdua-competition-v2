@@ -49,7 +49,7 @@ def divide_number(a: str, b: str) -> str:
 def answer_query(query: str, vectorstore: FduaVectorStore, output_name: str):
     reference = search_source_to_refer(query, output_name)
 
-    context = vectorstore.as_retriever(search_kwargs={"k": 4}).invoke(query, filter={"source": reference.source})
+    context = vectorstore.as_retriever().invoke(query, filter={"source": reference.source})
 
     parsed_context = yaml.dump(
         [{"content": i.page_content, "metadata": i.metadata} for i in context],
