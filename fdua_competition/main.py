@@ -3,12 +3,10 @@ from argparse import ArgumentParser
 from tqdm import tqdm
 
 from fdua_competition.answer_query import answer_query
-from fdua_competition.enums import EmbeddingOpt
-from fdua_competition.index_documents import extract_organization_name
+from fdua_competition.enums import EmbeddingOpt, Mode
 from fdua_competition.models import create_embeddings
 from fdua_competition.utils import read_queries, write_result
 from fdua_competition.vectorstore import FduaVectorStore
-from fdua_competition.enums import Mode
 
 
 def parse_args():
@@ -28,6 +26,7 @@ def main():
     responses = []
     for query in tqdm(read_queries(Mode(args.mode))):
         response = answer_query(query=query, vectorstore=vs)
+        print(response)
         responses.append(response)
 
     write_result(output_name=args.output_name, responses=responses)

@@ -3,9 +3,11 @@ import textwrap
 import yaml
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
+from tenacity import retry, stop_after_attempt, wait_fixed
 
 from fdua_competition.models import create_chat_model
 from fdua_competition.reference import search_source_to_refer
+from fdua_competition.utils import log_retry
 from fdua_competition.vectorstore import FduaVectorStore
 
 
@@ -18,6 +20,7 @@ class AnswerQueryOutput(BaseModel):
     reference: str = Field(description="the reference source of the context.")
 
 
+@retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=log_retry)
 def answer_query(query: str, vectorstore: FduaVectorStore):
     reference = search_source_to_refer(query)
     context = vectorstore.as_retriever().invoke(query, filter={"source": reference.source})
