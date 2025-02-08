@@ -1,12 +1,22 @@
+# import Document
+from langchain_core.documents import Document
+
 from fdua_competition.embeddings import create_embeddings
-from fdua_competition.enums import VectorStoreOpt
 from fdua_competition.vectorstore import FduaVectorStore
 
 
-class TestFduaVectorStore:
-    def setup_method(self):
-        embeddings = create_embeddings()
-        self.vs = FduaVectorStore(embeddings, VectorStoreOpt.CHROMA)
-
-    def test_create_fdua_vector_store(self):
-        assert isinstance(self.vs, FduaVectorStore)
+def test_vectorstore():
+    embeddings = create_embeddings()
+    vs = FduaVectorStore(output_name="test", embeddings=embeddings)
+    docs = [
+        Document(
+            page_content="test page 1",
+            metadata={"source": "dummy-source", "page": 1},
+        ),
+        Document(
+            page_content="test page 1",
+            metadata={"source": "dummy-source", "page": 2},
+        ),
+    ]
+    vs.add(docs)
+    assert vs.get()

@@ -23,7 +23,7 @@ in:
 
 vectorstore:
 	@echo "\npreparing vectorstore..."
-	${UV} python -m fdua_competition.vectorstore
+	${UV} python -m fdua_competition.vectorstore -o ${OUTPUT_NAME}
 	@echo "done"
 
 run: ${CSV_PATH}
