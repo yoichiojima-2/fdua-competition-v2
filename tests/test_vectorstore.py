@@ -1,7 +1,7 @@
 # import Document
 from langchain_core.documents import Document
 
-from fdua_competition.embeddings import create_embeddings
+from fdua_competition.models import create_embeddings
 from fdua_competition.vectorstore import FduaVectorStore
 
 

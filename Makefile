@@ -26,6 +26,11 @@ vectorstore:
 	${UV} python -m fdua_competition.vectorstore -o ${OUTPUT_NAME}
 	@echo "done"
 
+index:
+	@echo "\npreparing index..."
+	${UV} python -m fdua_competition.index -o ${OUTPUT_NAME}
+	@echo "done"
+
 run: ${CSV_PATH}
 ${CSV_PATH}: ${INSTALL_DIR}/.installed
 	@echo "\nrunning..."
