@@ -9,13 +9,13 @@ from fdua_competition.enums import Mode
 from fdua_competition.utils import read_queries
 
 
-def summarize():
+def summarize(output_name: str):
     print(" score ".center(88, "="))
     print()
     calc_score()
     print(" detail ".center(88, "="))
     print()
-    show_detail()
+    show_detail(output_name)
 
 
 def calc_score():
@@ -68,8 +68,7 @@ def parse_args() -> Namespace:
 
 def main():
     args = parse_args()
-    summarize()
-    show_detail(args.output_name)
+    summarize(args.output_name)
 
 
 if __name__ == "__main__":

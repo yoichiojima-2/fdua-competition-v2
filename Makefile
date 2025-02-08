@@ -7,9 +7,9 @@ GS_PATH = gs://fdua-competition
 ASSETS_DIR = assets
 SECRETS_DIR = secrets
 INSTALL_DIR = .fdua-competition
+OUTPUT_NAME = v$(shell uv run python bin/get_version.py)
 CSV_PATH = ${INSTALL_DIR}/results/${OUTPUT_NAME}.csv
 MODE = test
-OUTPUT_NAME = $(shell uv run python bin/get_version.py)
 
 up:
 	@echo "\starting container..."
