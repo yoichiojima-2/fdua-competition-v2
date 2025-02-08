@@ -163,12 +163,12 @@ def add_documents_to_vectorstore(documents: list[Path], vectorstore: VectorStore
 
     for path in documents:
         if str(path) in existing_sources:
-            print(f"[add_document_to_vectorstore] skipping existing document: {path}")
-            continue
-
-        print(f"[add_document_to_vectorstore] adding document to vectorstore: {path}")
-        pages = load_pages(path=path)
-        _add_pages_to_vectorstore_in_batches(vectorstore=vectorstore, pages=pages)
+            # print(f"[add_document_to_vectorstore] skipping existing document: {path}")
+            pass
+        else:
+            print(f"[add_document_to_vectorstore] adding document to vectorstore: {path}")
+            pages = load_pages(path=path)
+            _add_pages_to_vectorstore_in_batches(vectorstore=vectorstore, pages=pages)
 
 
 def build_vectorstore(output_name: str, mode: Mode, vectorstore_option: VectorStoreOption) -> VectorStore:
