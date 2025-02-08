@@ -7,9 +7,7 @@ GS_PATH = gs://fdua-competition
 ASSETS_DIR = assets
 SECRETS_DIR = secrets
 INSTALL_DIR = .fdua-competition
-CHAT_MODEL = 4omini
 CSV_PATH = ${INSTALL_DIR}/results/${OUTPUT_NAME}.csv
-
 
 up:
 	@echo "\starting container..."
@@ -21,8 +19,12 @@ down:
 
 in:
 	@echo "\nentering container..."
-	docker compose run fdua-competition
+	docker compose run fdua-competition-v2
 
+vectorstore:
+	@echo "\npreparing vectorstore..."
+	${UV} python -m fdua_competition.vectorstore -o ${OUTPUT_NAME}
+	@echo "done"
 
 run: ${CSV_PATH}
 ${CSV_PATH}: ${INSTALL_DIR}/.installed
@@ -34,7 +36,7 @@ evaluate: ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv
 ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv: ${CSV_PATH}
 	@echo "\nevaluating..."
 	${UV} python ${INSTALL_DIR}/evaluation/crag.py \
-		--model-name ${CHAT_MODEL} \
+		--model-name 4omini \
 		--result-dir ${PWD}/${INSTALL_DIR}/results \
 		--result-name ${OUTPUT_NAME}.csv \
 		--ans-dir ${PWD}/${INSTALL_DIR}/evaluation/data \
@@ -53,15 +55,6 @@ test: install
 	@echo "\ntesting..."
 	${UV} pytest -vvv
 	@echo "done"
-
-test-evaluate: install
-	${UV} python ${INSTALL_DIR}/evaluation/crag.py \
-		--model-name ${CHAT_MODEL} \
-		--result-dir ${PWD}/${INSTALL_DIR}/evaluation/submit \
-		--result-name predictions.csv \
-		--ans-dir ${PWD}/${INSTALL_DIR}/evaluation/data \
-		--ans-txt ans_txt.csv \
-		--eval-result-dir ${PWD}/${INSTALL_DIR}/evaluation/result
 
 clear-results:
 	-rm ${CSV_PATH}
@@ -117,12 +110,6 @@ uninstall: clean
 	-rm -rf ${ASSETS_DIR}
 	-rm -rf ${SECRETS_DIR}
 	@echo "done"
-
-upload-results:
-	gsutil -m cp -r ${INSTALL_DIR}/results ${GS_PATH}/
-
-download-results:
-	gsutil -m cp -r ${GS_PATH}/results ${INSTALL_DIR}
 
 upload-secrets:
 	gsutil -m cp -r secrets ${GS_PATH}/
