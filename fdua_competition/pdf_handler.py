@@ -29,8 +29,8 @@ def load_documents(mode: Mode = Mode.TEST) -> list[Document]:
 
 def split_document(doc: Document) -> list[Document]:
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800,
-        chunk_overlap=200,
+        chunk_size=1000,
+        chunk_overlap=150,
         separators=["\n\n", "\n", "。", "．", "？", "！", "「", "」", "【", "】"],
     )
     split_doc = splitter.split_text(doc.page_content)
