@@ -1,10 +1,11 @@
 import os
+from pathlib import Path
 
 import pandas as pd
 from tabulate import tabulate
 
 from fdua_competition.enums import Mode
-from fdua_competition.utils import get_queries, get_root
+from fdua_competition.utils import read_queries
 
 
 def main():
@@ -17,7 +18,7 @@ def main():
 
 
 def calc_score():
-    df = pd.read_csv(get_root() / "evaluation/result/scoring.csv", header=None)
+    df = pd.read_csv(Path(os.environ["FDUA_DIR"]) / ".fdua-competition/evaluation/result/scoring.csv", header=None)
     df.columns = ["index", "evaluation", "crag_score"]
 
     evaluation_to_score = {"Perfect": 1, "Acceptable": 0.5, "Missing": 0, "Incorrect": -1}
@@ -38,17 +39,17 @@ def calc_score():
 
 
 def show_detail():
-    answer_df = pd.read_csv(get_root() / "evaluation/data/ans_txt.csv", header=None)
+    answer_df = pd.read_csv(Path(os.environ["FDUA_DIR"]) / ".fdua-competition/evaluation/data/ans_txt.csv", header=None)
     answer_df.columns = ["index", "answer"]
 
-    output_df = pd.read_csv(get_root() / f"results/{os.getenv('OUTPUT_NAME')}.csv", header=None)
+    output_df = pd.read_csv(Path(os.environ["FDUA_DIR"]) / f".fdua-competition/results/{os.getenv('OUTPUT_NAME')}.csv", header=None)
     output_df.columns = ["index", "output"]
 
-    score_df = pd.read_csv(get_root() / "evaluation/result/scoring.csv", header=None)
+    score_df = pd.read_csv(Path(os.environ["FDUA_DIR"]) / ".fdua-competition/evaluation/result/scoring.csv", header=None)
     score_df.columns = ["index", "evaluation", "score"]
 
     for question, ansewr, output, score in zip(
-        get_queries(Mode.TEST), answer_df["answer"], output_df["output"], score_df["evaluation"]
+        read_queries(Mode.TEST), answer_df["answer"], output_df["output"], score_df["evaluation"]
     ):
         print(f"question: {question}")
         print(f"answer: {ansewr}")

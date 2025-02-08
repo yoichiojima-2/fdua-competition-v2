@@ -20,6 +20,26 @@ class AnswerQueryOutput(BaseModel):
     reference: str = Field(description="the reference source of the context.")
 
 
+def round_number(number: str, decimals: str) -> str:
+    """
+    rounds a number to a specified number of decimals.
+    args:
+        number: the number to round.
+        decimals: the number of decimals to round to.
+    """
+    return str(round(float(number), int(decimals - 1)))
+
+
+def divide_number(a: str, b: str) -> str:
+    """
+    divides two numbers.
+    args:
+        a: the dividend.
+        b: the divisor.
+    """
+    return str(float(a) / float(b))
+
+
 @retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=log_retry)
 def answer_query(query: str, vectorstore: FduaVectorStore):
     reference = search_source_to_refer(query)
@@ -64,7 +84,11 @@ def answer_query(query: str, vectorstore: FduaVectorStore):
         ]
     )
 
-    chat_model = create_chat_model().with_structured_output(AnswerQueryOutput)
+    chat_model = (
+        create_chat_model()
+        .with_structured_output(AnswerQueryOutput)
+        .bind_tools([round_number, divide_number])
+    )
     chain = prompt_template | chat_model
 
     return chain.invoke({"role": role, "context": parsed_context, "query": query, "language": "japanese"})
