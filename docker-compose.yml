@@ -1,18 +1,18 @@
 services:
-  fdua-competition:
+  fdua-competition-v2:
     build:
       context: .
-    container_name: fdua-competition
+    container_name: fdua-competition-v2
     volumes:
       - .:/fdua-competition
     tty: true
     env_file:
       - secrets/.env
 
-  fdua-notebook:
+  fdua-notebook-v2:
     build:
       context: .
-    container_name: fdua-notebook
+    container_name: fdua-notebook-v2
     volumes:
       - .:/fdua-competition
     tty: true
