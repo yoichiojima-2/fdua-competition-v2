@@ -3,7 +3,7 @@ import textwrap
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
-from fdua_competition.index_document import read_index
+from fdua_competition.index_documents import read_index
 from fdua_competition.models import create_chat_model
 
 
