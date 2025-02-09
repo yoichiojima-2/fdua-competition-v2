@@ -89,7 +89,4 @@ def answer_query(query: str, vectorstore: FduaVectorStore):
     chain = prompt_template | chat_model
     payload = {"role": role, "context": parsed_context, "query": query, "language": "japanese"}
 
-    # debug
-    print(prompt_template.invoke(payload))
-
     return chain.invoke(payload)
