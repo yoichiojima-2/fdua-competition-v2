@@ -10,12 +10,14 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.vectorstores import VectorStore
 from pydantic import BaseModel, Field
 from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from fdua_competition.enums import Mode
 from fdua_competition.models import create_chat_model, create_embeddings
 from fdua_competition.pdf_handler import get_document_dir
 from fdua_competition.utils import get_version
 from fdua_competition.vectorstore import FduaVectorStore
+
 
 OUTPUT_DIR = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/index/pages"
 
@@ -52,6 +54,20 @@ def summarize_page(document: Document) -> SummarizePageOutput:
     return chain.invoke({"page_content": document.page_content})
 
 
+def summarize_page_concurrently(docs: list[Document]) -> list[dict]:
+    summaries = []
+    with ThreadPoolExecutor() as executor:
+        future_to_doc = {executor.submit(summarize_page, doc): doc for doc in docs}
+        for future in tqdm(as_completed(future_to_doc), total=len(docs), desc="summarizing_pages.."):
+            doc = future_to_doc[future]
+            try:
+                summary = future.result()
+                summaries.append({"summary": summary.summary, "metadata": doc.metadata})
+            except Exception as exc:
+                print(f"[summarize_page_concurrently] {doc.metadata['source']} generated an exception: {exc}")
+    return summaries
+
+
 def write_page_index(source: Path, vectorstore: VectorStore) -> None:
     output_path = OUTPUT_DIR / f"v{get_version()}/{source.stem}.json"
 
@@ -62,11 +78,7 @@ def write_page_index(source: Path, vectorstore: VectorStore) -> None:
     print(f"[write_page_index] creating page index..: {source}")
 
     docs = get_document(source, vectorstore=vectorstore)
-
-    page_index = []
-    for doc in tqdm(docs, desc="summarizing_pages.."):
-        summary = summarize_page(doc)
-        page_index.append({"summary": summary.summary, "metadata": doc.metadata})
+    page_index = summarize_page_concurrently(docs)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w") as f:
