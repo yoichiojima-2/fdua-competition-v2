@@ -112,6 +112,11 @@ clean:
 	find . -type f -name "*.ipynb" -print -exec ${UV} jupyter nbconvert --clear-output {} \;
 	@echo "done"
 
+clean-containers:
+	@echo "\ncleaning container..."
+	docker ps -qa | xargs docker rm -f && docker images -q | xargs docker rmi -f
+	@echo "done"
+
 uninstall: clean
 	@echo "\nuninstalling..."
 	-rm -rf .venv
