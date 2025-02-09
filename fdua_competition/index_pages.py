@@ -17,7 +17,6 @@ from fdua_competition.pdf_handler import get_document_dir
 from fdua_competition.utils import get_version
 from fdua_competition.vectorstore import FduaVectorStore
 
-
 OUTPUT_DIR = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/index/pages"
 
 
