@@ -65,7 +65,6 @@ def write_index(output_name: str, vectorstore: VectorStore, mode: Mode = Mode.TE
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w") as f:
         json.dump(organization_names, f, ensure_ascii=False, indent=2)
-
     print(f"[write_index] done: {output_path}")
 
 
