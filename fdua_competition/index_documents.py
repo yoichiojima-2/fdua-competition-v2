@@ -1,7 +1,6 @@
 import json
 import os
 import textwrap
-from argparse import ArgumentParser
 from pathlib import Path
 
 import yaml
@@ -13,6 +12,7 @@ from tqdm import tqdm
 from fdua_competition.enums import Mode
 from fdua_competition.models import create_chat_model, create_embeddings
 from fdua_competition.pdf_handler import get_document_dir
+from fdua_competition.utils import get_version
 from fdua_competition.vectorstore import FduaVectorStore
 
 OUTPUT_DIR = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/index"
@@ -51,7 +51,7 @@ def extract_organization_name(source: Path, vectorstore: VectorStore):
     return chain.invoke({"context": "\n---\n".join([i.page_content for i in context])})
 
 
-def write_index(output_name: str, vectorstore: VectorStore, mode: Mode = Mode.TEST):
+def write_index(vectorstore: VectorStore, mode: Mode = Mode.TEST):
     print("[write_index] creating index..")
 
     organization_names = []
@@ -60,31 +60,24 @@ def write_index(output_name: str, vectorstore: VectorStore, mode: Mode = Mode.TE
         names = extract_organization_name(source=pdf_path, vectorstore=vectorstore)
         organization_names.append({"organizations": names.organizations, "source": str(pdf_path)})
 
-    output_path = OUTPUT_DIR / f"{output_name}.json"
+    output_path = OUTPUT_DIR / f"v{get_version()}.json"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w") as f:
         json.dump(organization_names, f, ensure_ascii=False, indent=2)
     print(f"[write_index] done: {output_path}")
 
 
-def parse_args():
-    parser = ArgumentParser()
-    parser.add_argument("--output_name", "-o", type=str)
-    return parser.parse_args()
-
-
-def main(output_name: str):
+def main():
     embeddings = create_embeddings()
-    vs = FduaVectorStore(output_name=output_name, embeddings=embeddings)
-    write_index(output_name=output_name, vectorstore=vs)
+    vs = FduaVectorStore(embeddings=embeddings)
+    write_index(vectorstore=vs)
 
 
-def read_index(output_name: str) -> str:
-    index_path = OUTPUT_DIR / f"{output_name}.json"
+def read_index() -> str:
+    index_path = OUTPUT_DIR / f"v{get_version()}.json"
     index = json.load(index_path.open())
     return yaml.dump(index, allow_unicode=True, default_flow_style=False, sort_keys=False)
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    main(output_name=args.output_name)
+    main()

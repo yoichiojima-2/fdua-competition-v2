@@ -7,7 +7,7 @@ from fdua_competition.vectorstore import FduaVectorStore
 
 def test_vectorstore():
     embeddings = create_embeddings()
-    vs = FduaVectorStore(output_name="test", embeddings=embeddings)
+    vs = FduaVectorStore(embeddings=embeddings)
     docs = [
         Document(
             page_content="test page 1",

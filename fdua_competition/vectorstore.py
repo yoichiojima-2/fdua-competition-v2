@@ -13,13 +13,13 @@ from tqdm import tqdm
 from fdua_competition.enums import EmbeddingOpt
 from fdua_competition.models import create_embeddings
 from fdua_competition.pdf_handler import load_documents
-from fdua_competition.utils import log_retry
+from fdua_competition.utils import get_version, log_retry
 
 
 class FduaVectorStore:
-    def __init__(self, output_name: str, embeddings: Embeddings):
+    def __init__(self, embeddings: Embeddings):
         self.embeddings = embeddings
-        self.persist_directory = Path(os.getenv("FDUA_DIR")) / f".fdua-competition/vectorstores/chroma/{output_name}"
+        self.persist_directory = Path(os.getenv("FDUA_DIR")) / f".fdua-competition/vectorstores/chroma/v{get_version()}"
         self.persist_directory.mkdir(parents=True, exist_ok=True)
 
         print(f"[FduaVectorStore] {self.persist_directory}")
@@ -43,6 +43,8 @@ class FduaVectorStore:
         self.vectorstore.reset_collection()
         docs = load_documents()
 
+        # [start: adding documents]
+
         # # v2.3: recursive split
         # for doc in tqdm(docs, desc="populating vectorstore.."):
         #     split_doc = split_document(doc)
@@ -58,15 +60,11 @@ class FduaVectorStore:
         for doc in tqdm(batches, desc="populating vectorstore.."):
             self.add(doc)
 
+        # [end: adding documents]
+
 
 def parse_args() -> Namespace:
     parser = ArgumentParser()
-    parser.add_argument(
-        "--output-name",
-        "-o",
-        type=str,
-        help="the name of the vectorstore to persist",
-    )
     parser.add_argument(
         "--embeddings",
         "-e",
@@ -78,12 +76,12 @@ def parse_args() -> Namespace:
     return parser.parse_args()
 
 
-def main() -> None:
+def prepare_vectorstore() -> None:
     args = parse_args()
     embeddings = create_embeddings(args.embeddings)
-    vs = FduaVectorStore(output_name=args.output_name, embeddings=embeddings)
+    vs = FduaVectorStore(embeddings=embeddings)
     vs.populate()
 
 
 if __name__ == "__main__":
-    main()
+    prepare_vectorstore()

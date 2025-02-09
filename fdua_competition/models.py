@@ -4,8 +4,8 @@ from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
 
 from fdua_competition.enums import ChatOpt, EmbeddingOpt
 
-
 TEMPRATURE = 0
+
 
 def create_embeddings(opt: EmbeddingOpt = EmbeddingOpt.AZURE) -> Embeddings:
     match opt:

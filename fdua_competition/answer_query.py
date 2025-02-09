@@ -44,7 +44,7 @@ class AnswerQueryOutput(BaseModel):
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=log_retry)
-def answer_query(query: str, vectorstore: FduaVectorStore, output_name: str):
+def answer_query(query: str, vectorstore: FduaVectorStore):
     role = textwrap.dedent(
         """ 
         You are a research assistant. You have access to the user's query and a set of documents referred to as “context.”
@@ -69,7 +69,7 @@ def answer_query(query: str, vectorstore: FduaVectorStore, output_name: str):
         """
     )
 
-    reference = search_source_to_refer(query, output_name)
+    reference = search_source_to_refer(query)
     context = vectorstore.as_retriever().invoke(query, filter={"source": reference.source})
     parsed_context = yaml.dump(
         [{"content": i.page_content, "metadata": i.metadata} for i in context],

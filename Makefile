@@ -7,7 +7,7 @@ GS_PATH = gs://fdua-competition
 ASSETS_DIR = assets
 SECRETS_DIR = secrets
 INSTALL_DIR = .fdua-competition
-OUTPUT_NAME = v$(shell uv run python bin/get_version.py)
+OUTPUT_NAME = v$(shell uv run python -m bin.print_version)
 CSV_PATH = ${INSTALL_DIR}/results/${OUTPUT_NAME}.csv
 MODE = test
 
@@ -26,20 +26,20 @@ in:
 run: ${CSV_PATH}
 ${CSV_PATH}: ${INSTALL_DIR}/index/${OUTPUT_NAME}.json
 	@echo "\nrunning..."
-	${UV} python -m fdua_competition.main -o ${OUTPUT_NAME} -m ${MODE}
+	${UV} python -m fdua_competition.main -m ${MODE}
 	@echo "done"
 
 vectorstore: ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success
 ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success: ${INSTALL_DIR}/.installed
 	@echo "\npreparing vectorstore..."
-	${UV} python -m fdua_competition.vectorstore -o ${OUTPUT_NAME}
+	${UV} python -m fdua_competition.vectorstore 
 	touch ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success
 	@echo "done"
 
 index: ${INSTALL_DIR}/index/${OUTPUT_NAME}.json
 ${INSTALL_DIR}/index/${OUTPUT_NAME}.json: ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success
 	@echo "\npreparing index..."
-	${UV} python -m fdua_competition.index_documents -o ${OUTPUT_NAME}
+	${UV} python -m fdua_competition.index_documents
 	@echo "done"
 
 evaluate: ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv
@@ -58,7 +58,7 @@ ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv: ${CSV_PATH}
 summary: evaluate
 	@echo "\nsummarizing..."
 	-mkdir -p ${INSTALL_DIR}/summary
-	${UV} python bin/summarize_result.py -o ${OUTPUT_NAME} | tee ${INSTALL_DIR}/summary/${OUTPUT_NAME}.txt
+	${UV} python bin/summarize_result.py | tee ${INSTALL_DIR}/summary/${OUTPUT_NAME}.txt
 	@echo "done"
 
 test: install

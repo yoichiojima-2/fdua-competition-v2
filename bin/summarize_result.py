@@ -1,21 +1,20 @@
 import os
-from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
 import pandas as pd
 from tabulate import tabulate
 
 from fdua_competition.enums import Mode
-from fdua_competition.utils import read_queries
+from fdua_competition.utils import get_version, read_queries
 
 
-def summarize(output_name: str):
+def summarize():
     print(" score ".center(88, "="))
     print()
     calc_score()
     print(" detail ".center(88, "="))
     print()
-    show_detail(output_name)
+    show_detail()
 
 
 def calc_score():
@@ -39,11 +38,11 @@ def calc_score():
     print()
 
 
-def show_detail(output_name: str):
+def show_detail():
     answer_df = pd.read_csv(Path(os.environ["FDUA_DIR"]) / ".fdua-competition/evaluation/data/ans_txt.csv", header=None)
     answer_df.columns = ["index", "answer"]
 
-    output_df = pd.read_csv(Path(os.environ["FDUA_DIR"]) / f".fdua-competition/results/{output_name}.csv", header=None)
+    output_df = pd.read_csv(Path(os.environ["FDUA_DIR"]) / f".fdua-competition/results/v{get_version()}.csv", header=None)
     output_df.columns = ["index", "output"]
 
     score_df = pd.read_csv(Path(os.environ["FDUA_DIR"]) / ".fdua-competition/evaluation/result/scoring.csv", header=None)
@@ -59,16 +58,8 @@ def show_detail(output_name: str):
         print()
 
 
-def parse_args() -> Namespace:
-    parser = ArgumentParser()
-    opt = parser.add_argument
-    opt("--output_name", "-o", type=str, required=True)
-    return parser.parse_args()
-
-
 def main():
-    args = parse_args()
-    summarize(args.output_name)
+    summarize()
 
 
 if __name__ == "__main__":
