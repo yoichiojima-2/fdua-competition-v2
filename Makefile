@@ -123,7 +123,7 @@ clear-container:
 clear-vectorstore:
 	-rm -r ${INSTALL_DIR}/vectorstores
 
-uninstall: clean
+uninstall: clean clear-container
 	@echo "\nuninstalling..."
 	-rm -rf .venv
 	-rm uv.lock
