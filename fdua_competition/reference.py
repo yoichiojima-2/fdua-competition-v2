@@ -3,7 +3,7 @@ import textwrap
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
-from fdua_competition.index_documents import read_index
+from fdua_competition.index_documents import read_document_index
 from fdua_competition.models import create_chat_model
 
 
@@ -39,7 +39,7 @@ def search_source_to_refer(query: str) -> ReferenceOutput:
 
     chat_model = create_chat_model().with_structured_output(ReferenceOutput)
     prompt_template = ChatPromptTemplate.from_messages(
-        [("system", role), ("system", f"index: {read_index()}"), ("user", f"query: {query}")]
+        [("system", role), ("system", f"index: {read_document_index()}"), ("user", f"query: {query}")]
     )
     chain = prompt_template | chat_model
     return chain.invoke({"query": query})
