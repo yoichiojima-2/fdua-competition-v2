@@ -1,0 +1,6 @@
+#!/bin/bash
+
+echo "copying vectorstore ${1} to ${2}"
+VS_PATH=".fdua-competition/vectorstores/chroma"
+cp -r ${VS_PATH}/${1} ${VS_PATH}/${2}
+echo "done"
