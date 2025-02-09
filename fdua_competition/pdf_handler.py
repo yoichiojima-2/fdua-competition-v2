@@ -1,11 +1,11 @@
 import os
-from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
-from tqdm import tqdm
 from langchain_community.document_loaders import PyPDFium2Loader
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from tqdm import tqdm
 
 from fdua_competition.enums import Mode
 
@@ -34,6 +34,7 @@ def load_documents_concurrently(mode: Mode = Mode.TEST) -> list[Document]:
             except Exception as exc:
                 print(f"[load_documents_concurrently] {path} generated an exception: {exc}")
     return docs
+
 
 def load_documents(mode: Mode = Mode.TEST) -> list[Document]:
     return load_documents_concurrently(mode)

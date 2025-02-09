@@ -1,8 +1,8 @@
 import os
 import typing as t
 from argparse import ArgumentParser, Namespace
-from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
@@ -14,7 +14,7 @@ from tqdm import tqdm
 from fdua_competition.enums import EmbeddingOpt
 from fdua_competition.models import create_embeddings
 from fdua_competition.pdf_handler import load_documents
-from fdua_competition.utils import get_version, before_sleep_hook
+from fdua_competition.utils import before_sleep_hook, get_version
 
 
 class FduaVectorStore:

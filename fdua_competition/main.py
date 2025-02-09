@@ -1,5 +1,6 @@
 import sys
 from argparse import ArgumentParser, Namespace
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from tqdm import tqdm
 
@@ -8,7 +9,6 @@ from fdua_competition.enums import EmbeddingOpt, Mode
 from fdua_competition.models import create_embeddings
 from fdua_competition.utils import read_queries, write_result
 from fdua_competition.vectorstore import FduaVectorStore
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 def parse_args() -> Namespace:
@@ -21,7 +21,9 @@ def parse_args() -> Namespace:
 def process_queries_concurrently(queries: list[str], vectorstore: FduaVectorStore) -> list[str]:
     responses = [None] * len(queries)
     with ThreadPoolExecutor() as executor:
-        future_to_index = {executor.submit(answer_query, query=query, vectorstore=vectorstore): i for i, query in enumerate(queries)}
+        future_to_index = {
+            executor.submit(answer_query, query=query, vectorstore=vectorstore): i for i, query in enumerate(queries)
+        }
         for future in tqdm(as_completed(future_to_index), total=len(queries), desc="processing queries.."):
             index = future_to_index[future]
             try:

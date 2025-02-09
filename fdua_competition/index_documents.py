@@ -2,6 +2,7 @@ import json
 import os
 import textwrap
 from argparse import ArgumentParser, Namespace
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import yaml
@@ -9,7 +10,6 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.vectorstores import VectorStore
 from pydantic import BaseModel, Field
 from tqdm import tqdm
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from fdua_competition.enums import Mode
 from fdua_competition.models import create_chat_model, create_embeddings
@@ -65,6 +65,7 @@ def extract_organization_name_concurrently(pdfs: list[Path], vectorstore: Vector
             except Exception as exc:
                 print(f"[extract_organization_name_concurrently] {pdf} generated an exception: {exc}")
     return organization_names
+
 
 def write_document_index(vectorstore: VectorStore, mode: Mode = Mode.TEST):
     output_path = OUTPUT_DIR / f"v{get_version()}.json"
