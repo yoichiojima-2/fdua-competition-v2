@@ -2,6 +2,7 @@ import os
 import typing as t
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
@@ -35,32 +36,25 @@ class FduaVectorStore:
     def as_retriever(self, **kwargs) -> VectorStoreRetriever:
         return self.vectorstore.as_retriever(**kwargs)
 
-    @retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=log_retry)
+    @retry(stop=stop_after_attempt(24), wait=wait_fixed(1))
     def add(self, docs: list[Document]) -> None:
         self.vectorstore.add_documents(docs)
 
     def populate(self) -> None:
         self.vectorstore.reset_collection()
         docs = load_documents()
+        add_documents_concurrently(self, docs)
 
-        # [start: adding documents]
 
-        # # v2.3: recursive split
-        # for doc in tqdm(docs, desc="populating vectorstore.."):
-        #     split_doc = split_document(doc)
-        #     self.add(split_doc)
-
-        # # v2.4: page by page (premitive but better)
-        # for doc in tqdm(docs, desc="populating vectorstore.."):
-        #     self.add([doc])
-
-        # v2.5: page by page in batches
-        size = 8
-        batches = [docs[i : i + size] for i in range(0, len(docs), size)]
-        for doc in tqdm(batches, desc="populating vectorstore.."):
-            self.add(doc)
-
-        # [end: adding documents]
+def add_documents_concurrently(vectorstore: FduaVectorStore, docs: list[Document], batch_size: int = 8) -> None:
+    batches = [docs[i : i + batch_size] for i in range(0, len(docs), batch_size)]
+    with ThreadPoolExecutor() as executor:
+        futures = [executor.submit(vectorstore.add, batch) for batch in batches]
+        for future in tqdm(as_completed(futures), total=len(futures), desc="populating vectorstore.."):
+            try:
+                future.result()
+            except Exception as exc:
+                print(f"[add_documents_concurrently] generated an exception: {exc}")
 
 
 def parse_args() -> Namespace:
