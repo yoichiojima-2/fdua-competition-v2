@@ -39,14 +39,13 @@ def extract_organization_name(source: Path, vectorstore: VectorStore):
 
     user_query = "extract organization names from this document"
 
-    prompt_template = ChatPromptTemplate.from_messages(
-        [("system", role), ("system", "context:\n{context}"), ("user", user_query)]
-    )
-
     retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
     context = retriever.invoke(user_query, filter={"source": str(source)})
 
     chat_model = create_chat_model().with_structured_output(IndexDocumentOutput)
+    prompt_template = ChatPromptTemplate.from_messages(
+        [("system", role), ("system", "context:\n{context}"), ("user", user_query)]
+    )
     chain = prompt_template | chat_model
 
     return chain.invoke({"context": "\n---\n".join([i.page_content for i in context])})

@@ -37,11 +37,9 @@ def search_source_to_refer(query: str, output_name: str) -> ReferenceOutput:
         """
     )
 
+    chat_model = create_chat_model().with_structured_output(ReferenceOutput)
     prompt_template = ChatPromptTemplate.from_messages(
         [("system", role), ("system", f"index: {read_index(output_name)}"), ("user", f"query: {query}")]
     )
-
-    chat_model = create_chat_model().with_structured_output(ReferenceOutput)
     chain = prompt_template | chat_model
-
     return chain.invoke({"query": query})

@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 from fdua_competition.enums import EmbeddingOpt
 from fdua_competition.models import create_embeddings
-from fdua_competition.pdf_handler import load_documents, split_document
+from fdua_competition.pdf_handler import load_documents
 from fdua_competition.utils import log_retry
 
 
@@ -54,7 +54,7 @@ class FduaVectorStore:
 
         # v2.5: page by page in batches
         size = 8
-        batches = [docs[i:i + size] for i in range(0, len(docs), size)]
+        batches = [docs[i : i + size] for i in range(0, len(docs), size)]
         for doc in tqdm(batches, desc="populating vectorstore.."):
             self.add(doc)
 

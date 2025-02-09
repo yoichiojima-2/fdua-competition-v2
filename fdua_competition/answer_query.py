@@ -12,13 +12,15 @@ from fdua_competition.utils import log_retry
 from fdua_competition.vectorstore import FduaVectorStore
 
 
-class AnswerQueryOutput(BaseModel):
-    query: str = Field(description="the query that was asked.")
-    response: str = Field(description="the answer for the given query")
-    reason: str = Field(description="the reason for the response.")
-    organization_name: str = Field(description="the organization name that the query is about.")
-    contexts: list[str] = Field(description="the context that the response was based on with its file path and page number.")
-    reference: str = Field(description="the reference source of the context.")
+@tool
+def divide_number(a: str, b: str) -> str:
+    """
+    divides two numbers.
+    args:
+        a: the dividend.
+        b: the divisor.
+    """
+    return str(float(a) / float(b))
 
 
 @tool
@@ -32,30 +34,17 @@ def round_number(number: str, decimals: str) -> str:
     return str(round(float(number), int(decimals - 1)))
 
 
-@tool
-def divide_number(a: str, b: str) -> str:
-    """
-    divides two numbers.
-    args:
-        a: the dividend.
-        b: the divisor.
-    """
-    return str(float(a) / float(b))
+class AnswerQueryOutput(BaseModel):
+    query: str = Field(description="the query that was asked.")
+    response: str = Field(description="the answer for the given query")
+    reason: str = Field(description="the reason for the response.")
+    organization_name: str = Field(description="the organization name that the query is about.")
+    contexts: list[str] = Field(description="the context that the response was based on with its file path and page number.")
+    reference: str = Field(description="the reference source of the context.")
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=log_retry)
 def answer_query(query: str, vectorstore: FduaVectorStore, output_name: str):
-    reference = search_source_to_refer(query, output_name)
-
-    context = vectorstore.as_retriever().invoke(query, filter={"source": reference.source})
-
-    parsed_context = yaml.dump(
-        [{"content": i.page_content, "metadata": i.metadata} for i in context],
-        allow_unicode=True,
-        default_flow_style=False,
-        sort_keys=False,
-    )
-
     role = textwrap.dedent(
         """ 
         You are a research assistant. You have access to the user's query and a set of documents referred to as “context.”
@@ -80,6 +69,16 @@ def answer_query(query: str, vectorstore: FduaVectorStore, output_name: str):
         """
     )
 
+    reference = search_source_to_refer(query, output_name)
+    context = vectorstore.as_retriever().invoke(query, filter={"source": reference.source})
+    parsed_context = yaml.dump(
+        [{"content": i.page_content, "metadata": i.metadata} for i in context],
+        allow_unicode=True,
+        default_flow_style=False,
+        sort_keys=False,
+    )
+
+    chat_model = create_chat_model().bind_tools([round_number, divide_number]).with_structured_output(AnswerQueryOutput)
     prompt_template = ChatPromptTemplate.from_messages(
         [
             ("system", "{role}"),
@@ -87,9 +86,5 @@ def answer_query(query: str, vectorstore: FduaVectorStore, output_name: str):
             ("user", "query:\n{query}"),
         ]
     )
-
-    chat_model = create_chat_model().bind_tools([round_number, divide_number]).with_structured_output(AnswerQueryOutput)
-
     chain = prompt_template | chat_model
-
     return chain.invoke({"role": role, "context": parsed_context, "query": query, "language": "japanese"})
