@@ -120,6 +120,9 @@ clear-container:
 	docker ps -qa | xargs docker rm -f && docker images -q | xargs docker rmi -f
 	@echo "done"
 
+clear-vectorstore:
+	-rm -r ${INSTALL_DIR}/vectorstores
+
 uninstall: clean
 	@echo "\nuninstalling..."
 	-rm -rf .venv
