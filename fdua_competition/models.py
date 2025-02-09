@@ -5,6 +5,8 @@ from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
 from fdua_competition.enums import ChatOpt, EmbeddingOpt
 
 
+TEMPRATURE = 0
+
 def create_embeddings(opt: EmbeddingOpt = EmbeddingOpt.AZURE) -> Embeddings:
     match opt:
         case EmbeddingOpt.AZURE:
@@ -16,6 +18,6 @@ def create_embeddings(opt: EmbeddingOpt = EmbeddingOpt.AZURE) -> Embeddings:
 def create_chat_model(opt: ChatOpt = ChatOpt.AZURE) -> BaseChatModel:
     match opt:
         case ChatOpt.AZURE:
-            return AzureChatOpenAI(azure_deployment="4omini")
+            return AzureChatOpenAI(azure_deployment="4omini", temperature=TEMPRATURE)
         case _:
             raise ValueError("Invalid chat option")
