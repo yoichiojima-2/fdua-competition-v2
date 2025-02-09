@@ -46,7 +46,7 @@ class FduaVectorStore:
         add_documents_concurrently(self, docs)
 
 
-def add_documents_concurrently(vectorstore: FduaVectorStore, docs: list[Document], batch_size: int = 2) -> None:
+def add_documents_concurrently(vectorstore: FduaVectorStore, docs: list[Document], batch_size: int = 8) -> None:
     batches = [docs[i : i + batch_size] for i in range(0, len(docs), batch_size)]
     with ThreadPoolExecutor() as executor:
         futures = [executor.submit(vectorstore.add, batch) for batch in batches]
