@@ -1,3 +1,4 @@
+import sys
 import os
 import tomllib
 from pathlib import Path
@@ -37,5 +38,5 @@ def write_result(responses: list[BaseModel]) -> None:
     print(f"[write_result] done: {output_path}")
 
 
-def log_retry(state: RetryCallState) -> None:
-    pprint(f":( retrying attempt {state.attempt_number} after exception: {state.outcome.exception()}")
+def before_sleep_hook(state: RetryCallState) -> None:
+    print(f":( retrying attempt {state.attempt_number} after exception: {state.outcome.exception()}", file=sys.stderr)

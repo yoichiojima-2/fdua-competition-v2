@@ -14,7 +14,7 @@ from tqdm import tqdm
 from fdua_competition.enums import EmbeddingOpt
 from fdua_competition.models import create_embeddings
 from fdua_competition.pdf_handler import load_documents
-from fdua_competition.utils import get_version, log_retry
+from fdua_competition.utils import get_version, before_sleep_hook
 
 
 class FduaVectorStore:
@@ -36,7 +36,7 @@ class FduaVectorStore:
     def as_retriever(self, **kwargs) -> VectorStoreRetriever:
         return self.vectorstore.as_retriever(**kwargs)
 
-    @retry(stop=stop_after_attempt(24), wait=wait_fixed(1))
+    @retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=before_sleep_hook)
     def add(self, docs: list[Document]) -> None:
         self.vectorstore.add_documents(docs)
 

@@ -1,3 +1,4 @@
+import sys
 from argparse import ArgumentParser, Namespace
 
 from tqdm import tqdm
@@ -27,8 +28,8 @@ def process_queries_concurrently(queries: list[str], vectorstore: FduaVectorStor
                 response = future.result()
                 print(response)
                 responses[index] = response
-            except Exception as exc:
-                print(f"[process_queries_concurrently] query at index {index} generated an exception: {exc}")
+            except Exception as e:
+                print(f"[process_queries_concurrently] query at index {index} generated an exception: {e}", file=sys.stderr)
     return responses
 
 

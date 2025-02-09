@@ -8,7 +8,7 @@ from tenacity import retry, stop_after_attempt, wait_fixed
 
 from fdua_competition.models import create_chat_model
 from fdua_competition.reference import search_source_to_refer
-from fdua_competition.utils import log_retry
+from fdua_competition.utils import before_sleep_hook
 from fdua_competition.vectorstore import FduaVectorStore
 
 
@@ -43,7 +43,7 @@ class AnswerQueryOutput(BaseModel):
     reference: str = Field(description="the reference source of the context.")
 
 
-@retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=log_retry)
+@retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=before_sleep_hook)
 def answer_query(query: str, vectorstore: FduaVectorStore):
     role = textwrap.dedent(
         """ 
