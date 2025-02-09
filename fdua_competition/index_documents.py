@@ -9,6 +9,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.vectorstores import VectorStore
 from pydantic import BaseModel, Field
 from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from fdua_competition.enums import Mode
 from fdua_competition.models import create_chat_model, create_embeddings
@@ -52,6 +53,19 @@ def extract_organization_name(source: Path, vectorstore: VectorStore):
     return chain.invoke({"context": "\n---\n".join([i.page_content for i in context])})
 
 
+def extract_organization_name_concurrently(pdfs: list[Path], vectorstore: VectorStore) -> list[dict]:
+    organization_names = []
+    with ThreadPoolExecutor() as executor:
+        future_to_pdf = {executor.submit(extract_organization_name, pdf, vectorstore): pdf for pdf in pdfs}
+        for future in tqdm(as_completed(future_to_pdf), total=len(pdfs), desc="extracting organization names.."):
+            pdf = future_to_pdf[future]
+            try:
+                names = future.result()
+                organization_names.append({"organizations": names.organizations, "source": str(pdf)})
+            except Exception as exc:
+                print(f"[extract_organization_name_concurrently] {pdf} generated an exception: {exc}")
+    return organization_names
+
 def write_document_index(vectorstore: VectorStore, mode: Mode = Mode.TEST):
     output_path = OUTPUT_DIR / f"v{get_version()}.json"
 
@@ -61,11 +75,8 @@ def write_document_index(vectorstore: VectorStore, mode: Mode = Mode.TEST):
 
     print("[write_document_index] creating document index..")
 
-    organization_names = []
     pdfs = list(get_document_dir(mode).rglob("*.pdf"))
-    for pdf_path in tqdm(pdfs, desc="extracting organization names.."):
-        names = extract_organization_name(source=pdf_path, vectorstore=vectorstore)
-        organization_names.append({"organizations": names.organizations, "source": str(pdf_path)})
+    organization_names = extract_organization_name_concurrently(pdfs, vectorstore)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w") as f:
