@@ -18,7 +18,7 @@ from fdua_competition.pdf_handler import load_documents
 from fdua_competition.utils import get_version, before_sleep_hook
 
 
-def add_documents_concurrently(vectorstore: VectorStore, docs: list[Document], batch_size: int = 8) -> None:
+def add_documents_concurrently(vectorstore: VectorStore, docs: list[Document], batch_size: int = 2) -> None:
     batches = [docs[i : i + batch_size] for i in range(0, len(docs), batch_size)]
     with ThreadPoolExecutor() as executor:
         futures = [executor.submit(vectorstore.add, batch) for batch in batches]

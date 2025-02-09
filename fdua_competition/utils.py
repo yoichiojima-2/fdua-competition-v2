@@ -38,5 +38,4 @@ def write_result(responses: list[BaseModel]) -> None:
 
 
 def before_sleep_hook(state: RetryCallState) -> None:
-    # print(f":( retrying attempt {state.attempt_number} after exception: {state.outcome.exception()}", file=sys.stderr)
     ...
