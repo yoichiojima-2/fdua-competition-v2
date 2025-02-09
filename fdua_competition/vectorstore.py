@@ -29,8 +29,8 @@ class FduaVectorStore:
             persist_directory=str(self.persist_directory),
         )
 
-    def get(self) -> dict[str, t.Any]:
-        return self.vectorstore.get()
+    def get(self, **kwargs) -> dict[str, t.Any]:
+        return self.vectorstore.get(**kwargs)
 
     def as_retriever(self, **kwargs) -> VectorStoreRetriever:
         return self.vectorstore.as_retriever(**kwargs)
