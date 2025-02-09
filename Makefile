@@ -24,7 +24,7 @@ in:
 	docker compose run fdua-competition-v2
 
 run: ${CSV_PATH}
-${CSV_PATH}: ${INSTALL_DIR}/index/${OUTPUT_NAME}.json
+${CSV_PATH}: ${INSTALL_DIR}/index/documents/${OUTPUT_NAME}.json
 	@echo "\nrunning..."
 	${UV} python -m fdua_competition.main -m ${MODE}
 	@echo "done"
@@ -36,8 +36,8 @@ ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success: ${INSTALL_DIR}/.inst
 	touch ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success
 	@echo "done"
 
-index: ${INSTALL_DIR}/index/${OUTPUT_NAME}.json
-${INSTALL_DIR}/index/${OUTPUT_NAME}.json: ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success
+index: ${INSTALL_DIR}/index/documents/${OUTPUT_NAME}.json
+${INSTALL_DIR}/index/documents/${OUTPUT_NAME}.json: ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success
 	@echo "\npreparing index..."
 	${UV} python -m fdua_competition.index_documents -m ${MODE}
 	@echo "done"
@@ -65,10 +65,6 @@ test: install
 	@echo "\ntesting..."
 	${UV} pytest -vvv
 	@echo "done"
-
-clear-results:
-	-rm ${CSV_PATH}
-	-rm ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv
 
 install: ${INSTALL_DIR}/.installed
 ${INSTALL_DIR}/.installed: ${ASSETS_DIR}/.success
@@ -112,7 +108,14 @@ clean:
 	find . -type f -name "*.ipynb" -print -exec ${UV} jupyter nbconvert --clear-output {} \;
 	@echo "done"
 
-clean-containers:
+clear-result:
+	-rm ${CSV_PATH}
+	-rm ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv
+
+clear-index:
+	-rm -r ${INSTALL_DIR}/index
+
+clear-container:
 	@echo "\ncleaning container..."
 	docker ps -qa | xargs docker rm -f && docker images -q | xargs docker rmi -f
 	@echo "done"
