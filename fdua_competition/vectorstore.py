@@ -42,8 +42,12 @@ class FduaVectorStore:
         self.vectorstore.reset_collection()
         docs = load_documents()
         for doc in tqdm(docs, desc="populating vectorstore.."):
-            split_doc = split_document(doc)
-            self.add(split_doc)
+            # v2.3: store split document
+            # split_doc = split_document(doc)
+            # self.add(split_doc)
+
+            # v2.4 store by page
+            self.add([doc])
 
 
 def parse_args() -> Namespace:
