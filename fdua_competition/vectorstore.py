@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 from fdua_competition.enums import EmbeddingOpt
 from fdua_competition.models import create_embeddings
-from fdua_competition.pdf_handler import load_documents
+from fdua_competition.pdf_handler import load_documents, split_document
 from fdua_competition.utils import log_retry
 
 
@@ -21,6 +21,7 @@ class FduaVectorStore:
         self.embeddings = embeddings
         self.persist_directory = Path(os.getenv("FDUA_DIR")) / f".fdua-competition/vectorstores/chroma/{output_name}"
         self.persist_directory.mkdir(parents=True, exist_ok=True)
+
         print(f"[FduaVectorStore] {self.persist_directory}")
         self.vectorstore = Chroma(
             collection_name="fdua-competition",
@@ -41,13 +42,21 @@ class FduaVectorStore:
     def populate(self) -> None:
         self.vectorstore.reset_collection()
         docs = load_documents()
-        for doc in tqdm(docs, desc="populating vectorstore.."):
-            # v2.3: store split document
-            # split_doc = split_document(doc)
-            # self.add(split_doc)
 
-            # v2.4 store by page
-            self.add([doc])
+        # # v2.3: recursive split
+        # for doc in tqdm(docs, desc="populating vectorstore.."):
+        #     split_doc = split_document(doc)
+        #     self.add(split_doc)
+
+        # # v2.4: page by page (premitive but better)
+        # for doc in tqdm(docs, desc="populating vectorstore.."):
+        #     self.add([doc])
+
+        # v2.5: page by page in batches
+        size = 12
+        batches = [docs[i:i + size] for i in range(0, len(docs), size)]
+        for doc in tqdm(batches, desc="populating vectorstore.."):
+            self.add(doc)
 
 
 def parse_args() -> Namespace:
