@@ -1,6 +1,6 @@
 import os
-from pathlib import Path
 from argparse import ArgumentParser, Namespace
+from pathlib import Path
 
 import pandas as pd
 from tabulate import tabulate

@@ -1,8 +1,8 @@
 import textwrap
 
 import yaml
-from langchain_core.tools import tool
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_fixed
 
@@ -14,12 +14,11 @@ from fdua_competition.vectorstore import FduaVectorStore
 
 class AnswerQueryOutput(BaseModel):
     query: str = Field(description="the query that was asked.")
-    response:str  = Field(description="the answer for the given query")
+    response: str = Field(description="the answer for the given query")
     reason: str = Field(description="the reason for the response.")
     organization_name: str = Field(description="the organization name that the query is about.")
     contexts: list[str] = Field(description="the context that the response was based on with its file path and page number.")
     reference: str = Field(description="the reference source of the context.")
-
 
 
 @tool
@@ -31,7 +30,6 @@ def round_number(number: str, decimals: str) -> str:
         decimals: the number of decimals to round to.
     """
     return str(round(float(number), int(decimals - 1)))
-
 
 
 @tool
@@ -90,11 +88,7 @@ def answer_query(query: str, vectorstore: FduaVectorStore, output_name: str):
         ]
     )
 
-    chat_model = (
-        create_chat_model()
-        .bind_tools([round_number, divide_number])
-        .with_structured_output(AnswerQueryOutput)
-    )
+    chat_model = create_chat_model().bind_tools([round_number, divide_number]).with_structured_output(AnswerQueryOutput)
 
     chain = prompt_template | chat_model
 
