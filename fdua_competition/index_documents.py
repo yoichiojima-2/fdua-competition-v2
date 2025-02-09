@@ -59,11 +59,8 @@ def extract_organization_name_concurrently(pdfs: list[Path], vectorstore: Vector
         future_to_pdf = {executor.submit(extract_organization_name, pdf, vectorstore): pdf for pdf in pdfs}
         for future in tqdm(as_completed(future_to_pdf), total=len(pdfs), desc="extracting organization names.."):
             pdf = future_to_pdf[future]
-            try:
-                names = future.result()
-                organization_names.append({"organizations": names.organizations, "source": str(pdf)})
-            except Exception as exc:
-                print(f"[extract_organization_name_concurrently] {pdf} generated an exception: {exc}")
+            names = future.result()
+            organization_names.append({"organizations": names.organizations, "source": str(pdf)})
     return organization_names
 
 
