@@ -43,7 +43,7 @@ def extract_organization_name(source: Path, vectorstore: VectorStore):
         [("system", role), ("system", "context:\n{context}"), ("user", user_query)]
     )
 
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 100})
+    retriever = vectorstore.as_retriever()
     context = retriever.invoke(user_query, filter={"source": str(source)})
 
     chat_model = create_chat_model().with_structured_output(IndexDocumentOutput)
