@@ -26,12 +26,9 @@ def process_queries_concurrently(queries: list[str], vectorstore: FduaVectorStor
         }
         for future in tqdm(as_completed(future_to_index), total=len(queries), desc="processing queries.."):
             index = future_to_index[future]
-            try:
-                response = future.result()
-                print(response)
-                responses[index] = response
-            except Exception as e:
-                print(f"[process_queries_concurrently] query at index {index} generated an exception: {e}", file=sys.stderr)
+            response = future.result()
+            print(response)
+            responses[index] = response
     return responses
 
 

@@ -1,20 +1,29 @@
 import os
 import typing as t
 from argparse import ArgumentParser, Namespace
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 from langchain_core.vectorstores.base import VectorStoreRetriever
+from langchain_core.vectorstores import VectorStore
 from tenacity import retry, stop_after_attempt, wait_fixed
 from tqdm import tqdm
 
 from fdua_competition.enums import EmbeddingOpt
 from fdua_competition.models import create_embeddings
 from fdua_competition.pdf_handler import load_documents
-from fdua_competition.utils import before_sleep_hook, get_version
+from fdua_competition.utils import get_version, before_sleep_hook
+
+
+def add_documents_concurrently(vectorstore: VectorStore, docs: list[Document], batch_size: int = 8) -> None:
+    batches = [docs[i : i + batch_size] for i in range(0, len(docs), batch_size)]
+    with ThreadPoolExecutor() as executor:
+        futures = [executor.submit(vectorstore.add, batch) for batch in batches]
+        for future in tqdm(as_completed(futures), total=len(futures), desc="populating vectorstore.."):
+            future.result()
 
 
 class FduaVectorStore:
@@ -44,18 +53,6 @@ class FduaVectorStore:
         self.vectorstore.reset_collection()
         docs = load_documents()
         add_documents_concurrently(self, docs)
-
-
-def add_documents_concurrently(vectorstore: FduaVectorStore, docs: list[Document], batch_size: int = 8) -> None:
-    batches = [docs[i : i + batch_size] for i in range(0, len(docs), batch_size)]
-    with ThreadPoolExecutor() as executor:
-        futures = [executor.submit(vectorstore.add, batch) for batch in batches]
-        for future in tqdm(as_completed(futures), total=len(futures), desc="populating vectorstore.."):
-            try:
-                future.result()
-            except Exception as e:
-                # print(f"[add_documents_concurrently] generated an exception: {e}", file=sys.stderr)
-                ...
 
 
 def parse_args() -> Namespace:

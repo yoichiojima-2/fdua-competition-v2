@@ -27,12 +27,8 @@ def load_documents_concurrently(mode: Mode = Mode.TEST) -> list[Document]:
     with ThreadPoolExecutor() as executor:
         futures = {executor.submit(PyPDFium2Loader(path).lazy_load): path for path in paths}
         for future in tqdm(as_completed(futures), total=len(futures), desc="loading documents.."):
-            path = futures[future]
-            try:
-                for doc in future.result():
-                    docs.append(doc)
-            except Exception as exc:
-                print(f"[load_documents_concurrently] {path} generated an exception: {exc}")
+            for doc in future.result():
+                docs.append(doc)
     return docs
 
 

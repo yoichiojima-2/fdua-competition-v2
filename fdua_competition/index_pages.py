@@ -59,11 +59,8 @@ def summarize_page_concurrently(docs: list[Document]) -> list[dict]:
         future_to_doc = {executor.submit(summarize_page, doc): doc for doc in docs}
         for future in tqdm(as_completed(future_to_doc), total=len(docs), desc="summarizing_pages.."):
             doc = future_to_doc[future]
-            try:
-                summary = future.result()
-                summaries.append({"summary": summary.summary, "metadata": doc.metadata})
-            except Exception as exc:
-                print(f"[summarize_page_concurrently] {doc.metadata['source']} generated an exception: {exc}")
+            summary = future.result()
+            summaries.append({"summary": summary.summary, "metadata": doc.metadata})
     return summaries
 
 
