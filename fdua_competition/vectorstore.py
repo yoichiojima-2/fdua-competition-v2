@@ -53,7 +53,7 @@ class FduaVectorStore:
         #     self.add([doc])
 
         # v2.5: page by page in batches
-        size = 12
+        size = 8
         batches = [docs[i:i + size] for i in range(0, len(docs), size)]
         for doc in tqdm(batches, desc="populating vectorstore.."):
             self.add(doc)
