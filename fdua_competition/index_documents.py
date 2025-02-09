@@ -1,6 +1,7 @@
 import json
 import os
 import textwrap
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
 import yaml
@@ -15,7 +16,7 @@ from fdua_competition.pdf_handler import get_document_dir
 from fdua_competition.utils import get_version
 from fdua_competition.vectorstore import FduaVectorStore
 
-OUTPUT_DIR = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/index"
+OUTPUT_DIR = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/index/documents"
 
 
 class IndexDocumentOutput(BaseModel):
@@ -51,8 +52,14 @@ def extract_organization_name(source: Path, vectorstore: VectorStore):
     return chain.invoke({"context": "\n---\n".join([i.page_content for i in context])})
 
 
-def write_index(vectorstore: VectorStore, mode: Mode = Mode.TEST):
-    print("[write_index] creating index..")
+def write_document_index(vectorstore: VectorStore, mode: Mode = Mode.TEST):
+    output_path = OUTPUT_DIR / f"v{get_version()}.json"
+
+    if output_path.exists():
+        print(f"[write_document_index] already exists: {output_path}")
+        return
+
+    print("[write_document_index] creating document index..")
 
     organization_names = []
     pdfs = list(get_document_dir(mode).rglob("*.pdf"))
@@ -60,20 +67,28 @@ def write_index(vectorstore: VectorStore, mode: Mode = Mode.TEST):
         names = extract_organization_name(source=pdf_path, vectorstore=vectorstore)
         organization_names.append({"organizations": names.organizations, "source": str(pdf_path)})
 
-    output_path = OUTPUT_DIR / f"v{get_version()}.json"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w") as f:
         json.dump(organization_names, f, ensure_ascii=False, indent=2)
-    print(f"[write_index] done: {output_path}")
+
+    print(f"[write_document_index] done: {output_path}")
+
+
+def parse_args() -> Namespace:
+    parser = ArgumentParser()
+    opt = parser.add_argument
+    opt("--mode", "-m", type=str, default=Mode.TEST.value, required=True)
+    return parser.parse_args()
 
 
 def main():
+    args = parse_args()
     embeddings = create_embeddings()
     vs = FduaVectorStore(embeddings=embeddings)
-    write_index(vectorstore=vs)
+    write_document_index(vectorstore=vs, mode=Mode(args.mode))
 
 
-def read_index() -> str:
+def read_document_index() -> str:
     index_path = OUTPUT_DIR / f"v{get_version()}.json"
     index = json.load(index_path.open())
     return yaml.dump(index, allow_unicode=True, default_flow_style=False, sort_keys=False)

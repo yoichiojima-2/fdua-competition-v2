@@ -39,7 +39,7 @@ ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success: ${INSTALL_DIR}/.inst
 index: ${INSTALL_DIR}/index/${OUTPUT_NAME}.json
 ${INSTALL_DIR}/index/${OUTPUT_NAME}.json: ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success
 	@echo "\npreparing index..."
-	${UV} python -m fdua_competition.index_documents
+	${UV} python -m fdua_competition.index_documents -m ${MODE}
 	@echo "done"
 
 evaluate: ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv
