@@ -1,4 +1,5 @@
 import textwrap
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from langchain_core.prompts import ChatPromptTemplate
@@ -9,7 +10,7 @@ from tqdm import tqdm
 
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model
-from fdua_competition.reference import search_source_to_refer
+from fdua_competition.reference import search_reference_doc, search_reference_pages
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
 
@@ -42,7 +43,8 @@ class AnswerQueryOutput(BaseModel):
     reason: str = Field(description="the reason for the response.")
     organization_name: str = Field(description="the organization name that the query is about.")
     contexts: list[str] = Field(description="the context that the response was based on with its file path and page number.")
-    reference: str = Field(description="the reference source of the context.")
+    source: str = Field(description="the given context source")
+    pages: list[int] = Field(description="the page numbers of the given contexts.")
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=before_sleep_hook)
@@ -71,10 +73,18 @@ def answer_query(query: str, vectorstore: FduaVectorStore) -> AnswerQueryOutput:
         """
     )
 
-    reference = search_source_to_refer(query)
+    ref_doc = search_reference_doc(query)
+    ref_pages = search_reference_pages(query, Path(ref_doc.source))
 
-    context = vectorstore.as_retriever().invoke(query, filter={"source": reference.source})
-    parsed_context = dict_to_yaml([{"content": i.page_content, "metadata": i.metadata} for i in context])
+    contexts = []
+    for page in ref_pages.pages:
+        # print(ref_doc.source, page)
+        retriever = vectorstore.as_retriever(search_kwargs={"filter": {"$and": [{"source": ref_doc.source}, {"page": page}]}})
+        page_contexts = retriever.invoke(query)
+        for i in page_contexts:
+            contexts.append(i)
+
+    parsed_context = dict_to_yaml([{"content": i.page_content, "metadata": i.metadata} for i in contexts])
 
     chat_model = create_chat_model().bind_tools([round_number, divide_number]).with_structured_output(AnswerQueryOutput)
     prompt_template = ChatPromptTemplate.from_messages(
