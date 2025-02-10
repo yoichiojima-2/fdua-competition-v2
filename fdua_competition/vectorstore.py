@@ -1,24 +1,28 @@
 import os
 import typing as t
 from argparse import ArgumentParser, Namespace
-from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
-from langchain_core.vectorstores.base import VectorStoreRetriever
 from langchain_core.vectorstores import VectorStore
+from langchain_core.vectorstores.base import VectorStoreRetriever
 from tenacity import retry, stop_after_attempt, wait_fixed
 from tqdm import tqdm
 
 from fdua_competition.enums import EmbeddingOpt
+from fdua_competition.get_version import get_version
+from fdua_competition.logger import get_logger
 from fdua_competition.models import create_embeddings
 from fdua_competition.pdf_handler import load_documents
-from fdua_competition.utils import get_version, before_sleep_hook
+from fdua_competition.utils import before_sleep_hook
+
+logger = get_logger()
 
 
-def add_documents_concurrently(vectorstore: VectorStore, docs: list[Document], batch_size: int = 2) -> None:
+def add_documents_concurrently(vectorstore: VectorStore, docs: list[Document], batch_size: int = 8) -> None:
     batches = [docs[i : i + batch_size] for i in range(0, len(docs), batch_size)]
     with ThreadPoolExecutor() as executor:
         futures = [executor.submit(vectorstore.add, batch) for batch in batches]
@@ -32,7 +36,7 @@ class FduaVectorStore:
         self.persist_directory = Path(os.getenv("FDUA_DIR")) / f".fdua-competition/vectorstores/chroma/v{get_version()}"
         self.persist_directory.mkdir(parents=True, exist_ok=True)
 
-        print(f"[FduaVectorStore] {self.persist_directory}")
+        logger.info(f"[FduaVectorStore] {self.persist_directory}")
         self.vectorstore = Chroma(
             collection_name="fdua-competition",
             embedding_function=self.embeddings,

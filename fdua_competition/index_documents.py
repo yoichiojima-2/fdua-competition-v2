@@ -12,12 +12,14 @@ from pydantic import BaseModel, Field
 from tqdm import tqdm
 
 from fdua_competition.enums import Mode
+from fdua_competition.get_version import get_version
+from fdua_competition.logger import get_logger
 from fdua_competition.models import create_chat_model, create_embeddings
 from fdua_competition.pdf_handler import get_document_dir
-from fdua_competition.utils import get_version
 from fdua_competition.vectorstore import FduaVectorStore
 
 OUTPUT_DIR = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/index/documents"
+logger = get_logger()
 
 
 class IndexDocumentOutput(BaseModel):
@@ -65,7 +67,7 @@ def extract_organization_name_concurrently(pdfs: list[Path], vectorstore: Vector
 
 
 def write_document_index(vectorstore: VectorStore, mode: Mode = Mode.TEST):
-    print("[write_document_index] creating document index..")
+    logger.info("[write_document_index] creating document index..")
 
     output_path = OUTPUT_DIR / f"v{get_version()}.json"
 
@@ -76,7 +78,7 @@ def write_document_index(vectorstore: VectorStore, mode: Mode = Mode.TEST):
     with output_path.open("w") as f:
         json.dump(organization_names, f, ensure_ascii=False, indent=2)
 
-    print(f"[write_document_index] done: {output_path}")
+    logger.info(f"[write_document_index] done: {output_path}")
 
 
 def parse_args() -> Namespace:

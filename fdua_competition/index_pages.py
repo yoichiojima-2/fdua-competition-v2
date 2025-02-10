@@ -13,12 +13,14 @@ from pydantic import BaseModel, Field
 from tqdm import tqdm
 
 from fdua_competition.enums import Mode
+from fdua_competition.get_version import get_version
+from fdua_competition.logger import get_logger
 from fdua_competition.models import create_chat_model, create_embeddings
 from fdua_competition.pdf_handler import get_document_dir
-from fdua_competition.utils import get_version
 from fdua_competition.vectorstore import FduaVectorStore
 
 OUTPUT_DIR = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/index/pages"
+logger = get_logger()
 
 
 def get_document(source: Path, vectorstore: VectorStore) -> list[Document]:
@@ -57,7 +59,7 @@ def summarize_page_concurrently(docs: list[Document]) -> list[dict]:
     summaries = []
     with ThreadPoolExecutor() as executor:
         future_to_doc = {executor.submit(summarize_page, doc): doc for doc in docs}
-        for future in tqdm(as_completed(future_to_doc), total=len(docs), desc="summarizing_pages.."):
+        for future in as_completed(future_to_doc):
             doc = future_to_doc[future]
             summary = future.result()
             summaries.append({"summary": summary.summary, "metadata": doc.metadata})
@@ -68,10 +70,10 @@ def write_page_index(source: Path, vectorstore: VectorStore) -> None:
     output_path = OUTPUT_DIR / f"v{get_version()}/{source.stem}.json"
 
     if output_path.exists():
-        print(f"[write_page_index] already exists: {output_path}")
+        logger.info(f"[write_page_index] already exists: {output_path}")
         return
 
-    print(f"[write_page_index] creating page index..: {source}")
+    logger.info(f"[write_page_index] creating page index..: {source}")
 
     docs = get_document(source, vectorstore=vectorstore)
     page_index = summarize_page_concurrently(docs)
@@ -80,7 +82,7 @@ def write_page_index(source: Path, vectorstore: VectorStore) -> None:
     with output_path.open("w") as f:
         json.dump(page_index, f, ensure_ascii=False, indent=2)
 
-    print(f"[write_page_index] done: {output_path}")
+    logger.info(f"[write_page_index] done: {output_path}")
 
 
 def parse_args() -> Namespace:
@@ -96,7 +98,7 @@ def main() -> None:
     vs = FduaVectorStore(embeddings=embeddings)
 
     pdfs = list(get_document_dir(mode=Mode(args.mode)).rglob("*.pdf"))
-    for pdf in pdfs:
+    for pdf in tqdm(pdfs, desc="indexing pages.."):
         write_page_index(source=pdf, vectorstore=vs)
 
 

@@ -1,4 +1,3 @@
-import sys
 from argparse import ArgumentParser, Namespace
 from concurrent.futures import ThreadPoolExecutor, as_completed
 

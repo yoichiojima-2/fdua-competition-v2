@@ -5,7 +5,8 @@ import pandas as pd
 from tabulate import tabulate
 
 from fdua_competition.enums import Mode
-from fdua_competition.utils import get_version, read_queries
+from fdua_competition.get_version import get_version
+from fdua_competition.utils import read_queries
 
 
 def summarize():
