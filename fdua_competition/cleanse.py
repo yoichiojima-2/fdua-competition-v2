@@ -28,7 +28,7 @@ def cleanse_response(answer: AnswerQueryOutput) -> CleanseResponseOutput:
         - Do not rephrase or add any additional context or commentary.
         - Do not include extra subject headers, company names, or explanations that are not present in the original answer.
         - Simply output the essential answer text, as is, ensuring it is clear and minimal.
-        - If the answer is null, return an empty string.
+        - If the answer is null, return an '不明'.
         - The final output should be a single, minimal phrase or value, within 54 tokens.
         
         ## Input:
