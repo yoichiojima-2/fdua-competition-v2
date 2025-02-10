@@ -2,15 +2,13 @@ import logging
 import os
 from logging import Logger
 from pathlib import Path
-from fdua_competition.enums import Mode
 
 from fdua_competition.get_version import get_version
 
 
-
-def get_logger(mode: Mode) -> Logger:
-    log_dir = Path(os.environ["FDUA_DIR"]) / f".fdua-competition/logs/{mode.value}"
-    logger = logging.getLogger(f"{mode.value}-v{get_version()}")
+def get_logger() -> Logger:
+    log_dir = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/logs"
+    logger = logging.getLogger(f"v{get_version()}")
 
     log_dir.mkdir(parents=True, exist_ok=True)
 
@@ -29,4 +27,4 @@ def get_logger(mode: Mode) -> Logger:
     return logger
 
 
-logger = get_logger(Mode.TEST)
+logger = get_logger()

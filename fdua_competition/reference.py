@@ -3,13 +3,14 @@ from pathlib import Path
 
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
-from fdua_competition.enums import Mode
+from tenacity import retry, stop_after_attempt, wait_random
 
+from fdua_competition.enums import Mode
 from fdua_competition.index_documents import read_document_index
 from fdua_competition.index_pages import read_page_index
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model
-from fdua_competition.utils import dict_to_yaml
+from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 
 
 class ReferenceDocOutput(BaseModel):
@@ -18,6 +19,7 @@ class ReferenceDocOutput(BaseModel):
     reason: str = Field(..., title="The reason for selecting this source.")
 
 
+@retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
 def search_reference_doc(query: str, mode: Mode) -> ReferenceDocOutput:
     role = textwrap.dedent(
         """
@@ -59,6 +61,7 @@ class ReferencePageOutput(BaseModel):
     pages: list[int] = Field(..., title="The list of page numbers to refer.")
 
 
+@retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
 def search_reference_pages(query: str, source: Path, mode: Mode) -> ReferencePageOutput:
     role = textwrap.dedent(
         """

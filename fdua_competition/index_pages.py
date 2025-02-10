@@ -9,6 +9,7 @@ from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.vectorstores import VectorStore
 from pydantic import BaseModel, Field
+from tenacity import retry, stop_after_attempt, wait_random
 from tqdm import tqdm
 
 from fdua_competition.enums import Mode
@@ -16,7 +17,7 @@ from fdua_competition.get_version import get_version
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model, create_embeddings
 from fdua_competition.pdf_handler import get_document_dir
-from fdua_competition.utils import dict_to_yaml
+from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
 
 OUTPUT_DIR = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/index/pages"
@@ -32,6 +33,7 @@ class SummarizePageOutput(BaseModel):
     summary: str = Field(description="A concise summary of the document page.")
 
 
+@retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
 def summarize_page(document: Document) -> SummarizePageOutput:
     role = textwrap.dedent(
         """
@@ -94,7 +96,9 @@ def main() -> None:
     pdfs = list(get_document_dir(mode=Mode(args.mode)).rglob("*.pdf"))
 
     with ThreadPoolExecutor() as executor:
-        future_to_pdf = {executor.submit(write_page_index, source=pdf, vectorstore=vs, mode=Mode(args.mode)): pdf for pdf in pdfs}
+        future_to_pdf = {
+            executor.submit(write_page_index, source=pdf, vectorstore=vs, mode=Mode(args.mode)): pdf for pdf in pdfs
+        }
         for future in tqdm(as_completed(future_to_pdf), total=len(pdfs), desc="indexing pages.."):
             pdf = future_to_pdf[future]
             try:
