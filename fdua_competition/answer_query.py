@@ -8,7 +8,7 @@ from tenacity import retry, stop_after_attempt, wait_random
 from tqdm import tqdm
 
 from fdua_competition.baes_models import AnswerQueryOutput
-from fdua_competition.cleanse import cleanse_response
+from fdua_competition.cleanse import cleanse_context, cleanse_response
 from fdua_competition.enums import Mode
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model
@@ -17,13 +17,15 @@ from fdua_competition.tools import divide_number, round_number
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
 
-MAX_RETRIES = 500
+MAX_RETRIES = 16
 
 
+@retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
 def get_relevant_docs(query: str, vectorstore: FduaVectorStore, mode: Mode) -> list[Document]:
     ref_doc = search_reference_doc(query, mode)
 
-    docs = []
+    docs: list[Document] = []
+
     if ref_doc.source:
         ref_pages = search_reference_pages(query, Path(ref_doc.source), mode)
         if ref_pages.pages:
@@ -75,7 +77,7 @@ def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> Answer
     )
 
     docs = get_relevant_docs(query, vectorstore, mode)
-    parsed_context = dict_to_yaml([{"content": doc.page_content, "metadata": doc.metadata} for doc in docs])
+    parsed_context = dict_to_yaml([{"content": cleanse_context(doc).output, "metadata": doc.metadata} for doc in docs])
 
     chat_model = create_chat_model().bind_tools([round_number, divide_number]).with_structured_output(AnswerQueryOutput)
     prompt_template = ChatPromptTemplate.from_messages(

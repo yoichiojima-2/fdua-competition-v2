@@ -24,6 +24,7 @@ def round_number(number: str, decimals: str) -> str:
 
     Example:
         round_number("1.25", "1") returns "1.3"
+        "少数第二位を四捨五入" means turn 1.25 into 1.3
     """
     decimals_i = int(decimals)
     quantizer = Decimal("1") if decimals_i <= 0 else Decimal(f"0.{'0' * (decimals_i - 1)}1")
