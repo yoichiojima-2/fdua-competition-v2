@@ -77,7 +77,7 @@ def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> Answer
     )
 
     docs = get_relevant_docs(query, vectorstore, mode)
-    parsed_context = dict_to_yaml([{"content": cleanse_context(doc).output, "metadata": doc.metadata} for doc in docs])
+    parsed_context = dict_to_yaml(docs)
 
     chat_model = create_chat_model().bind_tools([round_number, divide_number]).with_structured_output(AnswerQueryOutput)
     prompt_template = ChatPromptTemplate.from_messages(
