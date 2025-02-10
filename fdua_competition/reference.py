@@ -43,4 +43,7 @@ def search_source_to_refer(query: str) -> ReferenceOutput:
         [("system", role), ("system", f"index: {read_document_index()}"), ("user", f"query: {query}")]
     )
     chain = prompt_template | chat_model
-    return chain.invoke({"query": query})
+    reference = chain.invoke({"query": query})
+
+    logger.info(f"[search_source_to_refer]\nquery: {query}\nreference: {reference.source}\n\n")
+    return reference

@@ -15,28 +15,12 @@ def parse_args() -> Namespace:
     return parser.parse_args()
 
 
-def process_queries_concurrently(queries: list[str], vectorstore: FduaVectorStore) -> list[str]:
-    responses = [None] * len(queries)
-    with ThreadPoolExecutor() as executor:
-        future_to_index = {
-            executor.submit(answer_query, query=query, vectorstore=vectorstore): i for i, query in enumerate(queries)
-        }
-        for future in tqdm(as_completed(future_to_index), total=len(queries), desc="processing queries.."):
-            index = future_to_index[future]
-            response = future.result()
-            logger.info(response)
-            responses[index] = response
-    return responses
-
-
 def main():
     args = parse_args()
-
     embeddings = create_embeddings(EmbeddingOpt.AZURE)
     vs = FduaVectorStore(embeddings)
-
     queries = read_queries(Mode(args.mode))
-    responses = process_queries_concurrently(queries, vs)
+    responses = answer_queries_concurrently(queries, vs)
     write_result(responses=responses)
     logger.info("[main] :)  done")
 

@@ -16,6 +16,7 @@ from fdua_competition.get_version import get_version
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model, create_embeddings
 from fdua_competition.pdf_handler import get_document_dir
+from fdua_competition.utils import dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
 
 OUTPUT_DIR = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/index/pages"
@@ -61,7 +62,10 @@ def summarize_page_concurrently(docs: list[Document]) -> list[dict]:
             doc = future_to_doc[future]
             summary = future.result()
             summaries.append({"summary": summary.summary, "metadata": doc.metadata})
-    return summaries
+
+    summary_sorted = sorted(summaries, key=lambda x: x["metadata"]["page"])
+    logger.info(f"[summarize_page_concurrently]\n{dict_to_yaml(summary_sorted)}")
+    return summary_sorted
 
 
 def write_page_index(source: Path, vectorstore: VectorStore) -> None:
@@ -99,7 +103,7 @@ def main() -> None:
 def read_page_index(source: Path) -> str:
     index_path = OUTPUT_DIR / f"v{get_version()}/{source.stem}.json"
     index = json.load(index_path.open())
-    return yaml.dump(index, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    return dict_to_yaml(index)
 
 
 if __name__ == "__main__":

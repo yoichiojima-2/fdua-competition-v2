@@ -51,7 +51,9 @@ def extract_organization_name(source: Path, vectorstore: VectorStore):
     )
     chain = prompt_template | chat_model
 
-    return chain.invoke({"context": "\n---\n".join([i.page_content for i in context])})
+    res = chain.invoke({"context": "\n---\n".join([i.page_content for i in context])})
+    logger.info(f"[extract_organization_name]\n{dict_to_yaml(res.model_dump())}")
+    return res
 
 
 def extract_organization_name_concurrently(pdfs: list[Path], vectorstore: VectorStore) -> list[dict]:
@@ -97,7 +99,7 @@ def main():
 def read_document_index() -> str:
     index_path = OUTPUT_DIR / f"v{get_version()}.json"
     index = json.load(index_path.open())
-    return yaml.dump(index, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    return dict_to_yaml(index)
 
 
 if __name__ == "__main__":

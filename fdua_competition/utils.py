@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 import pandas as pd
+import yaml
 from pydantic import BaseModel
 from tenacity import RetryCallState
 
@@ -33,3 +34,7 @@ def write_result(responses: list[BaseModel]) -> None:
 
 def before_sleep_hook(state: RetryCallState) -> None:
     logger.warning(f":( retrying attempt {state.attempt_number} after exception: {state.outcome.exception()}")
+
+
+def dict_to_yaml(model: BaseModel) -> str:
+    return yaml.dump(model, allow_unicode=True, default_flow_style=False, sort_keys=False)
