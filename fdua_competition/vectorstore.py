@@ -18,13 +18,13 @@ from fdua_competition.models import create_embeddings
 from fdua_competition.pdf_handler import load_documents
 from fdua_competition.utils import before_sleep_hook
 
-BATCH_SIZE = 12
+BATCH_SIZE = 8
 
 
 class FduaVectorStore:
     def __init__(self, embeddings: Embeddings):
         self.embeddings = embeddings
-        self.persist_directory = Path(os.getenv("FDUA_DIR")) / f".fdua-competition/vectorstores/chroma/v{get_version()}"
+        self.persist_directory = Path(os.environ["FDUA_DIR"]) / f".fdua-competition/vectorstores/chroma/v{get_version()}"
         self.persist_directory.mkdir(parents=True, exist_ok=True)
 
         logger.info(f"[FduaVectorStore] {self.persist_directory}")
