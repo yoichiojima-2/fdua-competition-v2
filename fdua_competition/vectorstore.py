@@ -43,7 +43,8 @@ class FduaVectorStore:
 
     @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
     def add(self, docs: list[Document]) -> None:
-        self.vectorstore.add_documents(docs)
+        cleansed_docs = [Document(page_content=cleanse_pdf(doc.page_content).output, metadata=doc.metadata) for doc in docs]
+        self.vectorstore.add_documents(cleansed_docs)
 
     def add_documents_concurrently(self, docs: list[Document]) -> None:
         batches = [docs[i : i + BATCH_SIZE] for i in range(0, len(docs), BATCH_SIZE)]
@@ -55,8 +56,7 @@ class FduaVectorStore:
     def populate(self) -> None:
         self.vectorstore.reset_collection()
         docs = load_documents()
-        cleansed_docs = [Document(page_content=cleanse_pdf(doc).output, metadata=doc.metadata) for doc in tqdm(docs, desc="cleansing documents..")]
-        self.add_documents_concurrently(cleansed_docs)
+        self.add_documents_concurrently(docs)
         logger.info("[FduaVectorStore] done populating vectorstore")
 
 
