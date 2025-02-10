@@ -23,17 +23,17 @@ def cleanse_pdf(input: str) -> CleansePDF:
         You are an intelligent assistant specializing in text refinement.
         The input provided is raw data parsed from a PDF and may be messy or contain unwanted artifacts.
         Your task is to clean up this raw context with only minimal modifications, ensuring that no important information is lost.
-        
+
         ## Instructions:
         - Fix minor formatting issues (such as extra whitespace, punctuation errors, or unwanted artifacts) without removing any essential content.
         - Do not rephrase or add new information.
         - Preserve all critical details while cleaning the text.
         - The final output must be a concise
         - Do not use commas or special characters that may break JSON parsing.
-        
+
         ## Input:
         - **context**: The raw context data extracted from a PDF.
-        
+
         ## Output:
         Return the cleaned context text with minimal corrections, preserving all original information.
         """
@@ -61,17 +61,17 @@ def cleanse_context(context: AnswerQueryOutput) -> CleanseContext:
         You are an intelligent assistant specializing in text refinement.
         The input provided is raw data parsed from a PDF and may be messy or contain unwanted artifacts.
         Your task is to clean up this raw context with only minimal modifications, ensuring that no important information is lost.
-        
+
         ## Instructions:
         - Fix minor formatting issues (such as extra whitespace, punctuation errors, or unwanted artifacts) without removing any essential content.
         - Do not rephrase or add new information.
         - Preserve all critical details while cleaning the text.
         - The final output must be a concise
         - Do not use commas or special characters that may break JSON parsing.
-        
+
         ## Input:
         - **context**: The raw context data extracted from a PDF.
-        
+
         ## Output:
         Return the cleaned context text with minimal corrections, preserving all original information.
         """

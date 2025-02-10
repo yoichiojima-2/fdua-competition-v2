@@ -55,7 +55,7 @@ class FduaVectorStore:
     def populate(self) -> None:
         self.vectorstore.reset_collection()
         docs = load_documents()
-        cleansed_docs = [Document(page_content=cleanse_pdf(doc).output, metadata=doc.metadata) for doc in docs]
+        cleansed_docs = [Document(page_content=cleanse_pdf(doc).output, metadata=doc.metadata) for doc in tqdm(docs, desc="cleansing documents..")]
         self.add_documents_concurrently(cleansed_docs)
         logger.info("[FduaVectorStore] done populating vectorstore")
 
