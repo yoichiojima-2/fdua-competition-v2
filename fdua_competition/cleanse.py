@@ -29,8 +29,7 @@ def cleanse_context(context: AnswerQueryOutput) -> CleanseContext:
         - Fix minor formatting issues (such as extra whitespace, punctuation errors, or unwanted artifacts) without removing any essential content.
         - Do not rephrase or add new information.
         - Preserve all critical details while cleaning the text.
-        - If the context is missing or unclear, output "不明".
-        - The final output must be a concise, single phrase or value within 54 tokens.
+        - The final output must be a concise
         
         ## Input:
         - **context**: The raw context data extracted from a PDF.
