@@ -1,6 +1,6 @@
 import textwrap
-from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
@@ -78,7 +78,6 @@ def answer_query(query: str, vectorstore: FduaVectorStore) -> AnswerQueryOutput:
 
     contexts = []
     for page in ref_pages.pages:
-        # print(ref_doc.source, page)
         retriever = vectorstore.as_retriever(search_kwargs={"filter": {"$and": [{"source": ref_doc.source}, {"page": page}]}})
         page_contexts = retriever.invoke(query)
         for i in page_contexts:
@@ -97,7 +96,7 @@ def answer_query(query: str, vectorstore: FduaVectorStore) -> AnswerQueryOutput:
     chain = prompt_template | chat_model
     payload = {"role": role, "context": parsed_context, "query": query, "language": "japanese"}
     res = chain.invoke(payload)
-    logger.info(f"[answer_query]\n{dict_to_yaml(res.model_dump())}")
+    logger.info(f"[answer_query]\n{dict_to_yaml(res.model_dump())}\n")
     return res
 
 
