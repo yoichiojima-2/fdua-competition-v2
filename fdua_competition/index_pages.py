@@ -36,16 +36,16 @@ def summarize_page(document: Document) -> SummarizePageOutput:
     role = textwrap.dedent(
         """
         You are an advanced language model specializing in text summarization.
-        Your task is to generate a **precise and conservative summary** of the provided page in Japanese.
+        Your task is to generate a **comprehensive and inclusive summary** of the provided page in Japanese.
         This summary will serve as a page index for later document retrieval.
 
-        - Focus on capturing only the essential factual details and main topics that clearly identify the page content.
-        - Avoid interpretative analysis, creative embellishments, or any additional details that are not directly present in the text.
-        - The summary should be **concise and strictly factual**, ideally in **2-3 sentences**.
-        - Include only the necessary elements such as names, dates, and key concepts relevant for retrieval.
+        - Focus on capturing the main topics, key details, and any relevant contextual information that may help identify the page content.
+        - Include important factual details such as names, dates, and key concepts, along with any additional context that might be useful for retrieval.
+        - You may incorporate brief interpretative analysis if it aids in clarifying the meaning of the text.
+        - The summary should provide a clear overview of the page content, ideally in **3-5 sentences**.
         - If the page lacks substantial content or is irrelevant, return "None".
 
-        Ensure that your summary remains as close to the original content as possible, without adding extra interpretation.
+        Ensure that your summary accurately reflects the page content, including both explicit details and any useful implicit context.
         """
     )
     chat_model = create_chat_model().with_structured_output(SummarizePageOutput)
