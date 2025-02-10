@@ -8,8 +8,8 @@ ASSETS_DIR = assets
 SECRETS_DIR = secrets
 INSTALL_DIR = .fdua-competition
 OUTPUT_NAME = v$(shell uv run python -m bin.print_version)
-CSV_PATH = ${INSTALL_DIR}/results/${OUTPUT_NAME}.csv
 MODE = test
+CSV_PATH = ${INSTALL_DIR}/results/${MODE}/${OUTPUT_NAME}.csv
 
 up:
 	@echo "\starting container..."
@@ -49,7 +49,7 @@ ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv: ${CSV_PATH}
 	@echo "\nevaluating..."
 	${UV} python ${INSTALL_DIR}/evaluation/crag.py \
 		--model-name 4omini \
-		--result-dir ${PWD}/${INSTALL_DIR}/results \
+		--result-dir ${PWD}/${INSTALL_DIR}/results/${MODE} \
 		--result-name ${OUTPUT_NAME}.csv \
 		--ans-dir ${PWD}/${INSTALL_DIR}/evaluation/data \
 		--ans-txt ans_txt.csv \
@@ -60,7 +60,7 @@ ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv: ${CSV_PATH}
 summary: evaluate
 	@echo "\nsummarizing..."
 	-mkdir -p ${INSTALL_DIR}/summary
-	${UV} python bin/summarize_result.py | tee ${INSTALL_DIR}/summary/${OUTPUT_NAME}.txt
+	${UV} python bin/summarize_result.py -m ${MODE} | tee ${INSTALL_DIR}/summary/${OUTPUT_NAME}.txt
 	@echo "done"
 
 test: install
