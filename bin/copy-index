@@ -1,0 +1,6 @@
+#!/bin/bash
+
+echo "copying index ${1} to ${2}"
+INDEX_PATH=".fdua-competition/index"
+cp -r ${INDEX_PATH}/${1} ${INDEX_PATH}/${2}
+echo "done"
