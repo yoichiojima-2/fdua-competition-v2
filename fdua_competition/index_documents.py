@@ -70,7 +70,7 @@ def extract_organization_name_concurrently(pdfs: list[Path], vectorstore: Vector
 def write_document_index(vectorstore: VectorStore, mode: Mode = Mode.TEST):
     logger.info("[write_document_index] creating document index..")
 
-    output_path = OUTPUT_DIR / f"v{get_version()}.json"
+    output_path = OUTPUT_DIR / f"{mode.value}/v{get_version()}.json"
 
     pdfs = list(get_document_dir(mode).rglob("*.pdf"))
     organization_names = extract_organization_name_concurrently(pdfs, vectorstore)
@@ -96,8 +96,8 @@ def main():
     write_document_index(vectorstore=vs, mode=Mode(args.mode))
 
 
-def read_document_index() -> str:
-    index_path = OUTPUT_DIR / f"v{get_version()}.json"
+def read_document_index(mode: Mode) -> str:
+    index_path = OUTPUT_DIR / f"{mode.value}/v{get_version()}.json"
     index = json.load(index_path.open())
     return dict_to_yaml(index)
 

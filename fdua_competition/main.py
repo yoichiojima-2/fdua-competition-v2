@@ -20,8 +20,8 @@ def main():
     embeddings = create_embeddings(EmbeddingOpt.AZURE)
     vs = FduaVectorStore(embeddings)
     queries = read_queries(Mode(args.mode))
-    responses = answer_queries_concurrently(queries, vs)
-    write_result(responses=responses)
+    responses = answer_queries_concurrently(queries, vs, mode=Mode(args.mode))
+    write_result(responses=responses, mode=Mode(args.mode))
     logger.info("[main] :)  done")
 
 

@@ -1,10 +1,12 @@
 import textwrap
+from fdua_competition.enums import Mode
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
 from tenacity import retry, stop_after_attempt, wait_fixed
+from decimal import Decimal, ROUND_HALF_UP
 from tqdm import tqdm
 
 from fdua_competition.baes_models import AnswerQueryOutput
@@ -30,16 +32,22 @@ def divide_number(a: str, b: str) -> str:
 @tool
 def round_number(number: str, decimals: str) -> str:
     """
-    rounds a number to a specified number of decimals.
-    args:
+    Rounds a number to a specified number of decimals using round half up.
+    Args:
         number: the number to round.
         decimals: the number of decimals to round to.
+        
+    Example:
+        round_number("1.25", "1") returns "1.3"
     """
-    return str(round(float(number), int(decimals - 1)))
+    decimals_i = int(decimals)
+    quantizer = Decimal("1") if decimals_i <= 0 else Decimal(f"0.{'0'*(decimals_i-1)}1")
+    number_d = Decimal(str(number))
+    return str(number_d.quantize(quantizer, rounding=ROUND_HALF_UP))
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=before_sleep_hook)
-def answer_query(query: str, vectorstore: FduaVectorStore) -> AnswerQueryOutput:
+def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> AnswerQueryOutput:
     role = textwrap.dedent(
         """ 
         You are a research assistant. You have access to the user's query and a set of documents referred to as “context.”
@@ -49,7 +57,7 @@ def answer_query(query: str, vectorstore: FduaVectorStore) -> AnswerQueryOutput:
         Your output must follow this exact JSON structure:
         {
             "query": "the original user question",
-            "response": "a concise answer",
+            "response": "a concise answer. set null if the answer is unknown",
             "reason": "a brief explanation of how you derived the answer from the context",
             "organization_name": "the relevant organization name if it is mentioned",
             "contexts": ["list of relevant context passages used, each as a string"]
@@ -64,8 +72,8 @@ def answer_query(query: str, vectorstore: FduaVectorStore) -> AnswerQueryOutput:
         """
     )
 
-    ref_doc = search_reference_doc(query)
-    ref_pages = search_reference_pages(query, Path(ref_doc.source))
+    ref_doc = search_reference_doc(query, mode)
+    ref_pages = search_reference_pages(query, Path(ref_doc.source), mode)
 
     contexts = []
     for page in ref_pages.pages:
@@ -88,17 +96,19 @@ def answer_query(query: str, vectorstore: FduaVectorStore) -> AnswerQueryOutput:
     payload = {"role": role, "context": parsed_context, "query": query, "language": "japanese"}
     res = chain.invoke(payload)
     logger.info(f"[answer_query]\n{dict_to_yaml(res.model_dump())}\n")
-    return res
+
+    return cleanse_response(res)
 
 
-def answer_queries_concurrently(queries: list[str], vectorstore: FduaVectorStore) -> list[AnswerQueryOutput]:
+def answer_queries_concurrently(queries: list[str], vectorstore: FduaVectorStore, mode: Mode) -> list[AnswerQueryOutput]:
     results: dict[int, AnswerQueryOutput] = {}
     with ThreadPoolExecutor() as executor:
         future_to_index = {
-            executor.submit(answer_query, query=query, vectorstore=vectorstore): i for i, query in enumerate(queries)
+            executor.submit(answer_query, query=query, vectorstore=vectorstore, mode=mode): i for i, query in enumerate(queries)
         }
         for future in tqdm(as_completed(future_to_index), total=len(queries), desc="processing queries.."):
             index = future_to_index[future]
             response = future.result()
-            results[index] = cleanse_response(response)
+            results[index] = response
+
     return [results[i] for i in range(len(queries))]

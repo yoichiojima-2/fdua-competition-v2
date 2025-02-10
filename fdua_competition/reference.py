@@ -3,6 +3,7 @@ from pathlib import Path
 
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
+from fdua_competition.enums import Mode
 
 from fdua_competition.index_documents import read_document_index
 from fdua_competition.index_pages import read_page_index
@@ -17,7 +18,7 @@ class ReferenceDocOutput(BaseModel):
     reason: str = Field(..., title="The reason for selecting this source.")
 
 
-def search_reference_doc(query: str) -> ReferenceDocOutput:
+def search_reference_doc(query: str, mode: Mode) -> ReferenceDocOutput:
     role = textwrap.dedent(
         """
         You are an intelligent assistant specializing in information retrieval. Your task is to analyze a user query and determine which sources from the provided dataset should be referenced to answer it.
@@ -43,7 +44,7 @@ def search_reference_doc(query: str) -> ReferenceDocOutput:
 
     chat_model = create_chat_model().with_structured_output(ReferenceDocOutput)
     prompt_template = ChatPromptTemplate.from_messages(
-        [("system", role), ("system", f"index: {read_document_index()}"), ("user", f"query: {query}")]
+        [("system", role), ("system", f"index: {read_document_index(mode)}"), ("user", f"query: {query}")]
     )
     chain = prompt_template | chat_model
     res = chain.invoke({"query": query})
@@ -58,7 +59,7 @@ class ReferencePageOutput(BaseModel):
     pages: list[int] = Field(..., title="The list of page numbers to refer.")
 
 
-def search_reference_pages(query: str, source: Path) -> ReferencePageOutput:
+def search_reference_pages(query: str, source: Path, mode: Mode) -> ReferencePageOutput:
     role = textwrap.dedent(
         """
         You are an intelligent assistant specializing in document retrieval. Your task is to analyze a user query and determine the pages from relevant documents that might contain the answer.
@@ -86,7 +87,7 @@ def search_reference_pages(query: str, source: Path) -> ReferencePageOutput:
 
     chat_model = create_chat_model().with_structured_output(ReferencePageOutput)
     prompt_template = ChatPromptTemplate.from_messages(
-        [("system", role), ("system", f"index: {read_page_index(source)}"), ("user", f"query: {query}")]
+        [("system", role), ("system", f"index: {read_page_index(source, mode)}"), ("user", f"query: {query}")]
     )
     chain = prompt_template | chat_model
     res = chain.invoke({"query": query})

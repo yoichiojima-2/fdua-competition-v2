@@ -9,6 +9,7 @@ from tenacity import RetryCallState
 from fdua_competition.enums import Mode
 from fdua_competition.get_version import get_version
 from fdua_competition.logging_config import logger
+from fdua_competition.enums import Mode
 
 
 def read_queries(mode: Mode) -> list[str]:
@@ -23,9 +24,9 @@ def read_queries(mode: Mode) -> list[str]:
             raise ValueError(f"): unknown mode: {mode}")
 
 
-def write_result(responses: list[BaseModel]) -> None:
+def write_result(responses: list[BaseModel], mode: Mode) -> None:
     assert responses[0].output, "output field is missing"
-    output_path = Path(os.environ["FDUA_DIR"]) / f".fdua-competition/results/v{get_version()}.csv"
+    output_path = Path(os.environ["FDUA_DIR"]) / f".fdua-competition/results/{mode.value}/v{get_version()}.csv"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     df = pd.DataFrame([{"output": res.output} for res in responses])
     df.to_csv(output_path, header=False)

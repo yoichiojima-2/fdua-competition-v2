@@ -68,8 +68,8 @@ def summarize_page_concurrently(docs: list[Document]) -> list[dict]:
     return summary_sorted
 
 
-def write_page_index(source: Path, vectorstore: VectorStore) -> None:
-    output_path = OUTPUT_DIR / f"v{get_version()}/{source.stem}.json"
+def write_page_index(source: Path, vectorstore: VectorStore, mode: Mode) -> None:
+    output_path = OUTPUT_DIR / f"{mode.value}/v{get_version()}/{source.stem}.json"
 
     docs = get_document(source, vectorstore=vectorstore)
     page_index = summarize_page_concurrently(docs)
@@ -94,7 +94,7 @@ def main() -> None:
     pdfs = list(get_document_dir(mode=Mode(args.mode)).rglob("*.pdf"))
 
     with ThreadPoolExecutor() as executor:
-        future_to_pdf = {executor.submit(write_page_index, source=pdf, vectorstore=vs): pdf for pdf in pdfs}
+        future_to_pdf = {executor.submit(write_page_index, source=pdf, vectorstore=vs, mode=Mode(args.mode)): pdf for pdf in pdfs}
         for future in tqdm(as_completed(future_to_pdf), total=len(pdfs), desc="indexing pages.."):
             pdf = future_to_pdf[future]
             try:
@@ -103,8 +103,8 @@ def main() -> None:
                 logger.error(f"error processing {pdf}: {e}")
 
 
-def read_page_index(source: Path) -> str:
-    index_path = OUTPUT_DIR / f"v{get_version()}/{source.stem}.json"
+def read_page_index(source: Path, mode: Mode) -> str:
+    index_path = OUTPUT_DIR / f"{mode.value}/v{get_version()}/{source.stem}.json"
     index = json.load(index_path.open())
     return dict_to_yaml(index)
 
