@@ -1,14 +1,16 @@
 import textwrap
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import yaml
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_fixed
+from tqdm import tqdm
 
+from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model
 from fdua_competition.reference import search_source_to_refer
-from fdua_competition.utils import before_sleep_hook
+from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
 
 

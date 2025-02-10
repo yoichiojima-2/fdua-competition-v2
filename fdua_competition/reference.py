@@ -4,6 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
 from fdua_competition.index_documents import read_document_index
+from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model
 
 

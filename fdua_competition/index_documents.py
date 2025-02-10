@@ -5,7 +5,6 @@ from argparse import ArgumentParser, Namespace
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-import yaml
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.vectorstores import VectorStore
 from pydantic import BaseModel, Field
@@ -16,6 +15,7 @@ from fdua_competition.get_version import get_version
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model, create_embeddings
 from fdua_competition.pdf_handler import get_document_dir
+from fdua_competition.utils import dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
 
 OUTPUT_DIR = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/index/documents"

@@ -1,9 +1,6 @@
 from argparse import ArgumentParser, Namespace
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from tqdm import tqdm
-
-from fdua_competition.answer_query import answer_query
+from fdua_competition.answer_query import answer_queries_concurrently
 from fdua_competition.enums import EmbeddingOpt, Mode
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_embeddings
