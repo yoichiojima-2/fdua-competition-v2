@@ -35,18 +35,17 @@ class SummarizePageOutput(BaseModel):
 def summarize_page(document: Document) -> SummarizePageOutput:
     role = textwrap.dedent(
         """
-        You are an advanced language model specializing in text summarization. 
-        Your task is to generate a **concise and accurate summary** of the provided page in japanese.
+        You are an advanced language model specializing in text summarization.
+        Your task is to generate a **precise and conservative summary** of the provided page in Japanese.
+        This summary will serve as a page index for later document retrieval.
 
-        - Capture the **main points and key details** without losing important context.
-        - The summary should be **clear, structured, and easy to understand**.
-        - Avoid unnecessary details, filler words, or overly technical jargon unless essential.
-        - If the page contains multiple distinct sections, summarize them **logically and coherently**.
-        - Retain **important names, dates, and figures** only if they contribute to the understanding of the content.
-        - Aim for a **brief but meaningful** summary, typically **3-5 sentences** unless more detail is required.
+        - Focus on capturing only the essential factual details and main topics that clearly identify the page content.
+        - Avoid interpretative analysis, creative embellishments, or any additional details that are not directly present in the text.
+        - The summary should be **concise and strictly factual**, ideally in **2-3 sentences**.
+        - Include only the necessary elements such as names, dates, and key concepts relevant for retrieval.
         - If the page lacks substantial content or is irrelevant, return "None".
 
-        Ensure that your summary maintains the integrity of the original information.
+        Ensure that your summary remains as close to the original content as possible, without adding extra interpretation.
         """
     )
     chat_model = create_chat_model().with_structured_output(SummarizePageOutput)

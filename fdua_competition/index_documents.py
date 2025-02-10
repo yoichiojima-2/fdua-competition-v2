@@ -52,7 +52,7 @@ def extract_organization_name(source: Path, vectorstore: VectorStore):
     chain = prompt_template | chat_model
 
     res = chain.invoke({"context": "\n---\n".join([i.page_content for i in context])})
-    logger.info(f"[extract_organization_name]\n{dict_to_yaml(res.model_dump())}")
+    logger.info(f"[extract_organization_name]\n{dict_to_yaml(res.model_dump())}\n")
     return res
 
 
