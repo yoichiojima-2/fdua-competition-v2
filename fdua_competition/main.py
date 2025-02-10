@@ -5,6 +5,7 @@ from tqdm import tqdm
 
 from fdua_competition.answer_query import answer_query
 from fdua_competition.enums import EmbeddingOpt, Mode
+from fdua_competition.logging_config import logger
 from fdua_competition.models import create_embeddings
 from fdua_competition.utils import read_queries, write_result
 from fdua_competition.vectorstore import FduaVectorStore
@@ -26,7 +27,7 @@ def process_queries_concurrently(queries: list[str], vectorstore: FduaVectorStor
         for future in tqdm(as_completed(future_to_index), total=len(queries), desc="processing queries.."):
             index = future_to_index[future]
             response = future.result()
-            print(response)
+            logger.info(response)
             responses[index] = response
     return responses
 
@@ -40,7 +41,7 @@ def main():
     queries = read_queries(Mode(args.mode))
     responses = process_queries_concurrently(queries, vs)
     write_result(responses=responses)
-    print("[main] :)  done")
+    logger.info("[main] :)  done")
 
 
 if __name__ == "__main__":

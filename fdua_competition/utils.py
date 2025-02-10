@@ -7,9 +7,7 @@ from tenacity import RetryCallState
 
 from fdua_competition.enums import Mode
 from fdua_competition.get_version import get_version
-from fdua_competition.logger import get_logger
-
-logger = get_logger()
+from fdua_competition.logging_config import logger
 
 
 def read_queries(mode: Mode) -> list[str]:

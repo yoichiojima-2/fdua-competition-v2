@@ -14,13 +14,12 @@ from tqdm import tqdm
 
 from fdua_competition.enums import Mode
 from fdua_competition.get_version import get_version
-from fdua_competition.logger import get_logger
+from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model, create_embeddings
 from fdua_competition.pdf_handler import get_document_dir
 from fdua_competition.vectorstore import FduaVectorStore
 
 OUTPUT_DIR = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/index/pages"
-logger = get_logger()
 
 
 def get_document(source: Path, vectorstore: VectorStore) -> list[Document]:
@@ -73,16 +72,12 @@ def write_page_index(source: Path, vectorstore: VectorStore) -> None:
         logger.info(f"[write_page_index] already exists: {output_path}")
         return
 
-    logger.info(f"[write_page_index] creating page index..: {source}")
-
     docs = get_document(source, vectorstore=vectorstore)
     page_index = summarize_page_concurrently(docs)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w") as f:
         json.dump(page_index, f, ensure_ascii=False, indent=2)
-
-    logger.info(f"[write_page_index] done: {output_path}")
 
 
 def parse_args() -> Namespace:

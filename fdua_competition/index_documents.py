@@ -13,13 +13,12 @@ from tqdm import tqdm
 
 from fdua_competition.enums import Mode
 from fdua_competition.get_version import get_version
-from fdua_competition.logger import get_logger
+from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model, create_embeddings
 from fdua_competition.pdf_handler import get_document_dir
 from fdua_competition.vectorstore import FduaVectorStore
 
 OUTPUT_DIR = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/index/documents"
-logger = get_logger()
 
 
 class IndexDocumentOutput(BaseModel):
