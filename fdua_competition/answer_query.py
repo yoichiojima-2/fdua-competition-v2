@@ -4,10 +4,11 @@ from pathlib import Path
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
-from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_fixed
 from tqdm import tqdm
 
+from fdua_competition.baes_models import AnswerQueryOutput
+from fdua_competition.cleanse import cleanse_response
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model
 from fdua_competition.reference import search_reference_doc, search_reference_pages
@@ -35,16 +36,6 @@ def round_number(number: str, decimals: str) -> str:
         decimals: the number of decimals to round to.
     """
     return str(round(float(number), int(decimals - 1)))
-
-
-class AnswerQueryOutput(BaseModel):
-    query: str = Field(description="the query that was asked.")
-    response: str = Field(description="the answer for the given query")
-    reason: str = Field(description="the reason for the response.")
-    organization_name: str = Field(description="the organization name that the query is about.")
-    contexts: list[str] = Field(description="the context that the response was based on with its file path and page number.")
-    source: str = Field(description="the given context source")
-    pages: list[int] = Field(description="the page numbers of the given contexts.")
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=before_sleep_hook)
@@ -101,7 +92,7 @@ def answer_query(query: str, vectorstore: FduaVectorStore) -> AnswerQueryOutput:
 
 
 def answer_queries_concurrently(queries: list[str], vectorstore: FduaVectorStore) -> list[AnswerQueryOutput]:
-    responses = [None] * len(queries)
+    results: dict[int, AnswerQueryOutput] = {}
     with ThreadPoolExecutor() as executor:
         future_to_index = {
             executor.submit(answer_query, query=query, vectorstore=vectorstore): i for i, query in enumerate(queries)
@@ -109,5 +100,5 @@ def answer_queries_concurrently(queries: list[str], vectorstore: FduaVectorStore
         for future in tqdm(as_completed(future_to_index), total=len(queries), desc="processing queries.."):
             index = future_to_index[future]
             response = future.result()
-            responses[index] = response
-    return responses
+            results[index] = cleanse_response(response)
+    return [results[i] for i in range(len(queries))]

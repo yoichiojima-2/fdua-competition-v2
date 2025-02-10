@@ -24,10 +24,10 @@ def read_queries(mode: Mode) -> list[str]:
 
 
 def write_result(responses: list[BaseModel]) -> None:
-    assert responses[0].response, "response field is missing"
+    assert responses[0].output, "output field is missing"
     output_path = Path(os.environ["FDUA_DIR"]) / f".fdua-competition/results/v{get_version()}.csv"
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    df = pd.DataFrame([{"response": res.response} for res in responses])
+    df = pd.DataFrame([{"output": res.output} for res in responses])
     df.to_csv(output_path, header=False)
     logger.info(f"[write_result] done: {output_path}")
 
