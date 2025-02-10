@@ -1,16 +1,16 @@
 import textwrap
-from fdua_competition.enums import Mode
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
 from tenacity import retry, stop_after_attempt, wait_random
-from decimal import Decimal, ROUND_HALF_UP
 from tqdm import tqdm
 
 from fdua_competition.baes_models import AnswerQueryOutput
 from fdua_competition.cleanse import cleanse_response
+from fdua_competition.enums import Mode
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model
 from fdua_competition.reference import search_reference_doc, search_reference_pages
@@ -36,12 +36,12 @@ def round_number(number: str, decimals: str) -> str:
     Args:
         number: the number to round.
         decimals: the number of decimals to round to.
-        
+
     Example:
         round_number("1.25", "1") returns "1.3"
     """
     decimals_i = int(decimals)
-    quantizer = Decimal("1") if decimals_i <= 0 else Decimal(f"0.{'0'*(decimals_i-1)}1")
+    quantizer = Decimal("1") if decimals_i <= 0 else Decimal(f"0.{'0' * (decimals_i - 1)}1")
     number_d = Decimal(str(number))
     return str(number_d.quantize(quantizer, rounding=ROUND_HALF_UP))
 
@@ -104,7 +104,8 @@ def answer_queries_concurrently(queries: list[str], vectorstore: FduaVectorStore
     results: dict[int, AnswerQueryOutput] = {}
     with ThreadPoolExecutor() as executor:
         future_to_index = {
-            executor.submit(answer_query, query=query, vectorstore=vectorstore, mode=mode): i for i, query in enumerate(queries)
+            executor.submit(answer_query, query=query, vectorstore=vectorstore, mode=mode): i
+            for i, query in enumerate(queries)
         }
         for future in tqdm(as_completed(future_to_index), total=len(queries), desc="processing queries.."):
             index = future_to_index[future]
