@@ -29,6 +29,7 @@ def cleanse_pdf(input: str) -> CleansePDF:
         - Do not rephrase or add new information.
         - Preserve all critical details while cleaning the text.
         - The final output must be a concise
+        - Do not use commas or special characters that may break JSON parsing.
         
         ## Input:
         - **context**: The raw context data extracted from a PDF.
@@ -66,6 +67,7 @@ def cleanse_context(context: AnswerQueryOutput) -> CleanseContext:
         - Do not rephrase or add new information.
         - Preserve all critical details while cleaning the text.
         - The final output must be a concise
+        - Do not use commas or special characters that may break JSON parsing.
         
         ## Input:
         - **context**: The raw context data extracted from a PDF.
@@ -102,6 +104,7 @@ def cleanse_response(answer: AnswerQueryOutput) -> CleanseResponseOutput:
         - Simply output the essential answer text, as is, ensuring it is clear and minimal.
         - If the answer is null, return an '不明'.
         - The final output should be a single, minimal phrase or value, within 54 tokens.
+        - Do not use commas or special characters that may break JSON parsing.
         
         ## Input:
         - **answer**: The original answer from the "response" field.
