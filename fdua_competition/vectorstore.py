@@ -19,11 +19,12 @@ from fdua_competition.models import create_embeddings
 from fdua_competition.pdf_handler import load_documents
 from fdua_competition.utils import before_sleep_hook
 
+BATCH_SIZE = 4
 logger = get_logger()
 
 
-def add_documents_concurrently(vectorstore: VectorStore, docs: list[Document], batch_size: int = 8) -> None:
-    batches = [docs[i : i + batch_size] for i in range(0, len(docs), batch_size)]
+def add_documents_concurrently(vectorstore: VectorStore, docs: list[Document]) -> None:
+    batches = [docs[i : i + BATCH_SIZE] for i in range(0, len(docs), BATCH_SIZE)]
     with ThreadPoolExecutor() as executor:
         futures = [executor.submit(vectorstore.add, batch) for batch in batches]
         for future in tqdm(as_completed(futures), total=len(futures), desc="populating vectorstore.."):
