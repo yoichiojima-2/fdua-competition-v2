@@ -24,7 +24,7 @@ in:
 	docker compose run fdua-competition-v2
 
 run: ${CSV_PATH}
-${CSV_PATH}: ${INSTALL_DIR}/index/.success
+${CSV_PATH}: ${INSTALL_DIR}/index/${OUTPUT_NAME}/.success
 	@echo "\nrunning..."
 	${UV} python -m fdua_competition.main -m ${MODE}
 	@echo "done"
@@ -36,12 +36,12 @@ ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success: ${INSTALL_DIR}/.inst
 	touch ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success
 	@echo "done"
 
-index: ${INSTALL_DIR}/index/.success
-${INSTALL_DIR}/index/.success: ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success
+index: ${INSTALL_DIR}/index/${OUTPUT_NAME}/.success
+${INSTALL_DIR}/index/${OUTPUT_NAME}/.success: ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success
 	@echo "\npreparing index..."
 	${UV} python -m fdua_competition.index_documents -m ${MODE}
 	${UV} python -m fdua_competition.index_pages -m ${MODE}
-	touch ${INSTALL_DIR}/index/.success
+	touch ${INSTALL_DIR}/index/${OUTPUT_NAME}/.success
 	@echo "done"
 
 evaluate: ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv

@@ -19,7 +19,7 @@ from fdua_competition.pdf_handler import get_document_dir
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
 
-OUTPUT_DIR = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/index/documents"
+OUTPUT_DIR = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/index"
 
 
 class IndexDocumentOutput(BaseModel):
@@ -72,7 +72,7 @@ def extract_organization_name_concurrently(pdfs: list[Path], vectorstore: Vector
 def write_document_index(vectorstore: VectorStore, mode: Mode = Mode.TEST):
     logger.info("[write_document_index] creating document index..")
 
-    output_path = OUTPUT_DIR / f"{mode.value}/v{get_version()}.json"
+    output_path = OUTPUT_DIR / f"v{get_version()}/document/{mode.value}.json"
 
     pdfs = list(get_document_dir(mode).rglob("*.pdf"))
     organization_names = extract_organization_name_concurrently(pdfs, vectorstore)
@@ -99,7 +99,7 @@ def main():
 
 
 def read_document_index(mode: Mode) -> str:
-    index_path = OUTPUT_DIR / f"{mode.value}/v{get_version()}.json"
+    index_path = OUTPUT_DIR / f"v{get_version()}/document/{mode.value}.json"
     index = json.load(index_path.open())
     return dict_to_yaml(index)
 

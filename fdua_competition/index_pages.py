@@ -20,7 +20,7 @@ from fdua_competition.pdf_handler import get_document_dir
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
 
-OUTPUT_DIR = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/index/pages"
+OUTPUT_DIR = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/index"
 
 
 def get_document(source: Path, vectorstore: VectorStore) -> list[Document]:
@@ -71,7 +71,7 @@ def summarize_page_concurrently(docs: list[Document]) -> list[dict]:
 
 
 def write_page_index(source: Path, vectorstore: VectorStore, mode: Mode) -> None:
-    output_path = OUTPUT_DIR / f"{mode.value}/v{get_version()}/{source.stem}.json"
+    output_path = OUTPUT_DIR / f"v{get_version()}/page/{mode.value}/{source.stem}.json"
 
     docs = get_document(source, vectorstore=vectorstore)
     page_index = summarize_page_concurrently(docs)
@@ -108,7 +108,7 @@ def main() -> None:
 
 
 def read_page_index(source: Path, mode: Mode) -> str:
-    index_path = OUTPUT_DIR / f"{mode.value}/v{get_version()}/{source.stem}.json"
+    index_path = OUTPUT_DIR / f"v{get_version()}/page/{mode.value}/{source.stem}.json"
     index = json.load(index_path.open())
     return dict_to_yaml(index)
 
