@@ -1,19 +1,14 @@
 import os
-import tomllib
 from pathlib import Path
-from pprint import pprint
 
 import pandas as pd
+import yaml
 from pydantic import BaseModel
 from tenacity import RetryCallState
 
 from fdua_competition.enums import Mode
-
-
-def get_version():
-    with open(Path(os.environ["FDUA_DIR"]) / "pyproject.toml", "rb") as f:
-        data = tomllib.load(f)
-    return data["project"]["version"]
+from fdua_competition.get_version import get_version
+from fdua_competition.logging_config import logger
 
 
 def read_queries(mode: Mode) -> list[str]:
@@ -29,13 +24,17 @@ def read_queries(mode: Mode) -> list[str]:
 
 
 def write_result(responses: list[BaseModel]) -> None:
-    assert responses[0].response, "response field is missing"
+    assert responses[0].output, "output field is missing"
     output_path = Path(os.environ["FDUA_DIR"]) / f".fdua-competition/results/v{get_version()}.csv"
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    df = pd.DataFrame([{"response": res.response} for res in responses])
+    df = pd.DataFrame([{"output": res.output} for res in responses])
     df.to_csv(output_path, header=False)
-    print(f"[write_result] done: {output_path}")
+    logger.info(f"[write_result] done: {output_path}")
 
 
-def log_retry(state: RetryCallState) -> None:
-    pprint(f":( retrying attempt {state.attempt_number} after exception: {state.outcome.exception()}")
+def before_sleep_hook(state: RetryCallState) -> None:
+    logger.warning(f":( retrying attempt {state.attempt_number} after exception: {state.outcome.exception()}")
+
+
+def dict_to_yaml(model: BaseModel) -> str:
+    return yaml.dump(model, allow_unicode=True, default_flow_style=False, sort_keys=False)

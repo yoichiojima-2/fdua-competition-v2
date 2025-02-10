@@ -1,19 +1,24 @@
 import os
 import typing as t
 from argparse import ArgumentParser, Namespace
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 from langchain_core.vectorstores.base import VectorStoreRetriever
-from tenacity import retry, stop_after_attempt, wait_fixed
+from tenacity import retry, stop_after_attempt, wait_random
 from tqdm import tqdm
 
 from fdua_competition.enums import EmbeddingOpt
+from fdua_competition.get_version import get_version
+from fdua_competition.logging_config import logger
 from fdua_competition.models import create_embeddings
 from fdua_competition.pdf_handler import load_documents
-from fdua_competition.utils import get_version, log_retry
+from fdua_competition.utils import before_sleep_hook
+
+BATCH_SIZE = 4
 
 
 class FduaVectorStore:
@@ -22,7 +27,7 @@ class FduaVectorStore:
         self.persist_directory = Path(os.getenv("FDUA_DIR")) / f".fdua-competition/vectorstores/chroma/v{get_version()}"
         self.persist_directory.mkdir(parents=True, exist_ok=True)
 
-        print(f"[FduaVectorStore] {self.persist_directory}")
+        logger.info(f"[FduaVectorStore] {self.persist_directory}")
         self.vectorstore = Chroma(
             collection_name="fdua-competition",
             embedding_function=self.embeddings,
@@ -35,32 +40,22 @@ class FduaVectorStore:
     def as_retriever(self, **kwargs) -> VectorStoreRetriever:
         return self.vectorstore.as_retriever(**kwargs)
 
-    @retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=log_retry)
+    @retry(stop=stop_after_attempt(24), wait=wait_random(min=2, max=10), before_sleep=before_sleep_hook)
     def add(self, docs: list[Document]) -> None:
         self.vectorstore.add_documents(docs)
+
+    def add_documents_concurrently(self, docs: list[Document]) -> None:
+        batches = [docs[i : i + BATCH_SIZE] for i in range(0, len(docs), BATCH_SIZE)]
+        with ThreadPoolExecutor() as executor:
+            futures = [executor.submit(self.add, batch) for batch in batches]
+            for future in tqdm(as_completed(futures), total=len(futures), desc="populating vectorstore.."):
+                future.result()
 
     def populate(self) -> None:
         self.vectorstore.reset_collection()
         docs = load_documents()
-
-        # [start: adding documents]
-
-        # # v2.3: recursive split
-        # for doc in tqdm(docs, desc="populating vectorstore.."):
-        #     split_doc = split_document(doc)
-        #     self.add(split_doc)
-
-        # # v2.4: page by page (premitive but better)
-        # for doc in tqdm(docs, desc="populating vectorstore.."):
-        #     self.add([doc])
-
-        # v2.5: page by page in batches
-        size = 8
-        batches = [docs[i : i + size] for i in range(0, len(docs), size)]
-        for doc in tqdm(batches, desc="populating vectorstore.."):
-            self.add(doc)
-
-        # [end: adding documents]
+        self.add_documents_concurrently(docs)
+        logger.info("[FduaVectorStore] done populating vectorstore")
 
 
 def parse_args() -> Namespace:

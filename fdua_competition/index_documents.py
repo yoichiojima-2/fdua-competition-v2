@@ -2,18 +2,20 @@ import json
 import os
 import textwrap
 from argparse import ArgumentParser, Namespace
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-import yaml
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.vectorstores import VectorStore
 from pydantic import BaseModel, Field
 from tqdm import tqdm
 
 from fdua_competition.enums import Mode
+from fdua_competition.get_version import get_version
+from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model, create_embeddings
 from fdua_competition.pdf_handler import get_document_dir
-from fdua_competition.utils import get_version
+from fdua_competition.utils import dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
 
 OUTPUT_DIR = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/index/documents"
@@ -49,29 +51,35 @@ def extract_organization_name(source: Path, vectorstore: VectorStore):
     )
     chain = prompt_template | chat_model
 
-    return chain.invoke({"context": "\n---\n".join([i.page_content for i in context])})
+    res = chain.invoke({"context": "\n---\n".join([i.page_content for i in context])})
+    logger.info(f"[extract_organization_name]\n{dict_to_yaml(res.model_dump())}\n")
+    return res
+
+
+def extract_organization_name_concurrently(pdfs: list[Path], vectorstore: VectorStore) -> list[dict]:
+    organization_names = []
+    with ThreadPoolExecutor() as executor:
+        future_to_pdf = {executor.submit(extract_organization_name, pdf, vectorstore): pdf for pdf in pdfs}
+        for future in tqdm(as_completed(future_to_pdf), total=len(pdfs), desc="extracting organization names.."):
+            pdf = future_to_pdf[future]
+            names = future.result()
+            organization_names.append({"organizations": names.organizations, "source": str(pdf)})
+    return organization_names
 
 
 def write_document_index(vectorstore: VectorStore, mode: Mode = Mode.TEST):
+    logger.info("[write_document_index] creating document index..")
+
     output_path = OUTPUT_DIR / f"v{get_version()}.json"
 
-    if output_path.exists():
-        print(f"[write_document_index] already exists: {output_path}")
-        return
-
-    print("[write_document_index] creating document index..")
-
-    organization_names = []
     pdfs = list(get_document_dir(mode).rglob("*.pdf"))
-    for pdf_path in tqdm(pdfs, desc="extracting organization names.."):
-        names = extract_organization_name(source=pdf_path, vectorstore=vectorstore)
-        organization_names.append({"organizations": names.organizations, "source": str(pdf_path)})
+    organization_names = extract_organization_name_concurrently(pdfs, vectorstore)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w") as f:
         json.dump(organization_names, f, ensure_ascii=False, indent=2)
 
-    print(f"[write_document_index] done: {output_path}")
+    logger.info(f"[write_document_index] done: {output_path}")
 
 
 def parse_args() -> Namespace:
@@ -91,7 +99,7 @@ def main():
 def read_document_index() -> str:
     index_path = OUTPUT_DIR / f"v{get_version()}.json"
     index = json.load(index_path.open())
-    return yaml.dump(index, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    return dict_to_yaml(index)
 
 
 if __name__ == "__main__":

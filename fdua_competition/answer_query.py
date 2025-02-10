@@ -1,14 +1,18 @@
 import textwrap
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
-import yaml
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
-from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_fixed
+from tqdm import tqdm
 
+from fdua_competition.baes_models import AnswerQueryOutput
+from fdua_competition.cleanse import cleanse_response
+from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model
-from fdua_competition.reference import search_source_to_refer
-from fdua_competition.utils import log_retry
+from fdua_competition.reference import search_reference_doc, search_reference_pages
+from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
 
 
@@ -34,17 +38,8 @@ def round_number(number: str, decimals: str) -> str:
     return str(round(float(number), int(decimals - 1)))
 
 
-class AnswerQueryOutput(BaseModel):
-    query: str = Field(description="the query that was asked.")
-    response: str = Field(description="the answer for the given query")
-    reason: str = Field(description="the reason for the response.")
-    organization_name: str = Field(description="the organization name that the query is about.")
-    contexts: list[str] = Field(description="the context that the response was based on with its file path and page number.")
-    reference: str = Field(description="the reference source of the context.")
-
-
-@retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=log_retry)
-def answer_query(query: str, vectorstore: FduaVectorStore):
+@retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=before_sleep_hook)
+def answer_query(query: str, vectorstore: FduaVectorStore) -> AnswerQueryOutput:
     role = textwrap.dedent(
         """ 
         You are a research assistant. You have access to the user's query and a set of documents referred to as “context.”
@@ -54,7 +49,7 @@ def answer_query(query: str, vectorstore: FduaVectorStore):
         Your output must follow this exact JSON structure:
         {
             "query": "the original user question",
-            "response": "a concise answer with no more than 50 tokens, no commas",
+            "response": "a concise answer",
             "reason": "a brief explanation of how you derived the answer from the context",
             "organization_name": "the relevant organization name if it is mentioned",
             "contexts": ["list of relevant context passages used, each as a string"]
@@ -69,14 +64,17 @@ def answer_query(query: str, vectorstore: FduaVectorStore):
         """
     )
 
-    reference = search_source_to_refer(query)
-    context = vectorstore.as_retriever().invoke(query, filter={"source": reference.source})
-    parsed_context = yaml.dump(
-        [{"content": i.page_content, "metadata": i.metadata} for i in context],
-        allow_unicode=True,
-        default_flow_style=False,
-        sort_keys=False,
-    )
+    ref_doc = search_reference_doc(query)
+    ref_pages = search_reference_pages(query, Path(ref_doc.source))
+
+    contexts = []
+    for page in ref_pages.pages:
+        retriever = vectorstore.as_retriever(search_kwargs={"filter": {"$and": [{"source": ref_doc.source}, {"page": page}]}})
+        page_contexts = retriever.invoke(query)
+        for i in page_contexts:
+            contexts.append(i)
+
+    parsed_context = dict_to_yaml([{"content": i.page_content, "metadata": i.metadata} for i in contexts])
 
     chat_model = create_chat_model().bind_tools([round_number, divide_number]).with_structured_output(AnswerQueryOutput)
     prompt_template = ChatPromptTemplate.from_messages(
@@ -87,4 +85,20 @@ def answer_query(query: str, vectorstore: FduaVectorStore):
         ]
     )
     chain = prompt_template | chat_model
-    return chain.invoke({"role": role, "context": parsed_context, "query": query, "language": "japanese"})
+    payload = {"role": role, "context": parsed_context, "query": query, "language": "japanese"}
+    res = chain.invoke(payload)
+    logger.info(f"[answer_query]\n{dict_to_yaml(res.model_dump())}\n")
+    return res
+
+
+def answer_queries_concurrently(queries: list[str], vectorstore: FduaVectorStore) -> list[AnswerQueryOutput]:
+    results: dict[int, AnswerQueryOutput] = {}
+    with ThreadPoolExecutor() as executor:
+        future_to_index = {
+            executor.submit(answer_query, query=query, vectorstore=vectorstore): i for i, query in enumerate(queries)
+        }
+        for future in tqdm(as_completed(future_to_index), total=len(queries), desc="processing queries.."):
+            index = future_to_index[future]
+            response = future.result()
+            results[index] = cleanse_response(response)
+    return [results[i] for i in range(len(queries))]

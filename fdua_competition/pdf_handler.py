@@ -1,9 +1,12 @@
 import os
+import warnings
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from langchain_community.document_loaders import PyPDFium2Loader
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from tqdm import tqdm
 
 from fdua_competition.enums import Mode
 
@@ -18,13 +21,22 @@ def get_document_dir(mode: Mode = Mode.TEST) -> Path:
             raise ValueError("Invalid mode")
 
 
-def load_documents(mode: Mode = Mode.TEST) -> list[Document]:
+def load_documents_concurrently(mode: Mode = Mode.TEST) -> list[Document]:
+    warnings.filterwarnings("ignore", category=UserWarning)  # suppress UserWarning from PyPDFium2
     doc_dir = get_document_dir(mode)
     docs = []
-    for path in doc_dir.rglob("*.pdf"):
-        for doc in PyPDFium2Loader(path).lazy_load():
-            docs.append(doc)
+    paths = list(doc_dir.rglob("*.pdf"))
+    with ThreadPoolExecutor() as executor:
+        futures = {executor.submit(PyPDFium2Loader(path).lazy_load): path for path in paths}
+        for future in tqdm(as_completed(futures), total=len(futures), desc="loading documents.."):
+            for doc in future.result():
+                docs.append(doc)
+    warnings.filterwarnings("default", category=UserWarning)  # reset UserWarning
     return docs
+
+
+def load_documents(mode: Mode = Mode.TEST) -> list[Document]:
+    return load_documents_concurrently(mode)
 
 
 def split_document(doc: Document) -> list[Document]:
