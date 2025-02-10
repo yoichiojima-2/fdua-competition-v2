@@ -17,6 +17,7 @@ from fdua_competition.logging_config import logger
 from fdua_competition.models import create_embeddings
 from fdua_competition.pdf_handler import load_documents
 from fdua_competition.utils import before_sleep_hook
+from fdua_competition.cleanse import CleansePDF, cleanse_pdf
 
 BATCH_SIZE = 1
 
@@ -54,7 +55,8 @@ class FduaVectorStore:
     def populate(self) -> None:
         self.vectorstore.reset_collection()
         docs = load_documents()
-        self.add_documents_concurrently(docs)
+        cleansed_docs = [Document(page_content=cleanse_pdf(doc).output, metadata=doc.metadata) for doc in docs]
+        self.add_documents_concurrently(cleansed_docs)
         logger.info("[FduaVectorStore] done populating vectorstore")
 
 

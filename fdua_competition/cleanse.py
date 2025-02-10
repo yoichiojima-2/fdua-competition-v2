@@ -11,6 +11,42 @@ from fdua_competition.tools import divide_number, round_number
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 
 
+class CleansePDF(BaseModel):
+    input: str = Field(description="The raw answer output provided in the 'response' field.")
+    output: str = Field(description="The cleansed 'response' string that satisfies the requirements.")
+
+
+@retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
+def cleanse_pdf(input: str) -> CleansePDF:
+    role = textwrap.dedent(
+        """
+        You are an intelligent assistant specializing in text refinement.
+        The input provided is raw data parsed from a PDF and may be messy or contain unwanted artifacts.
+        Your task is to clean up this raw context with only minimal modifications, ensuring that no important information is lost.
+        
+        ## Instructions:
+        - Fix minor formatting issues (such as extra whitespace, punctuation errors, or unwanted artifacts) without removing any essential content.
+        - Do not rephrase or add new information.
+        - Preserve all critical details while cleaning the text.
+        - The final output must be a concise
+        
+        ## Input:
+        - **context**: The raw context data extracted from a PDF.
+        
+        ## Output:
+        Return the cleaned context text with minimal corrections, preserving all original information.
+        """
+    )
+    chat_model = create_chat_model().bind_tools([divide_number, round_number]).with_structured_output(CleansePDF)
+    prompt_template = ChatPromptTemplate.from_messages([("system", role), ("user", "input: {input}")])
+    chain = prompt_template | chat_model
+    res = chain.invoke({"input": input})
+
+    logger.info(f"[cleanse_pdf]\n{dict_to_yaml(res.model_dump())}\n")
+    return res
+
+
+
 class CleanseContext(BaseModel):
     query: str = Field(description="The query string that was used to generate the answer.")
     input: str = Field(description="The raw answer output provided in the 'response' field.")
