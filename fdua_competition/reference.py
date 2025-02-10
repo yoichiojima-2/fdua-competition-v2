@@ -1,20 +1,23 @@
 import textwrap
+from pathlib import Path
 
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
 from fdua_competition.index_documents import read_document_index
+from fdua_competition.index_pages import read_page_index
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model
+from fdua_competition.utils import dict_to_yaml
 
 
-class ReferenceOutput(BaseModel):
+class ReferenceDocOutput(BaseModel):
     query: str = Field(..., title="The user query.")
     source: str = Field(..., title="The file path of the document.")
     reason: str = Field(..., title="The reason for selecting this source.")
 
 
-def search_source_to_refer(query: str) -> ReferenceOutput:
+def search_reference_doc(query: str) -> ReferenceDocOutput:
     role = textwrap.dedent(
         """
         You are an intelligent assistant specializing in information retrieval. Your task is to analyze a user query and determine which sources from the provided dataset should be referenced to answer it.
@@ -38,12 +41,53 @@ def search_source_to_refer(query: str) -> ReferenceOutput:
         """
     )
 
-    chat_model = create_chat_model().with_structured_output(ReferenceOutput)
+    chat_model = create_chat_model().with_structured_output(ReferenceDocOutput)
     prompt_template = ChatPromptTemplate.from_messages(
         [("system", role), ("system", f"index: {read_document_index()}"), ("user", f"query: {query}")]
     )
     chain = prompt_template | chat_model
-    reference = chain.invoke({"query": query})
+    res = chain.invoke({"query": query})
 
-    logger.info(f"[search_source_to_refer]\nquery: {query}\nreference: {reference.source}\n\n")
-    return reference
+    logger.info(f"[search_reference_doc]\n{dict_to_yaml(res.model_dump())}\n")
+    return res
+
+
+class ReferencePageOutput(BaseModel):
+    query: str = Field(..., title="The user query.")
+    source: str = Field(..., title="The file path of the document.")
+    pages: list[int] = Field(..., title="The list of page numbers to refer.")
+
+
+def search_reference_pages(query: str, source: Path) -> ReferencePageOutput:
+    role = textwrap.dedent(
+        """
+        You are an intelligent assistant specializing in document retrieval. Your task is to analyze a user query and identify **specific pages** from relevant documents that should be referenced.
+
+        ## Instructions:
+        - Consider the **context of the query** and match it with the **content of the indexed documents**.
+        - If multiple pages from the same document are relevant, include all of them.
+        - If **no relevant pages** are found, return an empty list (`[]`).
+
+        ## Input:
+        - **user_query**: The question or request made by the user.
+        - **page_index**: A list of dictionaries containing:
+            - `"source"`: The file path of the document.
+            - `"page"`: The page number.
+            - `"content"`: The text content of the page.
+
+        ## Output:
+        Return the `"source"` file path and a list of relevant `"page"` numbers.
+
+        Ensure that the selected pages directly relate to the user's request.
+        """
+    )
+
+    chat_model = create_chat_model().with_structured_output(ReferencePageOutput)
+    prompt_template = ChatPromptTemplate.from_messages(
+        [("system", role), ("system", f"index: {read_page_index(source)}"), ("user", f"query: {query}")]
+    )
+    chain = prompt_template | chat_model
+    res = chain.invoke({"query": query})
+
+    logger.info(f"[search_reference_pages]\n{dict_to_yaml(res.model_dump())}\n")
+    return res
