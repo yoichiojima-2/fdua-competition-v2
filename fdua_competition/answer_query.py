@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.documents import Document
 from tenacity import retry, stop_after_attempt, wait_random
 from tqdm import tqdm
 
@@ -11,10 +12,47 @@ from fdua_competition.cleanse import cleanse_response
 from fdua_competition.enums import Mode
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model
-from fdua_competition.reference import ReferencePageOutput, search_reference_doc, search_reference_pages
+from fdua_competition.reference import ReferencePageOutput, search_reference_doc, search_reference_pages, ReferenceDocOutput
 from fdua_competition.tools import divide_number, round_number
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
+
+
+
+def build_context(query: str, vectorstore: FduaVectorStore, mode: Mode) -> list[Document]:
+    ref_doc = search_reference_doc(query, mode)
+
+    contexts = []
+    if ref_doc.source:
+        ref_pages = (
+            ReferencePageOutput(query=query, source="", pages=[])
+            if ref_doc.source is None
+            else search_reference_pages(query, Path(ref_doc.source), mode)
+        )
+        if ref_pages.pages:
+            logger.info(f"reference pages found for query: {query}")
+            for page in ref_pages.pages:
+                retriever = vectorstore.as_retriever(
+                    search_kwargs={"filter": {"$and": [{"source": ref_doc.source}, {"page": page}]}}
+                )
+                page_contexts = retriever.invoke(query)
+                for i in page_contexts:
+                    contexts.append(i)
+            return contexts
+        else:
+            logger.info(f"no reference pages found for query: {query}")
+            retriever = vectorstore.as_retriever(search_kwargs={"filter": {"source": ref_doc.source}})
+            page_contexts = retriever.invoke(query)
+            for i in page_contexts:
+                contexts.append(i)
+            return contexts
+    else:
+        logger.info(f"no reference document found for query: {query}")
+        retriever = vectorstore.as_retriever()
+        page_contexts = retriever.invoke(query)
+        for i in page_contexts:
+            contexts.append(i)
+        return contexts
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
@@ -43,30 +81,7 @@ def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> Answer
         """
     )
 
-    ref_doc = search_reference_doc(query, mode)
-    ref_pages = (
-        ReferencePageOutput(query=query, source="", pages=[])
-        if ref_doc.source is None
-        else search_reference_pages(query, Path(ref_doc.source), mode)
-    )
-
-    contexts = []
-    if ref_pages.pages is None:
-        logger.info(f"no reference pages found for query: {query}")
-        retriever = vectorstore.as_retriever(search_kwargs={"filter": {"$and": [{"source": ref_doc.source}]}})
-        page_contexts = retriever.invoke(query)
-        for i in page_contexts:
-            contexts.append(i)
-    else:
-        logger.info(f"reference pages found for query: {query}")
-        for page in ref_pages.pages:
-            retriever = vectorstore.as_retriever(
-                search_kwargs={"filter": {"$and": [{"source": ref_doc.source}, {"page": page}]}}
-            )
-            page_contexts = retriever.invoke(query)
-            for i in page_contexts:
-                contexts.append(i)
-
+    contexts = build_context(query, vectorstore, mode)
     parsed_context = dict_to_yaml([{"content": i.page_content, "metadata": i.metadata} for i in contexts])
 
     chat_model = create_chat_model().bind_tools([round_number, divide_number]).with_structured_output(AnswerQueryOutput)
@@ -79,6 +94,9 @@ def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> Answer
     )
     chain = prompt_template | chat_model
     payload = {"role": role, "context": parsed_context, "query": query, "language": "japanese"}
+
+    logger.debug(dict_to_yaml(prompt_template.invoke(payload).model_dump()))
+
     res = chain.invoke(payload)
     logger.info(f"[answer_query]\n{dict_to_yaml(res.model_dump())}\n")
 
