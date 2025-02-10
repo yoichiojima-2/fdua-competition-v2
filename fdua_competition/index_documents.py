@@ -65,13 +65,9 @@ def extract_organization_name_concurrently(pdfs: list[Path], vectorstore: Vector
 
 
 def write_document_index(vectorstore: VectorStore, mode: Mode = Mode.TEST):
-    output_path = OUTPUT_DIR / f"v{get_version()}.json"
-
-    if output_path.exists():
-        print(f"[write_document_index] already exists: {output_path}")
-        return
-
     print("[write_document_index] creating document index..")
+
+    output_path = OUTPUT_DIR / f"v{get_version()}.json"
 
     pdfs = list(get_document_dir(mode).rglob("*.pdf"))
     organization_names = extract_organization_name_concurrently(pdfs, vectorstore)
