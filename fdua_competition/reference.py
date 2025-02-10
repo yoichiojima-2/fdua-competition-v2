@@ -61,12 +61,13 @@ class ReferencePageOutput(BaseModel):
 def search_reference_pages(query: str, source: Path) -> ReferencePageOutput:
     role = textwrap.dedent(
         """
-        You are an intelligent assistant specializing in document retrieval. Your task is to analyze a user query and identify **specific pages** from relevant documents that should be referenced.
+        You are an intelligent assistant specializing in document retrieval. Your task is to analyze a user query and determine the pages from relevant documents that are most likely to contain the answer.
 
         ## Instructions:
-        - Consider the **context of the query** and match it with the **content of the indexed documents**.
-        - If multiple pages from the same document are relevant, include all of them.
-        - If **no relevant pages** are found, return an empty list (`[]`).
+        - Consider the **context of the query** and carefully match it with the **content of the indexed documents**.
+        - Identify and select only those pages that are most likely to provide a direct answer to the query, rather than listing every relevant page.
+        - If multiple pages from the same document are possible candidates, prioritize the ones that best address the query.
+        - If **no pages** are likely to contain the answer, return an empty list (`[]`).
 
         ## Input:
         - **user_query**: The question or request made by the user.
@@ -76,9 +77,9 @@ def search_reference_pages(query: str, source: Path) -> ReferencePageOutput:
             - `"content"`: The text content of the page.
 
         ## Output:
-        Return the `"source"` file path and a list of relevant `"page"` numbers.
+        Return the `"source"` file path and a list of page numbers that are most likely to contain the answer to the user's query.
 
-        Ensure that the selected pages directly relate to the user's request.
+        Ensure that the selected pages best provide the answer or critical information relevant to the query.
         """
     )
 

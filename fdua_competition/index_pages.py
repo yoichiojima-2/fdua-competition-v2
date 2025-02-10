@@ -28,6 +28,7 @@ def get_document(source: Path, vectorstore: VectorStore) -> list[Document]:
 
 
 class SummarizePageOutput(BaseModel):
+    topics: list[str] = Field(description="topics or themes covered in the document page.")
     summary: str = Field(description="A concise summary of the document page.")
 
 
@@ -61,19 +62,15 @@ def summarize_page_concurrently(docs: list[Document]) -> list[dict]:
         for future in as_completed(future_to_doc):
             doc = future_to_doc[future]
             summary = future.result()
-            summaries.append({"summary": summary.summary, "metadata": doc.metadata})
+            summaries.append({**summary.model_dump(), "metadata": doc.metadata})
 
     summary_sorted = sorted(summaries, key=lambda x: x["metadata"]["page"])
-    logger.info(f"[summarize_page_concurrently]\n{dict_to_yaml(summary_sorted)}")
+    logger.info(f"[summarize_page_concurrently]\n{dict_to_yaml(summary_sorted)}\n")
     return summary_sorted
 
 
 def write_page_index(source: Path, vectorstore: VectorStore) -> None:
     output_path = OUTPUT_DIR / f"v{get_version()}/{source.stem}.json"
-
-    if output_path.exists():
-        logger.info(f"[write_page_index] already exists: {output_path}")
-        return
 
     docs = get_document(source, vectorstore=vectorstore)
     page_index = summarize_page_concurrently(docs)
@@ -96,8 +93,15 @@ def main() -> None:
     vs = FduaVectorStore(embeddings=embeddings)
 
     pdfs = list(get_document_dir(mode=Mode(args.mode)).rglob("*.pdf"))
-    for pdf in tqdm(pdfs, desc="indexing pages.."):
-        write_page_index(source=pdf, vectorstore=vs)
+
+    with ThreadPoolExecutor() as executor:
+        future_to_pdf = {executor.submit(write_page_index, source=pdf, vectorstore=vs): pdf for pdf in pdfs}
+        for future in tqdm(as_completed(future_to_pdf), total=len(pdfs), desc="indexing pages.."):
+            pdf = future_to_pdf[future]
+            try:
+                future.result()
+            except Exception as e:
+                logger.error(f"error processing {pdf}: {e}")
 
 
 def read_page_index(source: Path) -> str:
