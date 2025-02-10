@@ -18,7 +18,7 @@ from fdua_competition.models import create_embeddings
 from fdua_competition.pdf_handler import load_documents
 from fdua_competition.utils import before_sleep_hook
 
-BATCH_SIZE = 4
+BATCH_SIZE = 12
 
 
 class FduaVectorStore:
