@@ -2,7 +2,7 @@ import textwrap
 
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
-from tenacity import retry, stop_after_attempt, wait_fixed
+from tenacity import retry, stop_after_attempt, wait_random
 
 from fdua_competition.baes_models import AnswerQueryOutput
 from fdua_competition.logging_config import logger
@@ -17,7 +17,7 @@ class CleanseResponseOutput(BaseModel):
     output: str = Field(..., title="The cleansed 'response' string that satisfies the requirements.")
 
 
-@retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=before_sleep_hook)
+@retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
 def cleanse_response(answer: AnswerQueryOutput) -> CleanseResponseOutput:
     role = textwrap.dedent(
         """

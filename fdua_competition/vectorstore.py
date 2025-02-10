@@ -18,7 +18,7 @@ from fdua_competition.models import create_embeddings
 from fdua_competition.pdf_handler import load_documents
 from fdua_competition.utils import before_sleep_hook
 
-BATCH_SIZE = 8
+BATCH_SIZE = 1
 
 
 class FduaVectorStore:
@@ -40,7 +40,7 @@ class FduaVectorStore:
     def as_retriever(self, **kwargs) -> VectorStoreRetriever:
         return self.vectorstore.as_retriever(**kwargs)
 
-    @retry(stop=stop_after_attempt(24), wait=wait_random(min=2, max=10), before_sleep=before_sleep_hook)
+    @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
     def add(self, docs: list[Document]) -> None:
         self.vectorstore.add_documents(docs)
 

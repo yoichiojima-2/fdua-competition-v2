@@ -5,7 +5,7 @@ from pathlib import Path
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
-from tenacity import retry, stop_after_attempt, wait_fixed
+from tenacity import retry, stop_after_attempt, wait_random
 from decimal import Decimal, ROUND_HALF_UP
 from tqdm import tqdm
 
@@ -46,7 +46,7 @@ def round_number(number: str, decimals: str) -> str:
     return str(number_d.quantize(quantizer, rounding=ROUND_HALF_UP))
 
 
-@retry(stop=stop_after_attempt(24), wait=wait_fixed(1), before_sleep=before_sleep_hook)
+@retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
 def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> AnswerQueryOutput:
     role = textwrap.dedent(
         """ 
