@@ -17,33 +17,35 @@ from fdua_competition.tools import divide_number, round_number
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
 
-MAX_RETRIES = 50
+MAX_RETRIES = 500
 
-def build_context(query: str, vectorstore: FduaVectorStore, mode: Mode) -> list[Document]:
+
+def get_relevant_docs(query: str, vectorstore: FduaVectorStore, mode: Mode) -> list[Document]:
     ref_doc = search_reference_doc(query, mode)
 
-    contexts = []
+    docs = []
     if ref_doc.source:
         ref_pages = search_reference_pages(query, Path(ref_doc.source), mode)
         if ref_pages.pages:
             logger.info(f"reference pages found for query: {query}")
             for page in ref_pages.pages:
-                retriever = vectorstore.as_retriever(
-                    search_kwargs={"filter": {"$and": [{"source": ref_doc.source}, {"page": page}]}}
+                docs.append(
+                    *vectorstore.as_retriever(
+                        search_kwargs={"filter": {"$and": [{"source": ref_doc.source}, {"page": page}]}}
+                    ).invoke(query)
                 )
-                page_contexts = retriever.invoke(query)
         else:
             logger.info(f"no reference pages found for query: {query}")
-            retriever = vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIES, "filter": {"source": ref_doc.source}})
-            page_contexts = retriever.invoke(query)
+            docs.append(
+                *vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIES, "filter": {"source": ref_doc.source}}).invoke(query)
+            )
     else:
         logger.info(f"no reference document found for query: {query}")
-        retriever = vectorstore.as_retriever()
-        page_contexts = retriever.invoke(query, search_kwargs={"k": MAX_RETRIES})
+        retriever = vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIES})
+        docs.append(*retriever.invoke(query))
 
-    for page in page_contexts:
-        contexts.append(page)
-    return contexts
+    logger.debug(f"[get_relevant_docs] {docs}")
+    return docs
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
@@ -72,8 +74,8 @@ def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> Answer
         """
     )
 
-    contexts = build_context(query, vectorstore, mode)
-    parsed_context = dict_to_yaml([{"content": i.page_content, "metadata": i.metadata} for i in contexts])
+    docs = get_relevant_docs(query, vectorstore, mode)
+    parsed_context = dict_to_yaml([{"content": doc.page_content, "metadata": doc.metadata} for doc in docs])
 
     chat_model = create_chat_model().bind_tools([round_number, divide_number]).with_structured_output(AnswerQueryOutput)
     prompt_template = ChatPromptTemplate.from_messages(
