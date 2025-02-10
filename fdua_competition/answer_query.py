@@ -11,7 +11,7 @@ from fdua_competition.cleanse import cleanse_response
 from fdua_competition.enums import Mode
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model
-from fdua_competition.reference import search_reference_doc, search_reference_pages
+from fdua_competition.reference import ReferencePageOutput, search_reference_doc, search_reference_pages
 from fdua_competition.tools import divide_number, round_number
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
@@ -44,14 +44,28 @@ def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> Answer
     )
 
     ref_doc = search_reference_doc(query, mode)
-    ref_pages = search_reference_pages(query, Path(ref_doc.source), mode)
+    ref_pages = (
+        ReferencePageOutput(query=query, source="", pages=[])
+        if ref_doc.source is None
+        else search_reference_pages(query, Path(ref_doc.source), mode)
+    )
 
     contexts = []
-    for page in ref_pages.pages:
-        retriever = vectorstore.as_retriever(search_kwargs={"filter": {"$and": [{"source": ref_doc.source}, {"page": page}]}})
+    if ref_pages.pages is None:
+        logger.info(f"no reference pages found for query: {query}")
+        retriever = vectorstore.as_retriever(search_kwargs={"filter": {"$and": [{"source": ref_doc.source}]}})
         page_contexts = retriever.invoke(query)
         for i in page_contexts:
             contexts.append(i)
+    else:
+        logger.info(f"reference pages found for query: {query}")
+        for page in ref_pages.pages:
+            retriever = vectorstore.as_retriever(
+                search_kwargs={"filter": {"$and": [{"source": ref_doc.source}, {"page": page}]}}
+            )
+            page_contexts = retriever.invoke(query)
+            for i in page_contexts:
+                contexts.append(i)
 
     parsed_context = dict_to_yaml([{"content": i.page_content, "metadata": i.metadata} for i in contexts])
 
