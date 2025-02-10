@@ -126,7 +126,7 @@ clear-vectorstore:
 	-rm -r ${INSTALL_DIR}/vectorstores
 
 clear-log:
-	-rm -r ${INSTALL_DIR}/log
+	-rm -r ${INSTALL_DIR}/logs
 
 uninstall: clean clear-container
 	@echo "\nuninstalling..."

@@ -17,6 +17,7 @@ from fdua_competition.tools import divide_number, round_number
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
 
+MAX_RETRIES = 50
 
 def build_context(query: str, vectorstore: FduaVectorStore, mode: Mode) -> list[Document]:
     ref_doc = search_reference_doc(query, mode)
@@ -33,12 +34,13 @@ def build_context(query: str, vectorstore: FduaVectorStore, mode: Mode) -> list[
                 page_contexts = retriever.invoke(query)
         else:
             logger.info(f"no reference pages found for query: {query}")
-            retriever = vectorstore.as_retriever(search_kwargs={"filter": {"source": ref_doc.source}})
+            retriever = vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIES, "filter": {"source": ref_doc.source}})
             page_contexts = retriever.invoke(query)
     else:
         logger.info(f"no reference document found for query: {query}")
         retriever = vectorstore.as_retriever()
-        page_contexts = retriever.invoke(query)
+        page_contexts = retriever.invoke(query, search_kwargs={"k": MAX_RETRIES})
+
     for page in page_contexts:
         contexts.append(page)
     return contexts
