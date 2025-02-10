@@ -125,6 +125,9 @@ clear-container:
 clear-vectorstore:
 	-rm -r ${INSTALL_DIR}/vectorstores
 
+clear-log:
+	-rm -r ${INSTALL_DIR}/log
+
 uninstall: clean clear-container
 	@echo "\nuninstalling..."
 	-rm -rf .venv
