@@ -17,7 +17,7 @@ from fdua_competition.tools import divide_number, round_number
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
 
-MAX_RETRIES = 16
+MAX_RETRIEVES = 16
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
@@ -44,11 +44,11 @@ def get_relevant_docs(query: str, vectorstore: FduaVectorStore, mode: Mode) -> l
         else:
             logger.info(f"no reference pages found for query: {query}")
             docs.extend(
-                vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIES, "filter": {"source": ref_doc.source}}).invoke(query)
+                vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIEVES, "filter": {"source": ref_doc.source}}).invoke(query)
             )
     else:
         logger.info(f"no reference document found for query: {query}")
-        retriever = vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIES})
+        retriever = vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIEVES})
         docs.extend(retriever.invoke(query))
 
     logger.debug(f"[get_relevant_docs] {docs}")
