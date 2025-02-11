@@ -1,9 +1,9 @@
 # import Document
 from langchain_core.documents import Document
 
+from fdua_competition.enums import Mode
 from fdua_competition.models import create_embeddings
 from fdua_competition.vectorstore import FduaVectorStore
-from fdua_competition.enums import Mode
 
 
 def test_vectorstore():

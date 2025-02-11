@@ -8,7 +8,7 @@ from tenacity import retry, stop_after_attempt, wait_random
 from tqdm import tqdm
 
 from fdua_competition.baes_models import AnswerQueryOutput
-from fdua_competition.cleanse import cleanse_response, CleanseResponseOutput
+from fdua_competition.cleanse import CleanseResponseOutput, cleanse_response
 from fdua_competition.enums import Mode
 from fdua_competition.logging_config import logger
 from fdua_competition.merge_results import merge_results
@@ -27,7 +27,7 @@ def get_relevant_docs_with_index(query: str, vectorstore: FduaVectorStore, mode:
 
     docs: list[Document] = []
 
-    if (ref_doc.source):
+    if ref_doc.source:
         ref_pages = search_reference_pages(query, Path(ref_doc.source), mode)
         if ref_pages.pages:
             logger.info(f"reference pages found for query: {query}")
@@ -45,7 +45,9 @@ def get_relevant_docs_with_index(query: str, vectorstore: FduaVectorStore, mode:
         else:
             logger.info(f"no reference pages found for query: {query}")
             docs.extend(
-                vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIEVES, "filter": {"source": ref_doc.source}}).invoke(query)
+                vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIEVES, "filter": {"source": ref_doc.source}}).invoke(
+                    query
+                )
             )
     else:
         logger.info(f"no reference document found for query: {query}")
@@ -96,7 +98,12 @@ def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> Cleans
     payload_base = {"role": role, "query": query, "language": "japanese"}
     payload_simple = {
         **payload_base,
-        "context": "\n---\n".join([f"{i.page_content}\n{i.metadata}" for i in vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIEVES}).invoke(query)]),
+        "context": "\n---\n".join(
+            [
+                f"{i.page_content}\n{i.metadata}"
+                for i in vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIEVES}).invoke(query)
+            ]
+        ),
     }
     payload_index = {
         **payload_base,

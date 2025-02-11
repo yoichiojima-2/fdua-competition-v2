@@ -25,7 +25,9 @@ BATCH_SIZE = 1
 class FduaVectorStore:
     def __init__(self, mode: Mode, embeddings: Embeddings):
         self.embeddings = embeddings
-        self.persist_directory = Path(os.environ["FDUA_DIR"]) / f".fdua-competition/vectorstores/chroma/v{get_version()}/{mode.value}"
+        self.persist_directory = (
+            Path(os.environ["FDUA_DIR"]) / f".fdua-competition/vectorstores/chroma/v{get_version()}/{mode.value}"
+        )
         self.persist_directory.mkdir(parents=True, exist_ok=True)
         self.mode = mode
 
