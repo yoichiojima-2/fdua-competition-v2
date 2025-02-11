@@ -14,14 +14,14 @@ from fdua_competition.tools import divide_number, round_number
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 
 
-# todo: move to pdf_handler.py
+# todo: move these cleansers
 class CleansePDF(BaseModel):
     output: str = Field(description="The cleansed 'response' string that satisfies the requirements.")
 
 
 def split_document(doc: Document) -> list[Document]:
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=6000,
+        chunk_size=2000,
         chunk_overlap=0,
         separators=["\n\n", "\n", "。", "．", "？", "！", "「", "」", "【", "】"],
     )
