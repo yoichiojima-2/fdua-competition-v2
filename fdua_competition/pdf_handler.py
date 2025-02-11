@@ -5,7 +5,6 @@ from pathlib import Path
 
 from langchain_community.document_loaders import PyPDFium2Loader
 from langchain_core.documents import Document
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from tqdm import tqdm
 
 from fdua_competition.enums import Mode
@@ -37,13 +36,3 @@ def load_documents_concurrently(mode: Mode = Mode.TEST) -> list[Document]:
 
 def load_documents(mode: Mode = Mode.TEST) -> list[Document]:
     return load_documents_concurrently(mode)
-
-
-def split_document(doc: Document) -> list[Document]:
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=150,
-        separators=["\n\n", "\n", "。", "．", "？", "！", "「", "」", "【", "】"],
-    )
-    split_doc = splitter.split_text(doc.page_content)
-    return [Document(page_content=d, metadata=doc.metadata) for d in split_doc]

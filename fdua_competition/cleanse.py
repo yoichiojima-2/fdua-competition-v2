@@ -1,25 +1,41 @@
 import textwrap
+import unicodedata
 
+from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_random
 
 from fdua_competition.baes_models import AnswerQueryOutput
 from fdua_competition.logging_config import logger
-from langchain_core.documents import Document
 from fdua_competition.models import create_chat_model
 from fdua_competition.tools import divide_number, round_number
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 
 
 class CleansePDF(BaseModel):
-    input: str = Field(description="The raw answer output provided in the 'response' field.")
     output: str = Field(description="The cleansed 'response' string that satisfies the requirements.")
+
+
+def split_document(doc: Document) -> list[Document]:
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=6000,
+        chunk_overlap=0,
+        separators=["\n\n", "\n", "。", "．", "？", "！", "「", "」", "【", "】"],
+    )
+    split_doc = splitter.split_text(doc.page_content)
+    return [Document(page_content=d, metadata=doc.metadata) for d in split_doc]
+
+
+def remove_special_characters(doc: Document) -> Document:
+    return Document(
+        page_content="".join([c for c in doc.page_content if unicodedata.category(c)[0] != "C"]), metadata=doc.metadata
+    )
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
 def cleanse_pdf(doc: Document) -> CleansePDF:
-    logger.info(f"[cleanse_pdf] cleansing...: {doc.metadata}")
     role = textwrap.dedent(
         """
         You are an intelligent assistant specializing in text refinement.
@@ -43,10 +59,12 @@ def cleanse_pdf(doc: Document) -> CleansePDF:
     chat_model = create_chat_model().bind_tools([divide_number, round_number]).with_structured_output(CleansePDF)
     prompt_template = ChatPromptTemplate.from_messages([("system", role), ("user", "input: {input}")])
     chain = prompt_template | chat_model
-    res = chain.invoke({"input": doc.page_content.encode('unicode_escape').decode('utf-8')})
+
+    docs = split_document(doc)
+    cleansed_text = "".join([chain.invoke({"input": remove_special_characters(doc)}).output for doc in docs])
+    res = CleansePDF(input=doc.page_content, output=cleansed_text)
     logger.info(f"[cleanse_pdf] done\n{dict_to_yaml(res.model_dump())}\n")
     return res
-
 
 
 class CleanseContext(BaseModel):
