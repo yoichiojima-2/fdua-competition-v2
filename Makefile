@@ -9,7 +9,7 @@ SECRETS_DIR = secrets
 INSTALL_DIR = .fdua-competition
 OUTPUT_NAME = v$(shell uv run python -m bin.print_version)
 MODE = test
-LOG_LEVEL = WARNING
+LOG_LEVEL = INFO
 CSV_PATH = ${INSTALL_DIR}/results/${MODE}/${OUTPUT_NAME}.csv
 
 up:

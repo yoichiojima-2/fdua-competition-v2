@@ -14,6 +14,7 @@ from fdua_competition.logging_config import logger
 from fdua_competition.merge_results import merge_results
 from fdua_competition.models import create_chat_model
 from fdua_competition.reference import search_reference_doc, search_reference_pages
+from fdua_competition.refine_query import refine_query
 from fdua_competition.tools import divide_number, round_number
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
@@ -102,21 +103,23 @@ def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> Cleans
     chain = prompt_template | chat_model
     # [end: building chain]
 
+    refined_query = refine_query(query, vectorstore=vectorstore).output
+
     # [start: prep two types of payload]
-    payload_base = {"role": role, "query": query, "language": "japanese"}
+    payload_base = {"role": role, "query": refined_query, "language": "japanese"}
     payload_simple = {
         **payload_base,
         "context": "\n---\n".join(
             [
                 f"{i.page_content}\n{i.metadata}"
-                for i in vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIEVES}).invoke(query)
+                for i in vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIEVES}).invoke(refined_query)
             ]
         ),
     }
     payload_index = {
         **payload_base,
         "context": "\n---\n".join(
-            [f"{i.page_content}\n{i.metadata}" for i in get_relevant_docs_with_index(query, vectorstore, mode)]
+            [f"{i.page_content}\n{i.metadata}" for i in get_relevant_docs_with_index(refined_query, vectorstore, mode)]
         ),
     }
     # [end: prep two types of payload]
