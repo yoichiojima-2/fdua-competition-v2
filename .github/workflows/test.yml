@@ -2,7 +2,7 @@ name: Python application
 
 on:
   push:
-    branches: [ "main", "perf/concurrency" ]
+    branches: [ "main", "release/0.3.3" ]
   pull_request:
     branches: [ "main" ]
 

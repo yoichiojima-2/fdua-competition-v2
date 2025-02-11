@@ -36,5 +36,6 @@ def before_sleep_hook(state: RetryCallState) -> None:
     logger.warning(f":( retrying attempt {state.attempt_number} after exception: {state.outcome.exception()}")
 
 
+# this is just too handy
 def dict_to_yaml(model: BaseModel) -> str:
     return yaml.dump(model, allow_unicode=True, default_flow_style=False, sort_keys=False)

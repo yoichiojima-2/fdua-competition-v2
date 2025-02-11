@@ -11,10 +11,9 @@ from langchain_core.vectorstores.base import VectorStoreRetriever
 from tenacity import retry, stop_after_attempt, wait_random
 from tqdm import tqdm
 
-from fdua_competition.cleanse import cleanse_pdf
-from fdua_competition.enums import EmbeddingOpt
+from fdua_competition.enums import EmbeddingOpt, LogLevel, Mode
 from fdua_competition.get_version import get_version
-from fdua_competition.logging_config import logger
+from fdua_competition.logging_config import logger, set_log_level
 from fdua_competition.models import create_embeddings
 from fdua_competition.pdf_handler import load_documents
 from fdua_competition.utils import before_sleep_hook
@@ -23,10 +22,13 @@ BATCH_SIZE = 1
 
 
 class FduaVectorStore:
-    def __init__(self, embeddings: Embeddings):
+    def __init__(self, mode: Mode, embeddings: Embeddings):
         self.embeddings = embeddings
-        self.persist_directory = Path(os.environ["FDUA_DIR"]) / f".fdua-competition/vectorstores/chroma/v{get_version()}"
+        self.persist_directory = (
+            Path(os.environ["FDUA_DIR"]) / f".fdua-competition/vectorstores/chroma/v{get_version()}/{mode.value}"
+        )
         self.persist_directory.mkdir(parents=True, exist_ok=True)
+        self.mode = mode
 
         logger.info(f"[FduaVectorStore] {self.persist_directory}")
         self.vectorstore = Chroma(
@@ -43,8 +45,7 @@ class FduaVectorStore:
 
     @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
     def add(self, docs: list[Document]) -> None:
-        cleansed_docs = [Document(page_content=cleanse_pdf(doc).output, metadata=doc.metadata) for doc in docs]
-        self.vectorstore.add_documents(cleansed_docs)
+        self.vectorstore.add_documents(docs)
 
     def add_documents_concurrently(self, docs: list[Document]) -> None:
         batches = [docs[i : i + BATCH_SIZE] for i in range(0, len(docs), BATCH_SIZE)]
@@ -54,29 +55,33 @@ class FduaVectorStore:
                 future.result()
 
     def populate(self) -> None:
-        self.vectorstore.reset_collection()
-        docs = load_documents()
-        self.add_documents_concurrently(docs)
+        docs = load_documents(self.mode)
+        docs_to_add = [doc for doc in docs if doc.metadata not in self.get().get("metadatas")]
+        self.add_documents_concurrently(docs_to_add)
         logger.info("[FduaVectorStore] done populating vectorstore")
+
+    def reset_collection(self) -> None:
+        self.vectorstore.reset_collection()
 
 
 def parse_args() -> Namespace:
     parser = ArgumentParser()
-    parser.add_argument(
-        "--embeddings",
-        "-e",
-        type=EmbeddingOpt,
-        default=EmbeddingOpt.AZURE,
-        choices=list(EmbeddingOpt),
-        help="the type of embeddings to use",
-    )
+    opt = parser.add_argument
+    opt("--mode", "-m", type=str, default=Mode.TEST.value, required=True)
+    opt("--embeddings", "-e", type=str, default=EmbeddingOpt.AZURE.value, choices=[e.value for e in EmbeddingOpt])
+    opt("--reset", "-r", type=bool, default=False)
+    opt("--log-level", "-l", type=str, default=LogLevel.INFO.value)
     return parser.parse_args()
 
 
 def prepare_vectorstore() -> None:
     args = parse_args()
-    embeddings = create_embeddings(args.embeddings)
-    vs = FduaVectorStore(embeddings=embeddings)
+    set_log_level(LogLevel(args.log_level))
+    embeddings = create_embeddings(EmbeddingOpt(args.embeddings))
+    vs = FduaVectorStore(mode=Mode(args.mode), embeddings=embeddings)
+    if args.reset:
+        logger.warning("resetting vectorstore")
+        vs.reset_collection()
     vs.populate()
 
 

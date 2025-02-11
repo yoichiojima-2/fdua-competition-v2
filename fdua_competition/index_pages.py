@@ -12,9 +12,9 @@ from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_random
 from tqdm import tqdm
 
-from fdua_competition.enums import Mode
+from fdua_competition.enums import LogLevel, Mode
 from fdua_competition.get_version import get_version
-from fdua_competition.logging_config import logger
+from fdua_competition.logging_config import logger, set_log_level
 from fdua_competition.models import create_chat_model, create_embeddings
 from fdua_competition.pdf_handler import get_document_dir
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
@@ -85,13 +85,16 @@ def parse_args() -> Namespace:
     parser = ArgumentParser()
     opt = parser.add_argument
     opt("--mode", "-m", type=str, default=Mode.TEST.value, required=True)
+    opt("--log-level", "-l", type=str, default=LogLevel.INFO.value)
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
+    set_log_level(LogLevel(args.log_level))
+
     embeddings = create_embeddings()
-    vs = FduaVectorStore(embeddings=embeddings)
+    vs = FduaVectorStore(mode=Mode(args.mode), embeddings=embeddings)
 
     pdfs = list(get_document_dir(mode=Mode(args.mode)).rglob("*.pdf"))
 

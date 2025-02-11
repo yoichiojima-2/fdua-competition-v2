@@ -1,13 +1,14 @@
 # import Document
 from langchain_core.documents import Document
 
+from fdua_competition.enums import Mode
 from fdua_competition.models import create_embeddings
 from fdua_competition.vectorstore import FduaVectorStore
 
 
 def test_vectorstore():
     embeddings = create_embeddings()
-    vs = FduaVectorStore(embeddings=embeddings)
+    vs = FduaVectorStore(mode=Mode("test"), embeddings=embeddings)
     docs = [
         Document(
             page_content="test page 1",

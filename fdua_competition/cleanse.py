@@ -1,5 +1,5 @@
+import re
 import textwrap
-import unicodedata
 
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
@@ -14,14 +14,15 @@ from fdua_competition.tools import divide_number, round_number
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 
 
+# todo: move these cleansers
 class CleansePDF(BaseModel):
     output: str = Field(description="The cleansed 'response' string that satisfies the requirements.")
 
 
 def split_document(doc: Document) -> list[Document]:
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=6000,
-        chunk_overlap=0,
+        chunk_size=2000,
+        chunk_overlap=20,
         separators=["\n\n", "\n", "。", "．", "？", "！", "「", "」", "【", "】"],
     )
     split_doc = splitter.split_text(doc.page_content)
@@ -29,9 +30,9 @@ def split_document(doc: Document) -> list[Document]:
 
 
 def remove_special_characters(doc: Document) -> Document:
-    return Document(
-        page_content="".join([c for c in doc.page_content if unicodedata.category(c)[0] != "C"]), metadata=doc.metadata
-    )
+    # remove control characters
+    pattern = r"[\x00-\x08\x0B-\x0C\x0E-\x1F]"
+    return Document(page_content=re.sub(pattern, "", doc.page_content), metadata=doc.metadata)
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
@@ -124,6 +125,7 @@ def cleanse_response(answer: AnswerQueryOutput) -> CleanseResponseOutput:
         - If the answer is null, return an '不明'.
         - The final output should be a single, minimal phrase or value, within 54 tokens.
         - Do not use commas or special characters that may break JSON parsing.
+        - Round numbers when instraction is given in query. 小数点第2位を四捨五入は```python round(n, 1)```と同義です.
         
         ## Input:
         - **answer**: The original answer from the "response" field.
