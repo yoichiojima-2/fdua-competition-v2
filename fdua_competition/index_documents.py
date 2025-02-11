@@ -94,7 +94,7 @@ def parse_args() -> Namespace:
 def main():
     args = parse_args()
     embeddings = create_embeddings()
-    vs = FduaVectorStore(embeddings=embeddings)
+    vs = FduaVectorStore(mode=Mode(args.mode), embeddings=embeddings)
     write_document_index(vectorstore=vs, mode=Mode(args.mode))
 
 

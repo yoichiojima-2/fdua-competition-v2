@@ -12,7 +12,7 @@ from tenacity import retry, stop_after_attempt, wait_random
 from tqdm import tqdm
 
 from fdua_competition.cleanse import cleanse_pdf
-from fdua_competition.enums import EmbeddingOpt
+from fdua_competition.enums import EmbeddingOpt, Mode
 from fdua_competition.get_version import get_version
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_embeddings
@@ -23,10 +23,11 @@ BATCH_SIZE = 1
 
 
 class FduaVectorStore:
-    def __init__(self, embeddings: Embeddings):
+    def __init__(self, mode: Mode, embeddings: Embeddings):
         self.embeddings = embeddings
-        self.persist_directory = Path(os.environ["FDUA_DIR"]) / f".fdua-competition/vectorstores/chroma/v{get_version()}"
+        self.persist_directory = Path(os.environ["FDUA_DIR"]) / f".fdua-competition/vectorstores/chroma/v{get_version()}/{mode.value}"
         self.persist_directory.mkdir(parents=True, exist_ok=True)
+        self.mode = mode
 
         logger.info(f"[FduaVectorStore] {self.persist_directory}")
         self.vectorstore = Chroma(
@@ -55,28 +56,23 @@ class FduaVectorStore:
 
     def populate(self) -> None:
         self.vectorstore.reset_collection()
-        docs = load_documents()
+        docs = load_documents(self.mode)
         self.add_documents_concurrently(docs)
         logger.info("[FduaVectorStore] done populating vectorstore")
 
 
 def parse_args() -> Namespace:
     parser = ArgumentParser()
-    parser.add_argument(
-        "--embeddings",
-        "-e",
-        type=EmbeddingOpt,
-        default=EmbeddingOpt.AZURE,
-        choices=list(EmbeddingOpt),
-        help="the type of embeddings to use",
-    )
+    opt = parser.add_argument
+    opt("--mode", "-m", type=str, default=Mode.TEST.value, required=True)
+    opt("--embeddings", "-e", type=str, default=EmbeddingOpt.AZURE.value, choices=[e.value for e in EmbeddingOpt])
     return parser.parse_args()
 
 
 def prepare_vectorstore() -> None:
     args = parse_args()
-    embeddings = create_embeddings(args.embeddings)
-    vs = FduaVectorStore(embeddings=embeddings)
+    embeddings = create_embeddings(EmbeddingOpt(args.embeddings))
+    vs = FduaVectorStore(mode=Mode(args.mode), embeddings=embeddings)
     vs.populate()
 
 

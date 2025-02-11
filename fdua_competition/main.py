@@ -18,7 +18,7 @@ def parse_args() -> Namespace:
 def main():
     args = parse_args()
     embeddings = create_embeddings(EmbeddingOpt.AZURE)
-    vs = FduaVectorStore(embeddings)
+    vs = FduaVectorStore(mode=Mode(args.mode), embeddings=embeddings)
     queries = read_queries(Mode(args.mode))
     responses = answer_queries_concurrently(queries, vs, mode=Mode(args.mode))
     write_result(responses=responses, mode=Mode(args.mode))

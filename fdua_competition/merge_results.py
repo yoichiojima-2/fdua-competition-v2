@@ -28,17 +28,20 @@ def merge_results(res_index: AnswerQueryOutput, res_simple: AnswerQueryOutput) -
         
         - **Result 1 (res_index):** This answer is based on context retrieved using an index-based search.
         - **Result 2 (res_simple):** This answer is based on context retrieved using a simple retrieval method.
+
+        *Result 2 might be less reliable than Result 1 since it potentially includes contexts which should not be referenced.*
         
         Your task is to produce a merged answer that meets the following requirements:
         
         1. **Query:** Use the original user question (which is identical in both results) for the "query" field.
         2. **Original Answers:** Include the original answers and their corresponding certainty scores in the fields "res_index", "certainty_index", "res_simple", and "certainty_simple".
-        3. **Merged Answer ("res_merged"):** 
+        3. **Merged Answer ("output"):** 
            - If one result is clearly more reliable (e.g. higher certainty or more complete), use that answer.
            - If both results are similar in certainty and content, synthesize a concise answer.
            - If both indicate that the information is unknown, set the merged answer to "unknown".
         4. **Reason:** Provide a brief explanation in the "reason" field describing how you determined the merged answer.
         5. do not use commas or special characters that may break json parsing.
+        6. Simply output the essential answer text, as is, ensuring it is clear and minimal.
         
         Your output must strictly follow this JSON structure without any additional fields or text:
         {

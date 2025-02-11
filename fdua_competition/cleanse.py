@@ -14,6 +14,7 @@ from fdua_competition.tools import divide_number, round_number
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 
 
+# todo: move to pdf_handler.py
 class CleansePDF(BaseModel):
     output: str = Field(description="The cleansed 'response' string that satisfies the requirements.")
 

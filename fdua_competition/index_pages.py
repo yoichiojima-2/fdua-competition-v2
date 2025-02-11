@@ -91,7 +91,7 @@ def parse_args() -> Namespace:
 def main() -> None:
     args = parse_args()
     embeddings = create_embeddings()
-    vs = FduaVectorStore(embeddings=embeddings)
+    vs = FduaVectorStore(mode=Mode(args.mode), embeddings=embeddings)
 
     pdfs = list(get_document_dir(mode=Mode(args.mode)).rglob("*.pdf"))
 
