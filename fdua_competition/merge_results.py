@@ -2,10 +2,11 @@ import textwrap
 
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
+from tenacity import retry, stop_after_attempt, wait_random
 
 from fdua_competition.baes_models import AnswerQueryOutput
 from fdua_competition.models import create_chat_model
-from fdua_competition.utils import dict_to_yaml
+from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 
 
 class MergeResultsOutput(BaseModel):
@@ -18,6 +19,7 @@ class MergeResultsOutput(BaseModel):
     reason: str = Field(description="A brief explanation of how the merged answer was derived.")
 
 
+@retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
 def merge_results(res_index: AnswerQueryOutput, res_simple: AnswerQueryOutput) -> MergeResultsOutput:
     role = textwrap.dedent(
         """
@@ -36,6 +38,7 @@ def merge_results(res_index: AnswerQueryOutput, res_simple: AnswerQueryOutput) -
            - If both results are similar in certainty and content, synthesize a concise answer.
            - If both indicate that the information is unknown, set the merged answer to "unknown".
         4. **Reason:** Provide a brief explanation in the "reason" field describing how you determined the merged answer.
+        5. do not use commas or special characters that may break json parsing.
         
         Your output must strictly follow this JSON structure without any additional fields or text:
         {

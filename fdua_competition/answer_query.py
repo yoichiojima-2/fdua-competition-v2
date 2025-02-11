@@ -11,45 +11,44 @@ from fdua_competition.baes_models import AnswerQueryOutput
 from fdua_competition.cleanse import cleanse_response
 from fdua_competition.enums import Mode
 from fdua_competition.logging_config import logger
-from fdua_competition.merge_results import merge_results
 from fdua_competition.models import create_chat_model
 from fdua_competition.reference import search_reference_doc, search_reference_pages
 from fdua_competition.tools import divide_number, round_number
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
 
-MAX_RETRIEVES = 16
+MAX_RETRIES = 16
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
-def get_relevant_docs_with_index(query: str, vectorstore: FduaVectorStore, mode: Mode) -> list[Document]:
+def get_relevant_docs(query: str, vectorstore: FduaVectorStore, mode: Mode) -> list[Document]:
     ref_doc = search_reference_doc(query, mode)
 
     docs: list[Document] = []
 
+    print(ref_doc.source)
     if ref_doc.source:
         ref_pages = search_reference_pages(query, Path(ref_doc.source), mode)
+        print(ref_pages)
         if ref_pages.pages:
             logger.info(f"reference pages found for query: {query}")
             for page in ref_pages.pages:
                 try:
                     docs.extend(
-                        (
-                            vectorstore.as_retriever(
-                                search_kwargs={"filter": {"$and": [{"source": ref_doc.source}, {"page": page}]}}
-                            ).invoke(query)
-                        )
+                        vectorstore.as_retriever(
+                            search_kwargs={"filter": {"$and": [{"source": ref_doc.source}, {"page": page}]}}
+                        ).invoke(query)
                     )
                 except Exception as e:
                     logger.warning(f"error fetching reference page: {page} - {e}")
         else:
             logger.info(f"no reference pages found for query: {query}")
             docs.extend(
-                vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIEVES, "filter": {"source": ref_doc.source}}).invoke(query)
+                vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIES, "filter": {"source": ref_doc.source}}).invoke(query)
             )
     else:
         logger.info(f"no reference document found for query: {query}")
-        retriever = vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIEVES})
+        retriever = vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIES})
         docs.extend(retriever.invoke(query))
 
     logger.debug(f"[get_relevant_docs] {docs}")
@@ -82,6 +81,9 @@ def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> Answer
         """
     )
 
+    docs = get_relevant_docs(query, vectorstore, mode)
+    parsed_context = dict_to_yaml(docs)
+
     chat_model = create_chat_model().bind_tools([round_number, divide_number]).with_structured_output(AnswerQueryOutput)
     prompt_template = ChatPromptTemplate.from_messages(
         [
@@ -91,30 +93,11 @@ def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> Answer
         ]
     )
     chain = prompt_template | chat_model
+    payload = {"role": role, "context": parsed_context, "query": query, "language": "japanese"}
 
-    # prep two types of payload
-    payload_base = {"role": role, "query": query, "language": "japanese"}
-    payload_simple = {
-        **payload_base,
-        "context": "\n---\n".join([f"{i.page_content}\n{i.metadata}" for i in vectorstore.as_retriever().invoke(query)]),
-    }
-    payload_index = {
-        **payload_base,
-        "context": "\n---\n".join(
-            [f"{i.page_content}\n{i.metadata}" for i in get_relevant_docs_with_index(query, vectorstore, mode)]
-        ),
-    }
+    logger.debug(dict_to_yaml(prompt_template.invoke(payload).model_dump()))
 
-    logger.debug(f"payload_simple: {dict_to_yaml(prompt_template.invoke(payload_simple).model_dump())}")
-    logger.debug(f"payload_simple: {dict_to_yaml(prompt_template.invoke(payload_index).model_dump())}")
-
-    res_simple = chain.invoke(payload_simple)
-    res_index = chain.invoke(payload_index)
-
-    logger.info(f"[answer_query] res_simple\n{dict_to_yaml(res_simple.model_dump())}\n")
-    logger.info(f"[answer_query] res_index\n{dict_to_yaml(res_index.model_dump())}\n")
-
-    res = merge_results(res_index=res_index, res_simple=res_simple)
+    res = chain.invoke(payload)
     logger.info(f"[answer_query]\n{dict_to_yaml(res.model_dump())}\n")
 
     return cleanse_response(res)
