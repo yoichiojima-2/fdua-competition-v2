@@ -8,7 +8,8 @@ ASSETS_DIR = assets
 SECRETS_DIR = secrets
 INSTALL_DIR = .fdua-competition
 OUTPUT_NAME = v$(shell uv run python -m bin.print_version)
-MODE = submit
+MODE = test
+LOG_LEVEL = WARNING
 CSV_PATH = ${INSTALL_DIR}/results/${MODE}/${OUTPUT_NAME}.csv
 
 up:
@@ -26,21 +27,21 @@ in:
 run: ${CSV_PATH}
 ${CSV_PATH}: ${INSTALL_DIR}/index/${OUTPUT_NAME}/.success
 	@echo "\nrunning..."
-	${UV} python -m fdua_competition.main -m ${MODE}
+	${UV} python -m fdua_competition.main -m ${MODE} --log-level ${LOG_LEVEL}
 	@echo "done"
 
 vectorstore: ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success
 ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success: ${INSTALL_DIR}/.installed
 	@echo "\npreparing vectorstore..."
-	${UV} python -m fdua_competition.vectorstore -m ${MODE}
+	${UV} python -m fdua_competition.vectorstore -m ${MODE} --log-level ${LOG_LEVEL}
 	touch ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success
 	@echo "done"
 
 index: ${INSTALL_DIR}/index/${OUTPUT_NAME}/.success
 ${INSTALL_DIR}/index/${OUTPUT_NAME}/.success: ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success
 	@echo "\npreparing index..."
-	${UV} python -m fdua_competition.index_documents -m ${MODE}
-	${UV} python -m fdua_competition.index_pages -m ${MODE}
+	${UV} python -m fdua_competition.index_documents -m ${MODE} --log-level ${LOG_LEVEL}
+	${UV} python -m fdua_competition.index_pages -m ${MODE} --log-level ${LOG_LEVEL}
 	touch ${INSTALL_DIR}/index/${OUTPUT_NAME}/.success
 	@echo "done"
 
