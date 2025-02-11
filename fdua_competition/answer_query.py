@@ -27,7 +27,7 @@ def get_relevant_docs_with_index(query: str, vectorstore: FduaVectorStore, mode:
 
     docs: list[Document] = []
 
-    if ref_doc.source:
+    if (ref_doc.source):
         ref_pages = search_reference_pages(query, Path(ref_doc.source), mode)
         if ref_pages.pages:
             logger.info(f"reference pages found for query: {query}")
@@ -105,11 +105,14 @@ def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> Answer
         ),
     }
 
-    logger.debug(f"payload_simple: {dict_to_yaml(prompt_template.invoke(payload_simple).model_dump())}")
-    logger.debug(f"payload_simple: {dict_to_yaml(prompt_template.invoke(payload_index).model_dump())}")
+    with ThreadPoolExecutor() as executor:
+        future_simple = executor.submit(chain.invoke, payload_simple)
+        future_index = executor.submit(chain.invoke, payload_index)
+        res_simple = future_simple.result()
+        res_index = future_index.result()
 
-    res_simple = chain.invoke(payload_simple)
-    res_index = chain.invoke(payload_index)
+    logger.debug(f"payload_simple: {dict_to_yaml(res_simple.model_dump())}")
+    logger.debug(f"payload_index: {dict_to_yaml(res_index.model_dump())}")
 
     logger.info(f"[answer_query] res_simple\n{dict_to_yaml(res_simple.model_dump())}\n")
     logger.info(f"[answer_query] res_index\n{dict_to_yaml(res_index.model_dump())}\n")
