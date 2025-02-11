@@ -13,6 +13,7 @@ class EmbeddingOpt(Enum):
 class ChatOpt(Enum):
     AZURE = "azure"
 
+
 class LogLevel(Enum):
     DEBUG = "DEBUG"
     INFO = "INFO"

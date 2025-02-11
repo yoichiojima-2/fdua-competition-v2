@@ -23,38 +23,44 @@ MAX_RETRIEVES = 16
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
 def get_relevant_docs_with_index(query: str, vectorstore: FduaVectorStore, mode: Mode) -> list[Document]:
+    docs: list[Document] = []
     ref_doc = search_reference_doc(query, mode)
 
-    docs: list[Document] = []
-
-    if ref_doc.source:
+    if ref_doc.source:  # if reference document is found, search for reference pages
         ref_pages = search_reference_pages(query, Path(ref_doc.source), mode)
-        if ref_pages.pages:
+        if ref_pages.pages:  # if reference pages are found, add pages
             logger.info(f"reference pages found for query: {query}")
             for page in ref_pages.pages:
                 try:
                     docs.extend(
                         (
+                            # fmt: off
                             vectorstore.as_retriever(
                                 search_kwargs={"filter": {"$and": [{"source": ref_doc.source}, {"page": page}]}}
                             ).invoke(query)
+                            # fmt: on
                         )
                     )
                 except Exception as e:
                     logger.warning(f"error fetching reference page: {page} - {e}")
-        else:
+        else:  # if no reference pages are found, add pages that are most likely to contain the answer
             logger.info(f"no reference pages found for query: {query}")
+            # fmt: off
             docs.extend(
-                vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIEVES, "filter": {"source": ref_doc.source}}).invoke(
-                    query
+                (
+                    vectorstore
+                    .as_retriever(search_kwargs={"k": MAX_RETRIEVES, "filter": {"source": ref_doc.source}})
+                    .invoke(query)
                 )
             )
-    else:
+            # fmt: on
+    else:  # if no reference document is found, add pages that are most likely to contain the answer
         logger.info(f"no reference document found for query: {query}")
         retriever = vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIEVES})
         docs.extend(retriever.invoke(query))
 
     logger.debug(f"[get_relevant_docs] {docs}")
+
     return docs
 
 
@@ -84,6 +90,7 @@ def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> Cleans
         """
     )
 
+    # [start: building chain]
     chat_model = create_chat_model().bind_tools([round_number, divide_number]).with_structured_output(AnswerQueryOutput)
     prompt_template = ChatPromptTemplate.from_messages(
         [
@@ -93,8 +100,9 @@ def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> Cleans
         ]
     )
     chain = prompt_template | chat_model
+    # [end: building chain]
 
-    # prep two types of payload
+    # [start: prep two types of payload]
     payload_base = {"role": role, "query": query, "language": "japanese"}
     payload_simple = {
         **payload_base,
@@ -111,6 +119,9 @@ def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> Cleans
             [f"{i.page_content}\n{i.metadata}" for i in get_relevant_docs_with_index(query, vectorstore, mode)]
         ),
     }
+    # [end: prep two types of payload]
+
+    # [start: invoke chain with two payloads]
     with ThreadPoolExecutor() as executor:
         future_simple = executor.submit(chain.invoke, payload_simple)
         future_index = executor.submit(chain.invoke, payload_index)
@@ -122,10 +133,10 @@ def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> Cleans
 
     logger.info(f"[answer_query] res_simple\n{dict_to_yaml(res_simple.model_dump())}\n")
     logger.info(f"[answer_query] res_index\n{dict_to_yaml(res_index.model_dump())}\n")
+    # [end: invoke chain with two payloads]
 
     res = merge_results(res_index=res_index, res_simple=res_simple)
     logger.info(f"[answer_query]\n{dict_to_yaml(res.model_dump())}\n")
-
     return cleanse_response(res)
 
 

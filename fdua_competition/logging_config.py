@@ -2,8 +2,8 @@ import logging
 import os
 from pathlib import Path
 
-from fdua_competition.get_version import get_version
 from fdua_competition.enums import LogLevel
+from fdua_competition.get_version import get_version
 
 
 def get_logger() -> logging.Logger:
