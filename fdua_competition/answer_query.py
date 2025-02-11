@@ -8,7 +8,7 @@ from tenacity import retry, stop_after_attempt, wait_random
 from tqdm import tqdm
 
 from fdua_competition.baes_models import AnswerQueryOutput
-from fdua_competition.cleanse import cleanse_context, cleanse_response
+from fdua_competition.cleanse import cleanse_response
 from fdua_competition.enums import Mode
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model
@@ -26,25 +26,27 @@ def get_relevant_docs(query: str, vectorstore: FduaVectorStore, mode: Mode) -> l
 
     docs: list[Document] = []
 
+    print(ref_doc.source)
     if ref_doc.source:
         ref_pages = search_reference_pages(query, Path(ref_doc.source), mode)
+        print(ref_pages)
         if ref_pages.pages:
             logger.info(f"reference pages found for query: {query}")
             for page in ref_pages.pages:
-                docs.append(
-                    *vectorstore.as_retriever(
+                docs.extend(
+                    vectorstore.as_retriever(
                         search_kwargs={"filter": {"$and": [{"source": ref_doc.source}, {"page": page}]}}
                     ).invoke(query)
                 )
         else:
             logger.info(f"no reference pages found for query: {query}")
-            docs.append(
-                *vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIES, "filter": {"source": ref_doc.source}}).invoke(query)
+            docs.extend(
+                vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIES, "filter": {"source": ref_doc.source}}).invoke(query)
             )
     else:
         logger.info(f"no reference document found for query: {query}")
         retriever = vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIES})
-        docs.append(*retriever.invoke(query))
+        docs.extend(retriever.invoke(query))
 
     logger.debug(f"[get_relevant_docs] {docs}")
     return docs
