@@ -53,8 +53,24 @@ jobs:
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
         run: make test
 
-      - name: run
+      - name: build vectorstore
         env: 
+          FDUA_DIR: ${{ env.FDUA_DIR }}
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          OPENAI_API_VERSION: ${{ secrets.OPENAI_API_VERSION }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+        run: make vectorstore
+
+      - name: build index
+        env:
+          FDUA_DIR: ${{ env.FDUA_DIR }}
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          OPENAI_API_VERSION: ${{ secrets.OPENAI_API_VERSION }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+        run: make index
+
+      - name: run
+        env:
           FDUA_DIR: ${{ env.FDUA_DIR }}
           AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
           OPENAI_API_VERSION: ${{ secrets.OPENAI_API_VERSION }}

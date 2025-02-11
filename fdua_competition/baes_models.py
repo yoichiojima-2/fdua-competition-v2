@@ -9,3 +9,4 @@ class AnswerQueryOutput(BaseModel):
     contexts: list[str] = Field(description="the context that the response was based on with its file path and page number.")
     source: str = Field(description="the given context source")
     pages: list[int] = Field(description="the page numbers of the given contexts.")
+    certainty: str = Field(description="the certainty of the answer in percentage.")
