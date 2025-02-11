@@ -1,5 +1,5 @@
+import re
 import textwrap
-import unicodedata
 
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
@@ -22,7 +22,7 @@ class CleansePDF(BaseModel):
 def split_document(doc: Document) -> list[Document]:
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=2000,
-        chunk_overlap=0,
+        chunk_overlap=20,
         separators=["\n\n", "\n", "。", "．", "？", "！", "「", "」", "【", "】"],
     )
     split_doc = splitter.split_text(doc.page_content)
@@ -30,9 +30,9 @@ def split_document(doc: Document) -> list[Document]:
 
 
 def remove_special_characters(doc: Document) -> Document:
-    return Document(
-        page_content="".join([c for c in doc.page_content if unicodedata.category(c)[0] != "C"]), metadata=doc.metadata
-    )
+    pattern = r"[\x00-\x08\x0B-\x0C\x0E-\x1F]"
+    cleaned_content = re.sub(pattern, "", doc.page_content)
+    return Document(page_content=cleaned_content, metadata=doc.metadata)
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
