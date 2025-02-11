@@ -69,6 +69,12 @@ test: install
 	${UV} pytest -vvv
 	@echo "done"
 
+submit:
+	# fixme
+	-mkdir -p ${INSTALL_DIR}/submit/asset
+	cp ${CSV_PATH} ${INSTALL_DIR}/submit/asset/predictions.csv
+	zip ${INSTALL_DIR}/submit/asset/predictions.csv
+
 install: ${INSTALL_DIR}/.installed
 ${INSTALL_DIR}/.installed: ${ASSETS_DIR}/.success
 	@echo "\ninstalling..."
