@@ -11,13 +11,13 @@ from langchain_core.vectorstores.base import VectorStoreRetriever
 from tenacity import retry, stop_after_attempt, wait_random
 from tqdm import tqdm
 
+from fdua_competition.cleanse import cleanse_pdf
 from fdua_competition.enums import EmbeddingOpt
 from fdua_competition.get_version import get_version
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_embeddings
 from fdua_competition.pdf_handler import load_documents
 from fdua_competition.utils import before_sleep_hook
-from fdua_competition.cleanse import cleanse_pdf
 
 BATCH_SIZE = 1
 

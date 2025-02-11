@@ -11,6 +11,7 @@ from fdua_competition.index_pages import read_page_index
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
+from fdua_competition.vectorstore import FduaVectorStore
 
 
 class ReferenceDocOutput(BaseModel):
@@ -56,9 +57,9 @@ def search_reference_doc(query: str, mode: Mode) -> ReferenceDocOutput:
 
 
 class ReferencePageOutput(BaseModel):
-    query: str = Field(..., title="The user query.")
-    source: str = Field(..., title="The file path of the document.")
-    pages: list[int] = Field(..., title="The list of page numbers to refer.")
+    query: str = Field(description="The user query.")
+    source: str = Field(description="The file path of the document.")
+    pages: list[int] = Field(description="The list of page numbers to refer.")
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
@@ -70,7 +71,7 @@ def search_reference_pages(query: str, source: Path, mode: Mode) -> ReferencePag
         ## Instructions:
         - Carefully consider the context of the query and match it with the content of the indexed documents.
         - Include pages that show any sign of relevance to the query, even if you're not completely sure they directly contain the answer.
-        - If multiple pages from the same document seem to have some connection to the query, include all of them.
+        - If multiple pages from the same document seem to have some connection to the query, include all of them., but keep it within 20.
         - If a page appears to provide useful context or partial information that could lead to an answer, it should be selected.
         - Only if **no pages** appear to have any relation to the query, return an empty list (`[]`).
 
@@ -89,11 +90,16 @@ def search_reference_pages(query: str, source: Path, mode: Mode) -> ReferencePag
     )
 
     chat_model = create_chat_model().with_structured_output(ReferencePageOutput)
+    page_index = read_page_index(source, mode)
+
     prompt_template = ChatPromptTemplate.from_messages(
-        [("system", role), ("system", f"index: {read_page_index(source, mode)}"), ("user", f"query: {query}")]
+        [("system", role), ("system", f"index: {page_index}"), ("user", "query: {query}")]
     )
     chain = prompt_template | chat_model
-    res = chain.invoke({"query": query})
+    payload = {"query": query}
+    logger.debug(prompt_template.invoke(payload))
+
+    res = chain.invoke(payload)
 
     logger.info(f"[search_reference_pages]\n{dict_to_yaml(res.model_dump())}\n")
     return res

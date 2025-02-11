@@ -33,11 +33,14 @@ def get_relevant_docs(query: str, vectorstore: FduaVectorStore, mode: Mode) -> l
         if ref_pages.pages:
             logger.info(f"reference pages found for query: {query}")
             for page in ref_pages.pages:
-                docs.extend(
-                    vectorstore.as_retriever(
-                        search_kwargs={"filter": {"$and": [{"source": ref_doc.source}, {"page": page}]}}
-                    ).invoke(query)
-                )
+                try:
+                    docs.extend(
+                        vectorstore.as_retriever(
+                            search_kwargs={"filter": {"$and": [{"source": ref_doc.source}, {"page": page}]}}
+                        ).invoke(query)
+                    )
+                except Exception as e:
+                    logger.warning(f"error fetching reference page: {page} - {e}")
         else:
             logger.info(f"no reference pages found for query: {query}")
             docs.extend(
