@@ -44,8 +44,7 @@ def cleanse_pdf(doc: Document) -> CleansePDF:
     prompt_template = ChatPromptTemplate.from_messages([("system", role), ("user", "input: {input}")])
     chain = prompt_template | chat_model
     res = chain.invoke({"input": doc.page_content.encode('unicode_escape').decode('utf-8')})
-    logger.info(f"[cleanse_pdf]\n{dict_to_yaml(res.model_dump())}\n")
-    logger.info(f"[cleanse_pdf] done: {doc.metadata}")
+    logger.info(f"[cleanse_pdf] done\n{dict_to_yaml(res.model_dump())}\n")
     return res
 
 
