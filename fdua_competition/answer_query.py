@@ -8,7 +8,7 @@ from tenacity import retry, stop_after_attempt, wait_random
 from tqdm import tqdm
 
 from fdua_competition.baes_models import AnswerQueryOutput
-from fdua_competition.cleanse import cleanse_response
+from fdua_competition.cleanse import cleanse_response, CleanseResponseOutput
 from fdua_competition.enums import Mode
 from fdua_competition.logging_config import logger
 from fdua_competition.merge_results import merge_results
@@ -57,7 +57,7 @@ def get_relevant_docs_with_index(query: str, vectorstore: FduaVectorStore, mode:
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
-def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> AnswerQueryOutput:
+def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> CleanseResponseOutput:
     role = textwrap.dedent(
         """ 
         You are a research assistant. You have access to the user's query and a set of documents referred to as “context.”
@@ -96,7 +96,7 @@ def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> Answer
     payload_base = {"role": role, "query": query, "language": "japanese"}
     payload_simple = {
         **payload_base,
-        "context": "\n---\n".join([f"{i.page_content}\n{i.metadata}" for i in vectorstore.as_retriever().invoke(query)]),
+        "context": "\n---\n".join([f"{i.page_content}\n{i.metadata}" for i in vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIEVES}).invoke(query)]),
     }
     payload_index = {
         **payload_base,
@@ -104,7 +104,6 @@ def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> Answer
             [f"{i.page_content}\n{i.metadata}" for i in get_relevant_docs_with_index(query, vectorstore, mode)]
         ),
     }
-
     with ThreadPoolExecutor() as executor:
         future_simple = executor.submit(chain.invoke, payload_simple)
         future_index = executor.submit(chain.invoke, payload_index)
