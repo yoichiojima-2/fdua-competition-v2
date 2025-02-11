@@ -6,6 +6,7 @@ from tenacity import retry, stop_after_attempt, wait_random
 
 from fdua_competition.baes_models import AnswerQueryOutput
 from fdua_competition.logging_config import logger
+from langchain_core.documents import Document
 from fdua_competition.models import create_chat_model
 from fdua_competition.tools import divide_number, round_number
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
@@ -17,7 +18,8 @@ class CleansePDF(BaseModel):
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
-def cleanse_pdf(input: str) -> CleansePDF:
+def cleanse_pdf(doc: Document) -> CleansePDF:
+    logger.info(f"[cleanse_pdf] cleansing...: {doc.metadata}")
     role = textwrap.dedent(
         """
         You are an intelligent assistant specializing in text refinement.
@@ -41,8 +43,9 @@ def cleanse_pdf(input: str) -> CleansePDF:
     chat_model = create_chat_model().bind_tools([divide_number, round_number]).with_structured_output(CleansePDF)
     prompt_template = ChatPromptTemplate.from_messages([("system", role), ("user", "input: {input}")])
     chain = prompt_template | chat_model
-    res = chain.invoke({"input": input.encode('unicode_escape').decode('utf-8')})
+    res = chain.invoke({"input": doc.page_content.encode('unicode_escape').decode('utf-8')})
     logger.info(f"[cleanse_pdf]\n{dict_to_yaml(res.model_dump())}\n")
+    logger.info(f"[cleanse_pdf] done: {doc.metadata}")
     return res
 
 
