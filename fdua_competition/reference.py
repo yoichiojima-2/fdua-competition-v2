@@ -11,7 +11,6 @@ from fdua_competition.index_pages import read_page_index
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
-from fdua_competition.vectorstore import FduaVectorStore
 
 
 class ReferenceDocOutput(BaseModel):
