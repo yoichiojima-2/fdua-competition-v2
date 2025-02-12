@@ -1,4 +1,3 @@
-# import Document
 from langchain_core.documents import Document
 
 from fdua_competition.enums import Mode
