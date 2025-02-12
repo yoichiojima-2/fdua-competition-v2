@@ -67,12 +67,12 @@ class FduaVectorStore:
         return doc.metadata in self.get()["metadatas"]
 
     def is_empty(self) -> bool:
-        return self.get()["metadatas"]
+        return len(self.get()["metadatas"]) == 0
 
     def populate(self) -> None:
         docs = load_documents(self.mode)
         print("debug", self.get())
-        docs_to_add = [doc for doc in docs if self.is_existing(doc)] if self.is_empty() else docs
+        docs_to_add = docs if self.is_empty() else [doc for doc in docs if self.is_existing(doc)]
         logger.info(f"[FduaVectorStore]\n- adding: {len(docs_to_add)} docs\n- skippting: {len(docs) - len(docs_to_add)} docs\n")
         self.add_documents_concurrently(docs_to_add)
         logger.info("[FduaVectorStore] done populating vectorstore")
