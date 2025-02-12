@@ -11,6 +11,7 @@ from langchain_core.vectorstores.base import VectorStoreRetriever
 from tenacity import retry, stop_after_attempt, wait_random
 from tqdm import tqdm
 
+from fdua_competition.cleanse import cleanse_pdf
 from fdua_competition.enums import EmbeddingOpt, LogLevel, Mode
 from fdua_competition.get_version import get_version
 from fdua_competition.logging_config import logger, set_log_level
@@ -45,7 +46,11 @@ class FduaVectorStore:
 
     @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
     def add(self, docs: list[Document]) -> None:
-        self.vectorstore.add_documents(docs)
+        with ThreadPoolExecutor() as executor:
+            cleansed_docs = list(executor.map(cleanse_pdf, docs))
+        self.vectorstore.add_documents(cleansed_docs)
+        for doc in cleansed_docs:
+            logger.info(f"[FduaVectorStore] added {doc.metadata}\n{doc.page_content}\n")
 
     def add_documents_concurrently(self, docs: list[Document]) -> None:
         batches = [docs[i : i + BATCH_SIZE] for i in range(0, len(docs), BATCH_SIZE)]
@@ -57,6 +62,9 @@ class FduaVectorStore:
     def populate(self) -> None:
         docs = load_documents(self.mode)
         docs_to_add = [doc for doc in docs if doc.metadata not in self.get().get("metadatas")]
+        logger.info(
+            f"[FduaVectorStore]\n- adding: {len(docs_to_add)} docs\n- skippting: {len(docs) - len(docs_to_add)} docs\n"
+        )
         self.add_documents_concurrently(docs_to_add)
         logger.info("[FduaVectorStore] done populating vectorstore")
 

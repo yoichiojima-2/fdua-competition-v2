@@ -16,6 +16,7 @@ from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 
 # todo: move these cleansers
 class CleansePDF(BaseModel):
+    input: str = Field(description="The raw context data extracted from a PDF.")
     output: str = Field(description="The cleansed 'response' string that satisfies the requirements.")
 
 
@@ -36,7 +37,7 @@ def remove_special_characters(doc: Document) -> Document:
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
-def cleanse_pdf(doc: Document) -> CleansePDF:
+def cleanse_pdf(doc: Document) -> Document:
     role = textwrap.dedent(
         """
         You are an intelligent assistant specializing in text refinement.
@@ -65,7 +66,9 @@ def cleanse_pdf(doc: Document) -> CleansePDF:
     cleansed_text = "".join([chain.invoke({"input": remove_special_characters(doc)}).output for doc in docs])
     res = CleansePDF(input=doc.page_content, output=cleansed_text)
     logger.info(f"[cleanse_pdf] done\n{dict_to_yaml(res.model_dump())}\n")
-    return res
+
+    # build Document object
+    return Document(page_content=res.output, metadata=doc.metadata)
 
 
 class CleanseContext(BaseModel):
