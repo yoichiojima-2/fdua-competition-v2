@@ -40,7 +40,7 @@ def majority_vote(query: str, candidates: list[str]):
         6. Provide the final answer along with a brief explanation of your majority vote decision, ensuring clarity and conciseness.
         7. Answer based only on the information provided in the candidate responses. Do not conduct additional research or use external sources.
         8. If there is only one candidate has a answer and else are わかりません, return that response as the final answer.
-        9. outputは日本語で50文字いないに収めてください.
+        9. outputは日本語で50文字以内に収めてください.
 
         Return only the final answer and the justification for your choice.
         """
