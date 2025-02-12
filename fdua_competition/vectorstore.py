@@ -44,11 +44,15 @@ class FduaVectorStore:
     def as_retriever(self, **kwargs) -> VectorStoreRetriever:
         return self.vectorstore.as_retriever(**kwargs)
 
+    def cleanse_concurrently(self, docs: list[Document]) -> list[Document]:
+        with ThreadPoolExecutor() as executor:
+            return list(executor.map(cleanse_pdf, docs))
+
     @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
     def add(self, docs: list[Document]) -> None:
-        with ThreadPoolExecutor() as executor:
-            cleansed_docs = list(executor.map(cleanse_pdf, docs))
+        cleansed_docs = self.cleanse_concurrently(docs)
         self.vectorstore.add_documents(cleansed_docs)
+
         for doc in cleansed_docs:
             logger.info(f"[FduaVectorStore] added {doc.metadata}\n{doc.page_content}\n")
 
@@ -59,12 +63,17 @@ class FduaVectorStore:
             for future in tqdm(as_completed(futures), total=len(futures), desc="populating vectorstore.."):
                 future.result()
 
+    def is_existing(self, doc: Document) -> bool:
+        return doc.metadata in self.get()["metadatas"]
+
+    def is_empty(self) -> bool:
+        return self.get()["metadatas"]
+
     def populate(self) -> None:
         docs = load_documents(self.mode)
-        docs_to_add = [doc for doc in docs if doc.metadata not in self.get().get("metadatas")]
-        logger.info(
-            f"[FduaVectorStore]\n- adding: {len(docs_to_add)} docs\n- skippting: {len(docs) - len(docs_to_add)} docs\n"
-        )
+        print("debug", self.get())
+        docs_to_add = [doc for doc in docs if self.is_existing(doc)] if self.is_empty() else docs
+        logger.info(f"[FduaVectorStore]\n- adding: {len(docs_to_add)} docs\n- skippting: {len(docs) - len(docs_to_add)} docs\n")
         self.add_documents_concurrently(docs_to_add)
         logger.info("[FduaVectorStore] done populating vectorstore")
 
