@@ -32,7 +32,7 @@ def split_document(doc: Document) -> list[Document]:
 
 
 def remove_special_characters(doc: Document) -> Document:
-    # remove control characters
+    # remove control charactors
     pattern = r"[\x00-\x08\x0B-\x0C\x0E-\x1F]"
     return Document(page_content=re.sub(pattern, "", doc.page_content), metadata=doc.metadata)
 
