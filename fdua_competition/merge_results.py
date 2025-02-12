@@ -26,39 +26,38 @@ def merge_results(res_index: AnswerQueryOutput, res_simple: AnswerQueryOutput, v
     logger.info("[merge_results] merging results..")
     role = textwrap.dedent(
         """
-        You are a research assistant tasked with merging two answers generated from different retrieval methods for the same query.
-        Below are two sets of results:
-        
-        - **Result 1 (res_index):** This answer is based on context retrieved using an index-based search.
-        - **Result 2 (res_simple):** This answer is based on context retrieved using a simple retrieval method.
+        あなたはリサーチアシスタントであり、同じクエリに対して異なる検索方法で生成された2つの回答を統合する任務を持っています。
+        以下に2つの結果セットがあります：
 
-        *Result 2 might be less reliable than Result 1 since it potentially includes contexts which should not be referenced.*
-        *Retrieved contexts will be attatched just in case you need it*
-        
-        Your task is to produce a merged answer that meets the following requirements:
-        
-        1. **Query:** Use the original user question (which is identical in both results) for the "query" field.
-        2. **Original Answers:** Include the original answers and their corresponding certainty scores in the fields "res_index", "certainty_index", "res_simple", and "certainty_simple".
-        3. **Merged Answer ("output"):** 
-           - If one result is clearly more reliable (e.g. higher certainty or more complete), use that answer.
-           - If both results are similar in certainty and content, synthesize a concise answer.
-           - If both indicate that the information is unknown, set the merged answer to "unknown".
-        4. **Reason:** Provide a brief explanation in the "reason" field describing how you determined the merged answer.
-        5. do not use commas or special characters that may break json parsing.
-        6. Simply output the essential answer text, as is, ensuring it is clear and minimal.
-        
-        Your output must strictly follow this JSON structure without any additional fields or text:
+        - **結果1 (res_index):** インデックスベースの検索を使用して取得したコンテキストに基づく回答。
+        - **結果2 (res_simple):** シンプルな検索方法を使用して取得したコンテキストに基づく回答。
+
+        *結果2は結果1よりも信頼性が低い可能性があります。必要に応じて参照できるように、取得したコンテキストを添付します。*
+
+        あなたの任務は、以下の要件を満たす統合された回答を作成することです：
+
+        1. **クエリ:** "query" フィールドには元のユーザーの質問を使用してください。
+        2. **元の回答:** "res_index", "certainty_index", "res_simple", "certainty_simple" フィールドに元の回答と対応する確信度スコアを含めてください。
+        3. **統合された回答 ("output"):**
+           - 1つの結果が明らかに信頼性が高い場合、その回答を使用してください。
+           - 両方の結果が確信度と内容で類似している場合、簡潔な回答を合成してください。
+           - 両方が情報が不明であることを示している場合、統合された回答を "unknown" に設定してください。
+        4. **理由:** "reason" フィールドに統合された回答をどのように決定したかの簡単な説明を記載してください。
+        5. JSON解析を壊す可能性のあるカンマや特殊文字を使用しないでください。
+        6. 必要な回答テキストのみを簡潔に出力し、明確で最小限にしてください。
+
+        出力は以下のJSON構造に厳密に従い、追加のフィールドやテキストを含めないでください：
         {
-            "query": "The original user question",
-            "res_index": "Answer from index-based retrieval",
+            "query": "元のユーザーの質問",
+            "res_index": "インデックスベースの検索からの回答",
             "certainty_index": <float>,
-            "res_simple": "Answer from simple retrieval",
+            "res_simple": "シンプルな検索からの回答",
             "certainty_simple": <float>,
-            "output": "The merged answer",
-            "reason": "Explanation for the merged answer"
+            "output": "統合された回答",
+            "reason": "統合された回答を決定した理由"
         }
-        
-        Please ensure that the entire response is written in japanese and that no extraneous text is included.
+
+        出力全体を日本語で記述し、余分なテキストを含めないでください。
         """
     )
     prompt = textwrap.dedent(

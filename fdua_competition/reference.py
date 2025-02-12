@@ -23,24 +23,22 @@ class ReferenceDocOutput(BaseModel):
 def search_reference_doc(query: str, mode: Mode) -> ReferenceDocOutput:
     role = textwrap.dedent(
         """
-        You are an intelligent assistant specializing in information retrieval. Your task is to analyze a user query and determine which sources from the provided dataset should be referenced to answer it.
+        あなたは情報検索に特化した賢いアシスタントです。ユーザークエリを分析し、提供されたデータセットからどのソースを参照すべきかを判断することが任務です。
 
-        ## Instructions:
-        - Consider the relevance of each source based on the **organizations mentioned** and the **context of the query**.
-        - If multiple sources are relevant, include all of them.
-        - Do **not** select sources that are unrelated to the query.
-        - If **no relevant sources** are found, respond with an empty list (`[]`).
+        ## 指示:
+        - クエリの文脈と関連性に基づいて各ソースの関連性を考慮してください。
+        - 複数のソースが関連している場合は、すべて含めてください。
+        - クエリに関連しないソースは選択しないでください。
+        - 関連するソースが見つからない場合は、空のリスト (`[]`) を返してください。
 
-        ## Input:
-        - **user_query**: The question or request made by the user.
-        - **organization_index**: A list of dictionaries containing:
-            - `"organizations"`: The list of organization names found in the document.
-            - `"source"`: The file path of the document.
+        ## 入力:
+        - **user_query**: ユーザーが行った質問やリクエスト。
+        - **organization_index**: ドキュメントに含まれる組織名のリストとソースのファイルパスを含む辞書のリスト。
 
-        ## Output:
-        Return a list of `"source"` paths that are relevant to the query.
+        ## 出力:
+        クエリに関連するソースのパスのリストを返してください。
 
-        Ensure that the selected sources directly relate to the user's request.
+        ユーザーのリクエストに直接関連するソースを選択してください。
         """
     )
 
@@ -65,26 +63,22 @@ class ReferencePageOutput(BaseModel):
 def search_reference_pages(query: str, source: Path, mode: Mode) -> ReferencePageOutput:
     role = textwrap.dedent(
         """
-        You are an intelligent assistant specializing in document retrieval. Your task is to analyze a user query and determine the pages from relevant documents that might contain the answer.
+        あなたはドキュメント検索に特化した賢いアシスタントです。ユーザークエリを分析し、関連するドキュメントのページを特定することが任務です。
 
-        ## Instructions:
-        - Carefully consider the context of the query and match it with the content of the indexed documents.
-        - Include pages that show any sign of relevance to the query, even if you're not completely sure they directly contain the answer.
-        - If multiple pages from the same document seem to have some connection to the query, include all of them., but keep it within 20.
-        - If a page appears to provide useful context or partial information that could lead to an answer, it should be selected.
-        - Only if **no pages** appear to have any relation to the query, return an empty list (`[]`).
+        ## 指示:
+        - クエリの文脈を慎重に考慮し、インデックスされたドキュメントの内容と一致させてください。
+        - クエリに関連すると思われるページをすべて含めてください。ただし、20ページ以内に収めてください。
+        - ページが有用なコンテキストや部分的な情報を提供する場合、それを選択してください。
+        - クエリに関連するページが見つからない場合は、空のリスト (`[]`) を返してください。
 
-        ## Input:
-        - **user_query**: The question or request made by the user.
-        - **page_index**: A list of dictionaries containing:
-            - `"source"`: The file path of the document.
-            - `"page"`: The page number.
-            - `"content"`: The text content of the page.
+        ## 入力:
+        - **user_query**: ユーザーが行った質問やリクエスト。
+        - **page_index**: ドキュメントのファイルパス、ページ番号、ページのテキスト内容を含む辞書のリスト。
 
-        ## Output:
-        Return the `"source"` file path and a list of page numbers that might contain the answer or provide useful context for the user's query.
+        ## 出力:
+        クエリに関連するページ番号のリストとソースのファイルパスを返してください。
 
-        Ensure that the selected pages, even if only partially relevant, offer potentially useful context for answering the query.
+        クエリに関連するページを選択し、回答に役立つコンテキストを提供してください。
         """
     )
 

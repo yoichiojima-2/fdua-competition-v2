@@ -39,22 +39,22 @@ def remove_special_characters(doc: Document) -> Document:
 def cleanse_pdf(doc: Document) -> Document:
     role = textwrap.dedent(
         """
-        You are an intelligent assistant specializing in text refinement.
-        The input provided is raw data parsed from a PDF and may be messy or contain unwanted artifacts.
-        Your task is to clean up this raw context with only minimal modifications, ensuring that no important information is lost.
+        あなたはテキストの精緻化に特化したアシスタントです。
+        提供された入力はPDFから解析された生データであり、乱雑で不要なアーティファクトを含んでいる可能性があります。
+        あなたの任務は、この生のコンテキストを最小限の修正でクリーンアップし、重要な情報を失わないようにすることです。
 
-        ## Instructions:
-        - Fix minor formatting issues (such as extra whitespace, punctuation errors, or unwanted artifacts) without removing any essential content.
-        - Do not rephrase or add new information.
-        - Preserve all critical details while cleaning the text.
-        - The final output must be a concise
-        - Do not use commas or special characters that may break JSON parsing.
+        ## 指示:
+        - 余分な空白、句読点の誤り、不要なアーティファクトなどの小さなフォーマットの問題を修正してください。ただし、重要な内容を削除しないでください。
+        - 言い換えや新しい情報の追加はしないでください。
+        - テキストをクリーンアップしながら、すべての重要な詳細を保持してください。
+        - 最終出力は簡潔でなければなりません。
+        - JSON解析を壊す可能性のあるカンマや特殊文字を使用しないでください。
 
-        ## Input:
-        - **context**: The raw context data extracted from a PDF.
+        ## 入力:
+        - **context**: PDFから抽出された生のコンテキストデータ。
 
-        ## Output:
-        Return the cleaned context text with minimal corrections, preserving all original information.
+        ## 出力:
+        最小限の修正でクリーンアップされたコンテキストテキストを返し、元の情報をすべて保持してください。
         """
     )
     chat_model = create_chat_model().bind_tools([divide_number, round_number]).with_structured_output(CleansePDF)
@@ -80,22 +80,22 @@ class CleanseContext(BaseModel):
 def cleanse_context(context: AnswerQueryOutput) -> CleanseContext:
     role = textwrap.dedent(
         """
-        You are an intelligent assistant specializing in text refinement.
-        The input provided is raw data parsed from a PDF and may be messy or contain unwanted artifacts.
-        Your task is to clean up this raw context with only minimal modifications, ensuring that no important information is lost.
+        あなたはテキストの精緻化に特化したアシスタントです。
+        提供された入力はPDFから解析された生データであり、乱雑で不要なアーティファクトを含んでいる可能性があります。
+        あなたの任務は、この生のコンテキストを最小限の修正でクリーンアップし、重要な情報を失わないようにすることです。
 
-        ## Instructions:
-        - Fix minor formatting issues (such as extra whitespace, punctuation errors, or unwanted artifacts) without removing any essential content.
-        - Do not rephrase or add new information.
-        - Preserve all critical details while cleaning the text.
-        - The final output must be a concise
-        - Do not use commas or special characters that may break JSON parsing.
+        ## 指示:
+        - 余分な空白、句読点の誤り、不要なアーティファクトなどの小さなフォーマットの問題を修正してください。ただし、重要な内容を削除しないでください。
+        - 言い換えや新しい情報の追加はしないでください。
+        - テキストをクリーンアップしながら、すべての重要な詳細を保持してください。
+        - 最終出力は簡潔でなければなりません。
+        - JSON解析を壊す可能性のあるカンマや特殊文字を使用しないでください。
 
-        ## Input:
-        - **context**: The raw context data extracted from a PDF.
+        ## 入力:
+        - **context**: PDFから抽出された生のコンテキストデータ。
 
-        ## Output:
-        Return the cleaned context text with minimal corrections, preserving all original information.
+        ## 出力:
+        最小限の修正でクリーンアップされたコンテキストテキストを返し、元の情報をすべて保持してください。
         """
     )
     chat_model = create_chat_model().bind_tools([divide_number, round_number]).with_structured_output(CleanseContext)
@@ -117,36 +117,35 @@ class CleanseResponseOutput(BaseModel):
 def cleanse_response(answer: AnswerQueryOutput) -> CleanseResponseOutput:
     role = textwrap.dedent(
         """
-        You are an intelligent assistant specializing in text refinement.
-        The input provided is raw data parsed from a PDF and may be messy or contain unwanted artifacts.
-        Your task is to clean up this raw context with only minimal modifications, ensuring that no important information is lost.
-        Additionally, if you are asked a direct question requiring a specific answer, respond with the default response corresponding to the question's category.
-        
-        ## Instructions:
+        あなたはテキストの精緻化に特化したアシスタントです。
+        提供された入力はPDFから解析された生データであり、乱雑で不要なアーティファクトを含んでいる可能性があります。
+        あなたの任務は、この生のコンテキストを最小限の修正でクリーンアップし、重要な情報を失わないようにすることです。
+        また、特定の回答を求める直接的な質問があった場合、その質問のカテゴリに対応するデフォルトの回答を返してください。
+
+        ## 指示:
         - 数量で答える問題の回答には、質問に記載の単位を使うこと.
         - 参照元に答えの手がかりが見つからないと判断される場合はその旨を「分かりません」と答えること.
         - queryに過不足なく回答すること.
         - outputの文字数は日本語だと17~25文字が上限です.
         - 小数点第2位を四捨五入はround(n, 1)と同義です. 同様に、小数点第3位を四捨五入はround(n, 2) ex: 1.2345 -> 1.23
         - 敬語は不要. 端的に回答すること.
-        - Fix minor formatting issues (such as extra whitespace, punctuation errors, or unwanted artifacts) without removing any essential content.
-        - Do not rephrase or add new information.
-        - Preserve all critical details while cleaning the text.
-        - The final output must be concise.
-        - Do not use commas or special characters that may break JSON parsing.
+        - 余分な空白、句読点の誤り、不要なアーティファクトなどの小さなフォーマットの問題を修正してください。ただし、重要な内容を削除しないでください。
+        - 言い換えや新しい情報の追加はしないでください。
+        - テキストをクリーンアップしながら、すべての重要な詳細を保持してください。
+        - 最終出力は簡潔でなければなりません。
+        - JSON解析を壊す可能性のあるカンマや特殊文字を使用しないでください。
 
-        ## Examples:
+        ## 例:
         - xxxは何年か -> good: xxxx年  /  bad: xxxはxxxx年です
         - xxxはaとbどちらか -> good: a  /  bad: xxxはaです
         - aとbのどちらがxxか -> good: a  /  bad : xxxなのはaです
         - 何%か -> response: good: 10%  /  bad: 10  # 単位をつける
-        
-        ## Input:
-        - **context**: The raw context data extracted from a PDF.
-        
-        ## Output:
-        Return the cleaned context text with minimal corrections, preserving all original information.
 
+        ## 入力:
+        - **context**: PDFから抽出された生のコンテキストデータ。
+
+        ## 出力:
+        最小限の修正でクリーンアップされたコンテキストテキストを返し、元の情報をすべて保持してください。
         """
     )
 

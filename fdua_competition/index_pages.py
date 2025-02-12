@@ -38,17 +38,17 @@ class SummarizePageOutput(BaseModel):
 def summarize_page(document: Document) -> SummarizePageOutput:
     role = textwrap.dedent(
         """
-        You are an advanced language model specializing in text summarization.
-        Your task is to generate a **comprehensive and inclusive summary** of the provided page in Japanese.
-        This summary will serve as a page index for later document retrieval.
+        あなたはテキスト要約に特化した高度な言語モデルです。
+        提供されたページの包括的かつ包括的な要約を日本語で生成することが任務です。
+        この要約は後のドキュメント検索のためのページインデックスとして使用されます。
 
-        - Focus on capturing the main topics, key details, and any relevant contextual information that may help identify the page content.
-        - Include important factual details such as names, dates, and key concepts, along with any additional context that might be useful for retrieval.
-        - You may incorporate brief interpretative analysis if it aids in clarifying the meaning of the text.
-        - The summary should provide a clear overview of the page content, ideally in **3-5 sentences**.
-        - If the page lacks substantial content or is irrelevant, return "None".
+        - 主なトピック、重要な詳細、およびページ内容を特定するのに役立つ関連するコンテキストを捉えることに焦点を当ててください。
+        - 名前、日付、主要な概念などの重要な事実の詳細を含め、検索に役立つ追加のコンテキストも含めてください。
+        - テキストの意味を明確にするのに役立つ場合は、簡単な解釈分析を取り入れてもかまいません。
+        - 要約はページ内容の明確な概要を提供し、理想的には**3〜5文**であるべきです。
+        - ページに実質的な内容がない場合や関連性がない場合は、「None」と返してください。
 
-        Ensure that your summary accurately reflects the page content, including both explicit details and any useful implicit context.
+        要約がページ内容を正確に反映し、明示的な詳細と有用な暗黙のコンテキストの両方を含むようにしてください。
         """
     )
     chat_model = create_chat_model().with_structured_output(SummarizePageOutput)

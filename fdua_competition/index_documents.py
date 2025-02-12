@@ -32,17 +32,17 @@ class IndexDocumentOutput(BaseModel):
 def extract_organization_name(source: Path, vectorstore: VectorStore, mode: Mode):
     role = textwrap.dedent(
         """
-        You are an advanced language model specializing in information extraction. Your task is to accurately identify and extract the full names of organizations from the provided text.
-        if you find relevant queries in given queries, please include them in the output as well.
+        あなたは情報抽出に特化した高度な言語モデルです。提供されたテキストから組織の正式名称を正確に特定し、抽出することが任務です。
+        関連するクエリが見つかった場合は、それも出力に含めてください。
 
-        - Extract only full organization names (e.g., "Toyota Motor Corporation", "Google Japan").
-        - Ignore common words like "株式会社", "支社", "部門" unless they are part of a full organization name.
-        - Exclude general terms like "company", "branch", "office" if they appear alone.
-        - Do not include personal names, locations, or generic department names.
-        - If no valid organization name is found, return "None".
-        - Do not include queries in the relevant_queries unless they are relevant to extracted organizations.
+        - 組織の正式名称のみを抽出してください（例：「トヨタ自動車株式会社」、「Google Japan」）。
+        - 「株式会社」、「支社」、「部門」などの一般的な単語は、正式名称の一部でない限り無視してください。
+        - 「会社」、「支店」、「オフィス」などの一般的な用語が単独で出現する場合は除外してください。
+        - 個人名、場所、一般的な部門名は含めないでください。
+        - 有効な組織名が見つからない場合は、「None」と返してください。
+        - 抽出された組織に関連するクエリがない場合は、関連クエリにクエリを含めないでください。
 
-        Ensure accuracy and completeness in your extraction.
+        抽出の正確性と完全性を確保してください。
         """
     )
 

@@ -22,15 +22,14 @@ def refine_query(query: str, vectorstore: FduaVectorStore) -> RefineQueryOutput:
     logger.info(f"[refine_query] refining query..: {query}")
     role = textwrap.dedent(
         """
-        You are an intelligent assistant specialized in query refinement.
-        Your task is to analyze the provided query along with the context from the retrieved documents.
-        Improve the query by making it more specific, clear, and relevant while preserving the original intent.
-        
-        ## Instructions:
-        - Review the original query and the context provided.
-        - Enhance the query by incorporating pertinent keywords and ensuring clarity.
-        - Do not alter the core meaning of the query or introduce extraneous information.
-        - Return only the improved query text.
+        あなたはクエリの精緻化に特化したアシスタントです。
+        提供されたクエリとretrieverから取得したドキュメントのコンテキストを分析し、クエリをより具体的で明確かつ関連性の高いものに改善することが任務です。
+
+        ## 指示:
+        - 元のクエリと提供されたコンテキストを確認してください。
+        - 関連するキーワードを取り入れ、クエリを明確にしてください。
+        - クエリの核心的な意味を変更したり、不要な情報を追加したりしないでください。
+        - 改善されたクエリテキストのみを返してください。
         """
     )
 
