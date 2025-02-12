@@ -30,15 +30,15 @@ ${CSV_PATH}: ${INSTALL_DIR}/index/${OUTPUT_NAME}/.success
 	${UV} python -m fdua_competition.main -m ${MODE} --log-level ${LOG_LEVEL}
 	@echo "done"
 
-vectorstore: ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success
-${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success: ${INSTALL_DIR}/.installed
+vectorstore: ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/${MODE}/.success
+${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/${MODE}/.success: ${INSTALL_DIR}/.installed
 	@echo "\npreparing vectorstore..."
 	${UV} python -m fdua_competition.vectorstore -m ${MODE} --log-level ${LOG_LEVEL}
-	touch ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success
+	touch ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/${MODE}/.success
 	@echo "done"
 
 index: ${INSTALL_DIR}/index/${OUTPUT_NAME}/.success
-${INSTALL_DIR}/index/${OUTPUT_NAME}/.success: ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/.success
+${INSTALL_DIR}/index/${OUTPUT_NAME}/.success: ${INSTALL_DIR}/vectorstores/chroma/${OUTPUT_NAME}/${MODE}/.success
 	@echo "\npreparing index..."
 	${UV} python -m fdua_competition.index_documents -m ${MODE} --log-level ${LOG_LEVEL}
 	${UV} python -m fdua_competition.index_pages -m ${MODE} --log-level ${LOG_LEVEL}
@@ -54,8 +54,7 @@ ${PWD}/${INSTALL_DIR}/evaluation/result/scoring.csv: ${CSV_PATH}
 		--result-name ${OUTPUT_NAME}.csv \
 		--ans-dir ${PWD}/${INSTALL_DIR}/evaluation/data \
 		--ans-txt ans_txt.csv \
-		--eval-result-dir ${PWD}/${INSTALL_DIR}/evaluation/result \
-		--max-num-tokens 150  # should be removed
+		--eval-result-dir ${PWD}/${INSTALL_DIR}/evaluation/result
 	@echo "done"
 
 summary: evaluate
