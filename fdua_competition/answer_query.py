@@ -19,7 +19,7 @@ from fdua_competition.tools import divide_number, round_number
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
 
-MAX_RETRIEVES = 16
+MAX_RETRIEVES = 25
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
@@ -35,18 +35,15 @@ def get_relevant_docs_with_index(query: str, vectorstore: FduaVectorStore, mode:
                 try:
                     docs.extend(
                         (
-                            # fmt: off
                             vectorstore.as_retriever(
                                 search_kwargs={"filter": {"$and": [{"source": ref_doc.source}, {"page": page}]}}
                             ).invoke(query)
-                            # fmt: on
                         )
                     )
                 except Exception as e:
                     logger.warning(f"error fetching reference page: {page} - {e}")
         else:  # if no reference pages are found, add pages that are most likely to contain the answer
             logger.info(f"no reference pages found for query: {query}")
-            # fmt: off
             docs.extend(
                 (
                     vectorstore
@@ -54,7 +51,6 @@ def get_relevant_docs_with_index(query: str, vectorstore: FduaVectorStore, mode:
                     .invoke(query)
                 )
             )
-            # fmt: on
     else:  # if no reference document is found, add pages that are most likely to contain the answer
         logger.info(f"no reference document found for query: {query}")
         retriever = vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIEVES})
