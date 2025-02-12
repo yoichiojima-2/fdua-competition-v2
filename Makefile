@@ -8,7 +8,7 @@ ASSETS_DIR = assets
 SECRETS_DIR = secrets
 INSTALL_DIR = .fdua-competition
 OUTPUT_NAME = v$(shell uv run python -m bin.print_version)
-MODE = test
+MODE = submit
 LOG_LEVEL = INFO
 CSV_PATH = ${INSTALL_DIR}/results/${MODE}/${OUTPUT_NAME}.csv
 
@@ -71,10 +71,10 @@ test: install
 
 submit:
 	@echo "\npreparing submission..."
-	-mkdir -p ${INSTALL_DIR}/submit/asset
-	-mkdir -p ${INSTALL_DIR}/submit/zip
-	cp ${CSV_PATH} ${INSTALL_DIR}/submit/asset/predictions.csv
-	cd ${INSTALL_DIR}/submit/asset && zip ../zip/submit.zip predictions.csv
+	-mkdir -p ${INSTALL_DIR}/submission/asset
+	-mkdir -p ${INSTALL_DIR}/submission/zip
+	cp ${CSV_PATH} ${INSTALL_DIR}/submission/asset/predictions.csv
+	cd ${INSTALL_DIR}/submission/asset && zip ../zip/submission.zip predictions.csv
 	@echo "done"
 
 install: ${INSTALL_DIR}/.installed
