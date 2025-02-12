@@ -12,6 +12,7 @@ from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model
 from fdua_competition.tools import divide_number, round_number
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
+from fdua_competition.read_answer_examples import read_answer_examples
 
 
 # todo: move these cleansers
@@ -116,7 +117,7 @@ class CleanseResponseOutput(BaseModel):
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
 def cleanse_response(answer: AnswerQueryOutput) -> CleanseResponseOutput:
     role = textwrap.dedent(
-        """
+        f"""
         You are an intelligent assistant specializing in text refinement.
         The input provided is raw data parsed from a PDF and may be messy or contain unwanted artifacts.
         Your task is to clean up this raw context with only minimal modifications, ensuring that no important information is lost.
@@ -136,10 +137,7 @@ def cleanse_response(answer: AnswerQueryOutput) -> CleanseResponseOutput:
         - Do not use commas or special characters that may break JSON parsing.
 
         ## Examples:
-        - xxxは何年か -> good: xxxx年  /  bad: xxxはxxxx年です
-        - xxxはaとbどちらか -> good: a  /  bad: xxxはaです
-        - aとbのどちらがxxか -> good: a  /  bad : xxxなのはaです
-        - 何%か -> response: good: 10%  /  bad: 10  # 単位をつける
+        {read_answer_examples()}
         
         ## Input:
         - **context**: The raw context data extracted from a PDF.
