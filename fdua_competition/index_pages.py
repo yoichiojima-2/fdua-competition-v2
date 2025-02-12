@@ -36,7 +36,7 @@ class SummarizePageOutput(BaseModel):
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
-def summarize_page(document: Document, mode: Mode) -> SummarizePageOutput:
+def summarize_page(document: Document) -> SummarizePageOutput:
     role = textwrap.dedent(
         """
         You are an advanced language model specializing in text summarization.
@@ -53,15 +53,15 @@ def summarize_page(document: Document, mode: Mode) -> SummarizePageOutput:
         """
     )
     chat_model = create_chat_model().with_structured_output(SummarizePageOutput)
-    prompt_template = ChatPromptTemplate.from_messages([("system", role), ("system", "page_content:\n{page_content}"), ("system", "queries: {queries}")])
+    prompt_template = ChatPromptTemplate.from_messages([("system", role), ("system", "page_content:\n{page_content}")])
     chain = prompt_template | chat_model
-    return chain.invoke({"page_content": document.page_content, "queries": read_queries(mode)})
+    return chain.invoke({"page_content": document.page_content})
 
 
-def summarize_page_concurrently(docs: list[Document], mode: Mode) -> list[dict]:
+def summarize_page_concurrently(docs: list[Document]) -> list[dict]:
     summaries = []
     with ThreadPoolExecutor() as executor:
-        future_to_doc = {executor.submit(summarize_page, doc, mode): doc for doc in docs}
+        future_to_doc = {executor.submit(summarize_page, doc): doc for doc in docs}
         for future in as_completed(future_to_doc):
             doc = future_to_doc[future]
             summary = future.result()
@@ -76,7 +76,7 @@ def write_page_index(source: Path, vectorstore: VectorStore, mode: Mode) -> None
     output_path = OUTPUT_DIR / f"v{get_version()}/page/{mode.value}/{source.stem}.json"
 
     docs = get_document(source, vectorstore=vectorstore)
-    page_index = summarize_page_concurrently(docs, mode)
+    page_index = summarize_page_concurrently(docs)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w") as f:
