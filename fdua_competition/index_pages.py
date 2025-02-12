@@ -1,4 +1,5 @@
 import json
+import typing as t
 import os
 import textwrap
 from argparse import ArgumentParser, Namespace
@@ -19,6 +20,7 @@ from fdua_competition.models import create_chat_model, create_embeddings
 from fdua_competition.pdf_handler import get_document_dir
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
+from fdua_competition.utils import read_queries
 
 OUTPUT_DIR = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/index"
 
@@ -31,15 +33,17 @@ def get_document(source: Path, vectorstore: VectorStore) -> list[Document]:
 class SummarizePageOutput(BaseModel):
     topics: list[str] = Field(description="topics or themes covered in the document page.")
     summary: str = Field(description="A concise summary of the document page.")
+    relevant_queries: list[str] = Field(description="[Relevant queries used to extract the organization names]")
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
-def summarize_page(document: Document) -> SummarizePageOutput:
+def summarize_page(document: Document, mode: Mode) -> SummarizePageOutput:
     role = textwrap.dedent(
         """
         You are an advanced language model specializing in text summarization.
         Your task is to generate a **comprehensive and inclusive summary** of the provided page in Japanese.
         This summary will serve as a page index for later document retrieval.
+        if you find relevant queries in given queries, please include them in the output as well.
 
         - Focus on capturing the main topics, key details, and any relevant contextual information that may help identify the page content.
         - Include important factual details such as names, dates, and key concepts, along with any additional context that might be useful for retrieval.
@@ -51,21 +55,21 @@ def summarize_page(document: Document) -> SummarizePageOutput:
         """
     )
     chat_model = create_chat_model().with_structured_output(SummarizePageOutput)
-    prompt_template = ChatPromptTemplate.from_messages([("system", role), ("system", "page_content:\n{page_content}")])
+    prompt_template = ChatPromptTemplate.from_messages([("system", role), ("system", "page_content:\n{page_content}"), ("system", "queries: {queries}")])
     chain = prompt_template | chat_model
-    return chain.invoke({"page_content": document.page_content})
+    return chain.invoke({"page_content": document.page_content, "queries": read_queries(mode)})
 
 
-def summarize_page_concurrently(docs: list[Document]) -> list[dict]:
+def summarize_page_concurrently(docs: list[Document], mode: Mode) -> list[dict]:
     summaries = []
     with ThreadPoolExecutor() as executor:
-        future_to_doc = {executor.submit(summarize_page, doc): doc for doc in docs}
+        future_to_doc = {executor.submit(summarize_page, doc, mode): doc for doc in docs}
         for future in as_completed(future_to_doc):
             doc = future_to_doc[future]
             summary = future.result()
             summaries.append({**summary.model_dump(), "metadata": doc.metadata})
 
-    summary_sorted = sorted(summaries, key=lambda x: x["metadata"]["page"])
+    summary_sorted: list[dict] = sorted(summaries, key=lambda x: x["metadata"]["page"])
     logger.info(f"[summarize_page_concurrently]\n{dict_to_yaml(summary_sorted)}\n")
     return summary_sorted
 
@@ -74,7 +78,7 @@ def write_page_index(source: Path, vectorstore: VectorStore, mode: Mode) -> None
     output_path = OUTPUT_DIR / f"v{get_version()}/page/{mode.value}/{source.stem}.json"
 
     docs = get_document(source, vectorstore=vectorstore)
-    page_index = summarize_page_concurrently(docs)
+    page_index = summarize_page_concurrently(docs, mode)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w") as f:

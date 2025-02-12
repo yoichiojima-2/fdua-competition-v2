@@ -18,19 +18,22 @@ from fdua_competition.models import create_chat_model, create_embeddings
 from fdua_competition.pdf_handler import get_document_dir
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
+from fdua_competition.utils import read_queries
 
 OUTPUT_DIR = Path(os.environ["FDUA_DIR"]) / ".fdua-competition/index"
 
 
 class IndexDocumentOutput(BaseModel):
     organizations: list[str] = Field(description="[Organization names extracted from the document]")
+    relevant_queries: list[str] = Field(description="[Relevant queries used to extract the organization names]")
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
-def extract_organization_name(source: Path, vectorstore: VectorStore):
+def extract_organization_name(source: Path, vectorstore: VectorStore, mode: Mode):
     role = textwrap.dedent(
         """
         You are an advanced language model specializing in information extraction. Your task is to accurately identify and extract the full names of organizations from the provided text.
+        if you find relevant queries in given queries, please include them in the output as well.
 
         - Extract only full organization names (e.g., "Toyota Motor Corporation", "Google Japan").
         - Ignore common words like "株式会社", "支社", "部門" unless they are part of a full organization name.
@@ -42,31 +45,29 @@ def extract_organization_name(source: Path, vectorstore: VectorStore):
         """
     )
 
-    user_query = "extract organization names from this document"
-
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
-    context = retriever.invoke(user_query, filter={"source": str(source)})
+    retriever = vectorstore.as_retriever(search_kwargs={"k": 20})
+    context = retriever.invoke(role, filter={"source": str(source)})
 
     chat_model = create_chat_model().with_structured_output(IndexDocumentOutput)
     prompt_template = ChatPromptTemplate.from_messages(
-        [("system", role), ("system", "context:\n{context}"), ("user", user_query)]
+        [("system", role), ("system", "context:\n{context}"), ("system", "queries: {queries}")],
     )
     chain = prompt_template | chat_model
 
-    res = chain.invoke({"context": "\n---\n".join([i.page_content for i in context])})
+    res = chain.invoke({"context": "\n---\n".join([i.page_content for i in context]), "queries": read_queries(Mode(mode))})
     logger.info(f"[extract_organization_name]\n{dict_to_yaml(res.model_dump())}\n")
     return res
 
 
-def extract_organization_name_concurrently(pdfs: list[Path], vectorstore: VectorStore) -> list[dict]:
-    organization_names = []
+def extract_organization_name_concurrently(pdfs: list[Path], vectorstore: VectorStore, mode: Mode) -> list[dict]:
+    responses = []
     with ThreadPoolExecutor() as executor:
-        future_to_pdf = {executor.submit(extract_organization_name, pdf, vectorstore): pdf for pdf in pdfs}
+        future_to_pdf = {executor.submit(extract_organization_name, pdf, vectorstore, mode): pdf for pdf in pdfs}
         for future in tqdm(as_completed(future_to_pdf), total=len(pdfs), desc="extracting organization names.."):
             pdf = future_to_pdf[future]
             names = future.result()
-            organization_names.append({"organizations": names.organizations, "source": str(pdf)})
-    return organization_names
+            responses.append({**names.model_dump(), "source": str(pdf)})
+    return responses
 
 
 def write_document_index(vectorstore: VectorStore, mode: Mode = Mode.TEST):
@@ -75,7 +76,7 @@ def write_document_index(vectorstore: VectorStore, mode: Mode = Mode.TEST):
     output_path = OUTPUT_DIR / f"v{get_version()}/document/{mode.value}.json"
 
     pdfs = list(get_document_dir(mode).rglob("*.pdf"))
-    organization_names = extract_organization_name_concurrently(pdfs, vectorstore)
+    organization_names = extract_organization_name_concurrently(pdfs, vectorstore, mode)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w") as f:
