@@ -70,10 +70,12 @@ test: install
 	@echo "done"
 
 submit:
-	# fixme
+	@echo "\npreparing submission..."
 	-mkdir -p ${INSTALL_DIR}/submit/asset
+	-mkdir -p ${INSTALL_DIR}/submit/zip
 	cp ${CSV_PATH} ${INSTALL_DIR}/submit/asset/predictions.csv
-	zip ${INSTALL_DIR}/submit/asset/predictions.csv
+	cd ${INSTALL_DIR}/submit/asset && zip ../zip/submit.zip predictions.csv
+	@echo "done"
 
 install: ${INSTALL_DIR}/.installed
 ${INSTALL_DIR}/.installed: ${ASSETS_DIR}/.success
