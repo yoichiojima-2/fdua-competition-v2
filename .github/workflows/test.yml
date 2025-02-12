@@ -2,7 +2,7 @@ name: Python application
 
 on:
   push:
-    branches: [ "main", "release/0.3.3" ]
+    branches: [ "main", "release/0.3.3", "experiment/japanize"]
   pull_request:
     branches: [ "main" ]
 
