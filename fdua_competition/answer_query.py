@@ -130,11 +130,11 @@ def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> Cleans
     logger.debug(f"payload_simple: {dict_to_yaml(res_simple.model_dump())}")
     logger.debug(f"payload_index: {dict_to_yaml(res_index.model_dump())}")
 
-    logger.info(f"[answer_query] res_simple\n{dict_to_yaml(res_simple.model_dump())}\n")
-    logger.info(f"[answer_query] res_index\n{dict_to_yaml(res_index.model_dump())}\n")
+    logger.debug(f"[answer_query] res_simple\n{dict_to_yaml(res_simple.model_dump())}\n")
+    logger.debug(f"[answer_query] res_index\n{dict_to_yaml(res_index.model_dump())}\n")
     # [end: invoke chain with two payloads]
 
-    res = merge_results(res_index=res_index, res_simple=res_simple)
+    res = merge_results(res_index=res_index, res_simple=res_simple, vectorstore=vectorstore, query=query)
     logger.info(f"[answer_query]\n{dict_to_yaml(res.model_dump())}\n")
     return cleanse_response(res)
 

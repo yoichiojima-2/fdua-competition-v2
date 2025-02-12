@@ -6,7 +6,9 @@ from tenacity import retry, stop_after_attempt, wait_random
 
 from fdua_competition.baes_models import AnswerQueryOutput
 from fdua_competition.models import create_chat_model
+from fdua_competition.logging_config import logger
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
+from fdua_competition.vectorstore import FduaVectorStore
 
 
 class MergeResultsOutput(BaseModel):
@@ -20,7 +22,8 @@ class MergeResultsOutput(BaseModel):
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
-def merge_results(res_index: AnswerQueryOutput, res_simple: AnswerQueryOutput) -> MergeResultsOutput:
+def merge_results(res_index: AnswerQueryOutput, res_simple: AnswerQueryOutput, vectorstore: FduaVectorStore, query: str) -> MergeResultsOutput:
+    logger.info("[merge_results] merging results..")
     role = textwrap.dedent(
         """
         You are a research assistant tasked with merging two answers generated from different retrieval methods for the same query.
@@ -30,6 +33,7 @@ def merge_results(res_index: AnswerQueryOutput, res_simple: AnswerQueryOutput) -
         - **Result 2 (res_simple):** This answer is based on context retrieved using a simple retrieval method.
 
         *Result 2 might be less reliable than Result 1 since it potentially includes contexts which should not be referenced.*
+        *Retrieved contexts will be attatched just in case you need it*
         
         Your task is to produce a merged answer that meets the following requirements:
         
@@ -57,21 +61,22 @@ def merge_results(res_index: AnswerQueryOutput, res_simple: AnswerQueryOutput) -
         Please ensure that the entire response is written in japanese and that no extraneous text is included.
         """
     )
-    res_combined = textwrap.dedent(
+    prompt = textwrap.dedent(
         f"""
-        ### result 1: the answer based on context retrieved with index 
-        {dict_to_yaml(res_index.model_dump())}
+        ### result 1 (the answer based on context retrieved with index): {dict_to_yaml(res_index.model_dump())}
+        ### result 2 (the answer based on context): {dict_to_yaml(res_simple.model_dump())}
 
-        ### result 2: the answer based on context 
-        {dict_to_yaml(res_simple.model_dump())}
+        ### context for reference: {vectorstore.as_retriever(search_kwargs={"k": 5}).invoke(query)}
         """
     )
     chat_model = create_chat_model().with_structured_output(AnswerQueryOutput)
     prompt_template = ChatPromptTemplate.from_messages(
         [
             ("system", "{role}"),
-            ("user", "results: {results}"),
+            ("user", "context: {context}"),
         ]
     )
+    payload = {"role": role, "context": prompt}
+    logger.info(f"[merge_results] {dict_to_yaml(prompt_template.invoke(payload).model_dump())}")
     chain = prompt_template | chat_model
-    return chain.invoke({"role": role, "results": res_combined})
+    return chain.invoke(payload)
