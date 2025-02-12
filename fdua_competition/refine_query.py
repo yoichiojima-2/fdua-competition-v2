@@ -6,7 +6,7 @@ from tenacity import retry, stop_after_attempt, wait_random
 
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model
-from fdua_competition.utils import before_sleep_hook
+from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
 
 MAX_RETRIEVES = 16
@@ -47,6 +47,6 @@ def refine_query(query: str, vectorstore: FduaVectorStore) -> RefineQueryOutput:
 
     res = chain.invoke({"query": query, "context": context})
 
-    logger.info(f"[refine_query] done: {res}")
+    logger.info(f"[refine_query] done: {dict_to_yaml(res.model_dump())}")
 
     return res

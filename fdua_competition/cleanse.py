@@ -118,28 +118,45 @@ def cleanse_response(answer: AnswerQueryOutput) -> CleanseResponseOutput:
     role = textwrap.dedent(
         """
         You are an intelligent assistant specializing in text refinement.
-        Your task is to return the provided answer exactly as given—with only minimal cleanup (such as whitespace or punctuation adjustments) if needed.
+        The input provided is raw data parsed from a PDF and may be messy or contain unwanted artifacts.
+        Your task is to clean up this raw context with only minimal modifications, ensuring that no important information is lost.
+        Additionally, if you are asked a direct question requiring a specific answer, respond with the default response corresponding to the question's category.
         
         ## Instructions:
-        - Do not rephrase or add any additional context or commentary.
-        - Do not include extra subject headers, company names, or explanations that are not present in the original answer.
-        - Simply output the essential answer text, as is, ensuring it is clear and minimal.
-        - If the answer is null, return an '不明'.
-        - The final output should be a single, minimal phrase or value, within 54 tokens.
+        - 数量で答える問題の回答には、質問に記載の単位を使うこと.
+        - 参照元に答えの手がかりが見つからないと判断される場合はその旨を「分かりません」と答えること.
+        - queryに過不足なく回答すること.
+        - outputの文字数は日本語だと17~25文字が上限です.
+        - 小数点第2位を四捨五入はround(n, 1)と同義です. 同様に、小数点第3位を四捨五入はround(n, 2) ex: 1.2345 -> 1.23
+        - 敬語は不要. 端的に回答すること.
+        - Fix minor formatting issues (such as extra whitespace, punctuation errors, or unwanted artifacts) without removing any essential content.
+        - Do not rephrase or add new information.
+        - Preserve all critical details while cleaning the text.
+        - The final output must be concise.
         - Do not use commas or special characters that may break JSON parsing.
-        - Round numbers when instraction is given in query. 小数点第2位を四捨五入は```python round(n, 1)```と同義です.
+
+        ## Examples:
+        - xxxは何年か -> good: xxxx年  /  bad: xxxはxxxx年です
+        - xxxはaとbどちらか -> good: a  /  bad: xxxはaです
+        - aとbのどちらがxxか -> good: a  /  bad : xxxなのはaです
+        - 何%か -> response: good: 10%  /  bad: 10  # 単位をつける
         
         ## Input:
-        - **answer**: The original answer from the "response" field.
+        - **context**: The raw context data extracted from a PDF.
         
         ## Output:
-        Return the refined "response" string exactly as provided, with only minimal corrections.
+        Return the cleaned context text with minimal corrections, preserving all original information.
+
         """
     )
+
     chat_model = create_chat_model().bind_tools([divide_number, round_number]).with_structured_output(CleanseResponseOutput)
     prompt_template = ChatPromptTemplate.from_messages([("system", role), ("user", "answer: {answer}")])
-    chain = prompt_template | chat_model
-    res = chain.invoke({"answer": dict_to_yaml(answer.model_dump())})
+    payload = {"answer": dict_to_yaml(answer.model_dump())}
 
+    logger.info(f"[cleanse_response]\n{dict_to_yaml(prompt_template.invoke(payload).model_dump())}\n")
+    chain = prompt_template | chat_model
+    res = chain.invoke(payload)
     logger.info(f"[cleanse_answer_query]\n{dict_to_yaml(res.model_dump())}\n")
+
     return res
