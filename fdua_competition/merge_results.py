@@ -5,8 +5,8 @@ from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_random
 
 from fdua_competition.baes_models import AnswerQueryOutput
-from fdua_competition.models import create_chat_model
 from fdua_competition.logging_config import logger
+from fdua_competition.models import create_chat_model
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
 
@@ -22,7 +22,9 @@ class MergeResultsOutput(BaseModel):
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
-def merge_results(res_index: AnswerQueryOutput, res_simple: AnswerQueryOutput, vectorstore: FduaVectorStore, query: str) -> MergeResultsOutput:
+def merge_results(
+    res_index: AnswerQueryOutput, res_simple: AnswerQueryOutput, vectorstore: FduaVectorStore, query: str
+) -> MergeResultsOutput:
     logger.info("[merge_results] merging results..")
     role = textwrap.dedent(
         """

@@ -46,9 +46,9 @@ def get_relevant_docs_with_index(query: str, vectorstore: FduaVectorStore, mode:
             logger.info(f"no reference pages found for query: {query}")
             docs.extend(
                 (
-                    vectorstore
-                    .as_retriever(search_kwargs={"k": MAX_RETRIEVES, "filter": {"source": ref_doc.source}})
-                    .invoke(query)
+                    vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIEVES, "filter": {"source": ref_doc.source}}).invoke(
+                        query
+                    )
                 )
             )
     else:  # if no reference document is found, add pages that are most likely to contain the answer

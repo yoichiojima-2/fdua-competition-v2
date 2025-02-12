@@ -1,5 +1,4 @@
 import json
-import typing as t
 import os
 import textwrap
 from argparse import ArgumentParser, Namespace

@@ -1,7 +1,9 @@
 import os
-from pathlib import Path
-import pandas as pd
 import textwrap
+from pathlib import Path
+
+import pandas as pd
+
 from fdua_competition.enums import Mode
 from fdua_competition.utils import dict_to_yaml
 

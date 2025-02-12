@@ -10,9 +10,9 @@ from tenacity import retry, stop_after_attempt, wait_random
 from fdua_competition.baes_models import AnswerQueryOutput
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model
+from fdua_competition.read_answer_examples import read_answer_examples
 from fdua_competition.tools import divide_number, round_number
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
-from fdua_competition.read_answer_examples import read_answer_examples
 
 
 # todo: move these cleansers
