@@ -73,7 +73,11 @@ submit:
 	@echo "\npreparing submission..."
 	-mkdir -p ${INSTALL_DIR}/submission/asset
 	-mkdir -p ${INSTALL_DIR}/submission/zip
-	cp ${CSV_PATH} ${INSTALL_DIR}/submission/asset/predictions.csv
+
+	# choose which one to submit
+	# cp ${CSV_PATH} ${INSTALL_DIR}/submission/asset/predictions.csv
+	cp ${INSTALL_DIR}/majority_vote/${OUTPUT_NAME}.csv ${INSTALL_DIR}/submission/asset/predictions.csv
+
 	cd ${INSTALL_DIR}/submission/asset && zip ../zip/submission.zip predictions.csv
 	@echo "done"
 
