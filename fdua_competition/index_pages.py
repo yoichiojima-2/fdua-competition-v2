@@ -33,7 +33,6 @@ def get_document(source: Path, vectorstore: VectorStore) -> list[Document]:
 class SummarizePageOutput(BaseModel):
     topics: list[str] = Field(description="topics or themes covered in the document page.")
     summary: str = Field(description="A concise summary of the document page.")
-    relevant_queries: list[str] = Field(description="[Relevant queries used to extract the organization names]")
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
@@ -43,14 +42,12 @@ def summarize_page(document: Document, mode: Mode) -> SummarizePageOutput:
         You are an advanced language model specializing in text summarization.
         Your task is to generate a **comprehensive and inclusive summary** of the provided page in Japanese.
         This summary will serve as a page index for later document retrieval.
-        if you find relevant queries in given queries, please include them in the output as well.
 
         - Focus on capturing the main topics, key details, and any relevant contextual information that may help identify the page content.
         - Include important factual details such as names, dates, and key concepts, along with any additional context that might be useful for retrieval.
         - You may incorporate brief interpretative analysis if it aids in clarifying the meaning of the text.
         - The summary should provide a clear overview of the page content, ideally in **3-5 sentences**.
         - If the page lacks substantial content or is irrelevant, return "None".
-        - Do not include queries in the relevant_queries unless you are definetely sure they are relevant to the page content with organization names.
 
         Ensure that your summary accurately reflects the page content, including both explicit details and any useful implicit context.
         """

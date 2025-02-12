@@ -19,7 +19,7 @@ from fdua_competition.tools import divide_number, round_number
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
 
-MAX_RETRIEVES = 25
+MAX_RETRIEVES = 10
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
