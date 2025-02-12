@@ -36,7 +36,6 @@ def remove_special_characters(doc: Document) -> Document:
     return Document(page_content=re.sub(pattern, "", doc.page_content), metadata=doc.metadata)
 
 
-@retry(stop=stop_after_attempt(3), wait=wait_random(min=0, max=2), before_sleep=before_sleep_hook)
 def cleanse_pdf(doc: Document) -> Document:
     role = textwrap.dedent(
         """

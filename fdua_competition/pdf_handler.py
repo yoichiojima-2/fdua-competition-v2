@@ -21,7 +21,6 @@ def get_document_dir(mode: Mode = Mode.TEST) -> Path:
 
 
 def load_documents_concurrently(mode: Mode = Mode.TEST) -> list[Document]:
-    warnings.filterwarnings("ignore", category=UserWarning)  # suppress UserWarning from PyPDFium2
     doc_dir = get_document_dir(mode)
     docs = []
     paths = list(doc_dir.rglob("*.pdf"))
@@ -30,7 +29,6 @@ def load_documents_concurrently(mode: Mode = Mode.TEST) -> list[Document]:
         for future in tqdm(as_completed(futures), total=len(futures), desc="loading documents.."):
             for doc in future.result():
                 docs.append(doc)
-    warnings.filterwarnings("default", category=UserWarning)  # reset UserWarning
     return docs
 
 
