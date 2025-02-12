@@ -78,4 +78,26 @@ def merge_results(res_index: AnswerQueryOutput, res_simple: AnswerQueryOutput, v
     payload = {"role": role, "context": prompt}
     logger.info(f"[merge_results] {dict_to_yaml(prompt_template.invoke(payload).model_dump())}")
     chain = prompt_template | chat_model
-    return chain.invoke(payload)
+    result = chain.invoke(payload)
+
+    if res_index.certainty_index > res_simple.certainty_simple:
+        final_output = res_index.res_index
+        reason = "Index-based result was more certain."
+    elif res_simple.certainty_simple > res_index.certainty_index:
+        final_output = res_simple.res_simple
+        reason = "Simple retrieval result was more certain."
+    else:
+        final_output = f"{res_index.res_index} / {res_simple.res_simple}"
+        reason = "Both results had similar certainty."
+
+    merged_result = MergeResultsOutput(
+        query=query,
+        res_index=res_index.res_index,
+        certainty_index=res_index.certainty_index,
+        res_simple=res_simple.res_simple,
+        certainty_simple=res_simple.certainty_simple,
+        output=final_output,
+        reason=reason,
+    )
+
+    return merged_result

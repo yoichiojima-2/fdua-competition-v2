@@ -22,7 +22,7 @@ class CleansePDF(BaseModel):
 
 def split_document(doc: Document) -> list[Document]:
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=2000,
+        chunk_size=3000,  # Increased from 2000
         chunk_overlap=20,
         separators=["\n\n", "\n", "。", "．", "？", "！", "「", "」", "【", "】"],
     )

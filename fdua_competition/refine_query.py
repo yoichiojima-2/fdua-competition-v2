@@ -9,7 +9,7 @@ from fdua_competition.models import create_chat_model
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
 from fdua_competition.vectorstore import FduaVectorStore
 
-MAX_RETRIEVES = 16
+MAX_RETRIEVES = 32  # Increased from 16
 
 
 class RefineQueryOutput(BaseModel):

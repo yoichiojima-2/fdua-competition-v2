@@ -46,7 +46,7 @@ def extract_organization_name(source: Path, vectorstore: VectorStore, mode: Mode
         """
     )
 
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 20})
+    retriever = vectorstore.as_retriever(search_kwargs={"k": 30})  # Increased from 20
     context = retriever.invoke(role, filter={"source": str(source)})
 
     chat_model = create_chat_model().with_structured_output(IndexDocumentOutput)
