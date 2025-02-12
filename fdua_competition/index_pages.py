@@ -50,6 +50,7 @@ def summarize_page(document: Document, mode: Mode) -> SummarizePageOutput:
         - You may incorporate brief interpretative analysis if it aids in clarifying the meaning of the text.
         - The summary should provide a clear overview of the page content, ideally in **3-5 sentences**.
         - If the page lacks substantial content or is irrelevant, return "None".
+        - Do not include queries in the relevant_queries unless you are definetely sure they are relevant to the page content with organization names.
 
         Ensure that your summary accurately reflects the page content, including both explicit details and any useful implicit context.
         """

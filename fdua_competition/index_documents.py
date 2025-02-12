@@ -40,6 +40,7 @@ def extract_organization_name(source: Path, vectorstore: VectorStore, mode: Mode
         - Exclude general terms like "company", "branch", "office" if they appear alone.
         - Do not include personal names, locations, or generic department names.
         - If no valid organization name is found, return "None".
+        - Do not include queries in the relevant_queries unless they are relevant to extracted organizations.
 
         Ensure accuracy and completeness in your extraction.
         """
