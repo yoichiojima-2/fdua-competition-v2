@@ -7,7 +7,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_random
 
-from fdua_competition.baes_models import AnswerQueryOutput
+from fdua_competition.base_models import AnswerQueryOutput
+from fdua_competition.enums import Mode
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model
 from fdua_competition.read_answer_examples import read_answer_examples
@@ -115,7 +116,7 @@ class CleanseResponseOutput(BaseModel):
 
 
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
-def cleanse_response(answer: AnswerQueryOutput) -> CleanseResponseOutput:
+def cleanse_response(answer: AnswerQueryOutput, mode: Mode) -> CleanseResponseOutput:
     role = textwrap.dedent(
         f"""
         You are an intelligent assistant specializing in text refinement.
@@ -137,7 +138,7 @@ def cleanse_response(answer: AnswerQueryOutput) -> CleanseResponseOutput:
         - Do not use commas or special characters that may break JSON parsing.
 
         ## Examples:
-        {read_answer_examples()}
+        {read_answer_examples(mode=mode)}
         
         ## Input:
         - **context**: The raw context data extracted from a PDF.

@@ -4,7 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_random
 
-from fdua_competition.baes_models import AnswerQueryOutput
+from fdua_competition.base_models import AnswerQueryOutput
 from fdua_competition.logging_config import logger
 from fdua_competition.models import create_chat_model
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml

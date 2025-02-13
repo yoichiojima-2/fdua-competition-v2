@@ -7,13 +7,13 @@ from langchain_core.prompts import ChatPromptTemplate
 from tenacity import retry, stop_after_attempt, wait_random
 from tqdm import tqdm
 
-from fdua_competition.baes_models import AnswerQueryOutput
+from fdua_competition.base_models import AnswerQueryOutput
 from fdua_competition.cleanse import CleanseResponseOutput, cleanse_response
 from fdua_competition.enums import Mode
 from fdua_competition.logging_config import logger
 from fdua_competition.merge_results import merge_results
 from fdua_competition.models import create_chat_model
-from fdua_competition.reference import search_reference_doc, search_reference_pages
+from fdua_competition.reference import ReferenceDocOutput, ReferencePageOutput, search_reference_doc, search_reference_pages
 from fdua_competition.refine_query import refine_query
 from fdua_competition.tools import divide_number, round_number
 from fdua_competition.utils import before_sleep_hook, dict_to_yaml
@@ -22,42 +22,57 @@ from fdua_competition.vectorstore import FduaVectorStore
 MAX_RETRIEVES = 10
 
 
+def add_specific_pages(
+    docs: list[Document],
+    reference_doc: ReferenceDocOutput,
+    reference_pages: ReferencePageOutput,
+    query: str,
+    vectorstore: FduaVectorStore,
+) -> None:
+    for page in reference_pages.pages:
+        retriever = vectorstore.as_retriever(
+            search_kwargs={"filter": {"$and": [{"source": reference_doc.source}, {"page": page}]}}
+        )
+        try:
+            docs.extend(retriever.invoke(query))
+        except Exception as e:
+            logger.warning(f"error fetching reference page: {page} - {e}")
+
+
+def add_retrieved_pages(
+    docs: list[Document], refecence_doc: ReferenceDocOutput, query: str, vectorstore: FduaVectorStore
+) -> None:
+    retriever = vectorstore.as_retriever(search_kwargs={"filter": {"source": refecence_doc.source}})
+    try:
+        docs.extend(retriever.invoke(query))
+    except Exception as e:
+        logger.warning(f"error fetching reference pages: {e}")
+
+
+def add_retrived_docs(docs: list[Document], query: str, vectorstore: FduaVectorStore) -> None:
+    try:
+        retriever = vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIEVES})
+        docs.extend(retriever.invoke(query))
+    except Exception as e:
+        logger.warning(f"error fetching reference docs: {e}")
+
+
 @retry(stop=stop_after_attempt(24), wait=wait_random(min=0, max=8), before_sleep=before_sleep_hook)
 def get_relevant_docs_with_index(query: str, vectorstore: FduaVectorStore, mode: Mode) -> list[Document]:
     docs: list[Document] = []
     ref_doc = search_reference_doc(query, mode)
-
-    if ref_doc.source:  # if reference document is found, search for reference pages
+    if ref_doc.source:
         ref_pages = search_reference_pages(query, Path(ref_doc.source), mode)
-        if ref_pages.pages:  # if reference pages are found, add pages
-            logger.info(f"reference pages found for query: {query}")
-            for page in ref_pages.pages:
-                try:
-                    docs.extend(
-                        (
-                            vectorstore.as_retriever(
-                                search_kwargs={"filter": {"$and": [{"source": ref_doc.source}, {"page": page}]}}
-                            ).invoke(query)
-                        )
-                    )
-                except Exception as e:
-                    logger.warning(f"error fetching reference page: {page} - {e}")
-        else:  # if no reference pages are found, add pages that are most likely to contain the answer
+        if ref_pages.pages:
+            logger.info(f"found reference pages found for query: {query}")
+            add_specific_pages(docs=docs, reference_pages=ref_pages, query=query, vectorstore=vectorstore)
+        else:
             logger.info(f"no reference pages found for query: {query}")
-            docs.extend(
-                (
-                    vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIEVES, "filter": {"source": ref_doc.source}}).invoke(
-                        query
-                    )
-                )
-            )
-    else:  # if no reference document is found, add pages that are most likely to contain the answer
+            add_retrieved_pages(docs=docs, refecence_doc=ref_doc, query=query, vectorstore=vectorstore)
+    else:
         logger.info(f"no reference document found for query: {query}")
-        retriever = vectorstore.as_retriever(search_kwargs={"k": MAX_RETRIEVES})
-        docs.extend(retriever.invoke(query))
-
+        add_retrived_docs(docs=docs, query=query, vectorstore=vectorstore)
     logger.debug(f"[get_relevant_docs] {docs}")
-
     return docs
 
 
@@ -136,7 +151,7 @@ def answer_query(query: str, vectorstore: FduaVectorStore, mode: Mode) -> Cleans
 
     res = merge_results(res_index=res_index, res_simple=res_simple, vectorstore=vectorstore, query=query)
     logger.info(f"[answer_query]\n{dict_to_yaml(res.model_dump())}\n")
-    return cleanse_response(res)
+    return cleanse_response(res, mode=mode)
 
 
 def answer_queries_concurrently(queries: list[str], vectorstore: FduaVectorStore, mode: Mode) -> list[AnswerQueryOutput]:
