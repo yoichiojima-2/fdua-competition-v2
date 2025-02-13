@@ -8,7 +8,7 @@ from fdua_competition.enums import Mode
 from fdua_competition.utils import dict_to_yaml
 
 
-def read_answer_examples(mode: Mode) -> list[dict[str, str]]:
+def read_answer_examples(mode: Mode) -> str:
     match mode:
         case mode.SUBMIT:
             df = pd.read_csv(Path(os.environ["FDUA_DIR"]) / ".fdua-competition/validation/ans_txt.csv")
